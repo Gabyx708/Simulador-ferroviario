@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dj336rlkj5sxa"]
+
+[resource]
+resource_name = "Zocalo_azul.002"
+albedo_color = Color(0.32507575, 0.5017734, 0.6651851, 1)
+metallic = 0.3
+roughness = 0.45

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b5ubedo3xl2sk"]
+
+[resource]
+resource_name = "Techo.002"
+albedo_color = Color(0.85536623, 0.86378807, 0.87210315, 1)
+metallic = 0.4
+roughness = 0.5

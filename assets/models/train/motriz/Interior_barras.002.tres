@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ew8b6wi0akay"]
+
+[resource]
+resource_name = "Interior_barras.002"
+albedo_color = Color(0.9772474, 0.8864085, 0.25983337, 1)
+metallic = 0.3
+roughness = 0.45

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dya503w5qee6g"]
+
+[resource]
+resource_name = "Eje_1.002"
+albedo_color = Color(0.32507575, 0.33910814, 0.35893196, 1)
+metallic = 0.7
+roughness = 0.45

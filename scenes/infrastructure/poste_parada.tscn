@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://dpx87s24n6w5q"]
+
+[ext_resource type="Script" path="res://scenes/infrastructure/poste_parada.gd" id="1_poste"]
+[ext_resource type="Material" path="res://common/materials/mat_metal.tres" id="2_metal"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_poste"]
+material = ExtResource("2_metal")
+top_radius = 0.06
+bottom_radius = 0.06
+height = 2.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cartel"]
+albedo_color = Color(0.9, 0.2, 0.2, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_cartel"]
+material = SubResource("StandardMaterial3D_cartel")
+size = Vector3(0.6, 0.6, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_linea"]
+albedo_color = Color(1, 0.85, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.75, 0.05, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_linea"]
+material = SubResource("StandardMaterial3D_linea")
+size = Vector3(0.15, 0.04, 3.2)
+
+[node name="PosteParada" type="Node3D"]
+script = ExtResource("1_poste")
+
+[node name="PosteVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+mesh = SubResource("CylinderMesh_poste")
+
+[node name="CartelVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
+mesh = SubResource("BoxMesh_cartel")
+
+[node name="LineaVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+mesh = SubResource("BoxMesh_linea")

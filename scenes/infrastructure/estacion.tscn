@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://c0chi55dc61kp"]
+
+[ext_resource type="Material" path="res://common/materials/mat_cemento.tres" id="1_cem"]
+[ext_resource type="Script" uid="uid://dt4tmfv6cchi8" path="res://scenes/infrastructure/estacion.gd" id="1_est"]
+[ext_resource type="Material" path="res://common/materials/mat_chapa.tres" id="2_cha"]
+[ext_resource type="Material" path="res://common/materials/mat_metal.tres" id="3_met"]
+[ext_resource type="PackedScene" uid="uid://dpx87s24n6w5q" path="res://scenes/infrastructure/poste_parada.tscn" id="4_poste"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_i68jh"]
+material = ExtResource("1_cem")
+size = Vector3(200, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_t0vsy"]
+material = ExtResource("2_cha")
+size = Vector3(200, 0.1, 4.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_columna"]
+material = ExtResource("3_met")
+size = Vector3(0.25, 3.5, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_40i5m"]
+material = ExtResource("1_cem")
+size = Vector3(200, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7a3wv"]
+material = ExtResource("2_cha")
+size = Vector3(200, 0.1, 4.5)
+
+[node name="Estacion" type="Node3D" unique_id=1882755475]
+script = ExtResource("1_est")
+desfasaje_parada_ida = 99.5
+desfasaje_parada_vuelta = -97.2
+
+[node name="AndenA" type="MeshInstance3D" parent="." unique_id=2126359164]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, -3.75)
+mesh = SubResource("BoxMesh_i68jh")
+
+[node name="MarquesinaA" type="MeshInstance3D" parent="." unique_id=1886178404]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.35, -3.75)
+mesh = SubResource("BoxMesh_t0vsy")
+
+[node name="ColumnaA0" type="MeshInstance3D" parent="." unique_id=1099479622]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 2.65, -3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaA1" type="MeshInstance3D" parent="." unique_id=1578532225]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 2.65, -3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaA2" type="MeshInstance3D" parent="." unique_id=309498452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.65, -3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaA3" type="MeshInstance3D" parent="." unique_id=1153406592]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2.65, -3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaA4" type="MeshInstance3D" parent="." unique_id=72884538]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 2.65, -3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="AndenB" type="MeshInstance3D" parent="." unique_id=775006517]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 3.75)
+mesh = SubResource("BoxMesh_40i5m")
+
+[node name="MarquesinaB" type="MeshInstance3D" parent="." unique_id=1672561323]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.35, 3.75)
+mesh = SubResource("BoxMesh_7a3wv")
+
+[node name="ColumnaB0" type="MeshInstance3D" parent="." unique_id=1244372367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 2.65, 3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaB1" type="MeshInstance3D" parent="." unique_id=616487680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 2.65, 3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaB2" type="MeshInstance3D" parent="." unique_id=907471358]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.65, 3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaB3" type="MeshInstance3D" parent="." unique_id=574669783]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2.65, 3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="ColumnaB4" type="MeshInstance3D" parent="." unique_id=46414648]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 2.65, 3.75)
+mesh = SubResource("BoxMesh_columna")
+
+[node name="PosteParadaIda" parent="." unique_id=1480635226 instance=ExtResource("4_poste")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99.5, 0, -2)
+texto_cartel = "PARADA IDA"
+color_cartel = Color(0.15, 0.6, 0.9, 1)
+
+[node name="PosteParadaVuelta" parent="." unique_id=1819216710 instance=ExtResource("4_poste")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.2, 0, 2)
+texto_cartel = "PARADA VUELTA"
+color_cartel = Color(0.95, 0.4, 0.1, 1)

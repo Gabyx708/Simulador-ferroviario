@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://j2s40rmd3gwo"]
+
+[resource]
+resource_name = "Interior_asientos.002"
+albedo_color = Color(0.41700304, 0.59922856, 0.7643137, 1)
+metallic = 0.05
+roughness = 0.9

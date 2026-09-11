@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://ctc78ksgu5q10"]
+
+[ext_resource type="Script" path="res://levels/base_level.gd" id="1_base"]
+[ext_resource type="Material" path="res://common/materials/mat_pasto.tres" id="2_pasto"]
+[ext_resource type="Curve3D" path="res://resources/tracks/traza_test_track.tres" id="3_curva"]
+[ext_resource type="Script" path="res://scenes/tracks/via_generada.gd" id="4_via"]
+[ext_resource type="Script" path="res://scenes/tracks/postes_catenaria.gd" id="5_cat"]
+[ext_resource type="PackedScene" path="res://scenes/train/tren_csr.tscn" id="6_tren"]
+[ext_resource type="PackedScene" path="res://scenes/camera/camara_libre.tscn" id="7_cam"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.38, 0.52, 0.75, 1)
+sky_horizon_color = Color(0.7, 0.78, 0.85, 1)
+ground_bottom_color = Color(0.2, 0.25, 0.2, 1)
+ground_horizon_color = Color(0.7, 0.78, 0.85, 1)
+
+[sub_resource type="Sky" id="Sky_default"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_default"]
+background_mode = 2
+sky = SubResource("Sky_default")
+ambient_light_source = 3
+reflected_light_source = 2
+tonemap_mode = 3
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_terreno"]
+material = ExtResource("2_pasto")
+size = Vector2(1000, 1000)
+
+[node name="TestTrack" type="Node3D" node_paths=PackedStringArray("camara", "formacion_principal", "traza")]
+script = ExtResource("1_base")
+camara = NodePath("Camaras/CamaraLibre")
+formacion_principal = NodePath("Formaciones/TrenCSR")
+traza = NodePath("Infraestructura/Traza")
+
+[node name="Entorno" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Entorno"]
+environment = SubResource("Environment_default")
+
+[node name="Sol" type="DirectionalLight3D" parent="Entorno"]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 50, 0)
+shadow_enabled = true
+
+[node name="Terreno" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.69, 0)
+mesh = SubResource("PlaneMesh_terreno")
+
+[node name="Infraestructura" type="Node3D" parent="."]
+
+[node name="Traza" type="Path3D" parent="Infraestructura"]
+curve = ExtResource("3_curva")
+
+[node name="Via" type="Node3D" parent="Infraestructura/Traza" node_paths=PackedStringArray("traza")]
+script = ExtResource("4_via")
+traza = NodePath("..")
+paso_muestreo = 1.0
+
+[node name="Catenaria" type="Node3D" parent="Infraestructura/Traza" node_paths=PackedStringArray("traza")]
+script = ExtResource("5_cat")
+traza = NodePath("..")
+
+[node name="Formaciones" type="Node3D" parent="."]
+
+[node name="TrenCSR" parent="Formaciones" node_paths=PackedStringArray("traza") instance=ExtResource("6_tren")]
+traza = NodePath("../../Infraestructura/Traza")
+avance_inicial = 20.0
+
+[node name="Camaras" type="Node3D" parent="."]
+
+[node name="CamaraLibre" parent="Camaras" node_paths=PackedStringArray("formacion") instance=ExtResource("7_cam")]
+transform = Transform3D(0.707107, -0.241845, 0.664463, 0, 0.939693, 0.34202, -0.707107, -0.241845, 0.664463, 50, 20, 50)
+formacion = NodePath("../../Formaciones/TrenCSR")

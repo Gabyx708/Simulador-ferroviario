@@ -1,0 +1,232 @@
+[gd_scene format=3 uid="uid://c7v0cb0o4bu2c"]
+
+[ext_resource type="Script" uid="uid://dgwhe1241vlq5" path="res://levels/base_level.gd" id="1_base"]
+[ext_resource type="Material" uid="uid://btipd63o1nfnk" path="res://common/materials/mat_pasto.tres" id="2_pasto"]
+[ext_resource type="Curve3D" path="res://resources/tracks/traza_ramal_roca.tres" id="3_traza"]
+[ext_resource type="Script" uid="uid://cdomixarehcvg" path="res://scenes/tracks/via_generada.gd" id="4_via"]
+[ext_resource type="Script" uid="uid://lxqug76h2d4f" path="res://scenes/tracks/postes_catenaria.gd" id="5_cat"]
+[ext_resource type="PackedScene" uid="uid://c0chi55dc61kp" path="res://scenes/infrastructure/estacion.tscn" id="6_est"]
+[ext_resource type="PackedScene" uid="uid://6lpu62cb11gh" path="res://scenes/train/tren_csr.tscn" id="7_tren"]
+[ext_resource type="PackedScene" path="res://scenes/camera/camara_libre.tscn" id="8_cam"]
+[ext_resource type="Shader" uid="uid://cvd0x7lon1ur6" path="res://addons/sky_3d/shaders/SkyMaterial.gdshader" id="9_tfjle"]
+[ext_resource type="Texture2D" uid="uid://cfqk60lpl5ljv" path="res://addons/sky_3d/assets/resources/SNoise.tres" id="10_o4eni"]
+[ext_resource type="Texture2D" uid="uid://cecwdqjol0ckd" path="res://addons/sky_3d/assets/textures/noiseClouds.png" id="11_axw1c"]
+[ext_resource type="Texture2D" uid="uid://2r8ylu6rg5dp" path="res://addons/sky_3d/assets/thirdparty/textures/moon/MoonMap.png" id="12_xgig0"]
+[ext_resource type="Texture2D" uid="uid://djpfuyxkryegn" path="res://addons/sky_3d/assets/textures/noise.jpg" id="13_lfmna"]
+[ext_resource type="Texture2D" uid="uid://bm7dot7t7u1q4" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/StarField.jpg" id="14_i2uun"]
+[ext_resource type="Material" uid="uid://bkvko0bnqfjxw" path="res://common/materials/mat_riel.tres" id="15_061dl"]
+[ext_resource type="Texture2D" uid="uid://c1vwcdcdvb74a" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/Milkyway.jpg" id="15_q22a0"]
+[ext_resource type="Script" uid="uid://deo0gxkmk2ahd" path="res://addons/sky_3d/src/Sky3D.gd" id="16_2ihef"]
+[ext_resource type="Material" uid="uid://crvivxbfb5pxm" path="res://common/materials/mat_balastro.tres" id="16_hail4"]
+[ext_resource type="Material" uid="uid://dce3cmmgmv8a2" path="res://common/materials/mat_durmiente.tres" id="17_1jyws"]
+[ext_resource type="Script" uid="uid://b4tkplvh7fq40" path="res://addons/sky_3d/src/SkyDome.gd" id="17_ce0nq"]
+[ext_resource type="PackedScene" uid="uid://cqxvxsq3680pj" path="res://assets/models/train/csr_roca_coche_motriz.glb" id="18_mb6u5"]
+[ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="18_rboct"]
+[ext_resource type="PackedScene" uid="uid://ch3056n8l7qtf" path="res://assets/models/train/csr_roca_coche_remolcado.glb" id="19_stcbo"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("9_tfjle")
+shader_parameter/sky_visible = true
+shader_parameter/color_correction = Vector2(0, 1)
+shader_parameter/ground_color = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/horizon_offset = 0.0
+shader_parameter/atm_darkness = 0.5
+shader_parameter/atm_sun_intensity = 18.0
+shader_parameter/atm_day_tint = Color(0.807843, 0.909804, 1, 1)
+shader_parameter/atm_horizon_light_tint = Color(0.980392, 0.635294, 0.462745, 1)
+shader_parameter/atm_night_tint = Color(0.0070224726, 0.008329002, 0.010452064, 0.04164501)
+shader_parameter/atm_level_params = Vector3(1, 0, 0)
+shader_parameter/atm_thickness = 0.7
+shader_parameter/atm_beta_ray = Vector3(5.804544e-06, 1.3562913e-05, 3.311258e-05)
+shader_parameter/atm_beta_mie = Vector3(3.038e-08, 3.038e-08, 3.038e-08)
+shader_parameter/sun_light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
+shader_parameter/sun_disk_color = Color(0.996094, 0.541334, 0.140076, 1)
+shader_parameter/sun_disk_intensity = 30.0
+shader_parameter/sun_disk_size = 0.02
+shader_parameter/atm_sun_mie_tint = Color(1, 1, 1, 1)
+shader_parameter/atm_sun_mie_intensity = 1.0
+shader_parameter/atm_sun_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/moon_color = Color(1, 1, 1, 1)
+shader_parameter/moon_texture = ExtResource("12_xgig0")
+shader_parameter/moon_texture_alignment = Vector3(7, 1.4, 4.8)
+shader_parameter/moon_texture_flip_u = false
+shader_parameter/moon_texture_flip_v = false
+shader_parameter/moon_size = 0.07
+shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
+shader_parameter/atm_moon_mie_intensity = 0.0
+shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
+shader_parameter/starmap_texture = ExtResource("15_q22a0")
+shader_parameter/starmap_flip_u = false
+shader_parameter/starmap_flip_v = false
+shader_parameter/starmap_alignment = Vector3(2.68288, -0.25891, 0.40101)
+shader_parameter/star_rotation_offset = 9.38899
+shader_parameter/star_rotation = -12.439238260385984
+shader_parameter/star_tilt = -1.2915436464758039
+shader_parameter/star_field_color = Color(1, 1, 1, 1)
+shader_parameter/star_field_texture = ExtResource("14_i2uun")
+shader_parameter/star_scintillation = 0.75
+shader_parameter/star_scintillation_speed = 0.01
+shader_parameter/noise_tex = ExtResource("13_lfmna")
+shader_parameter/clouds_night_color = Color(0.090196, 0.094118, 0.129412, 1)
+shader_parameter/cirrus_visible = true
+shader_parameter/cirrus_intensity = 2.0
+shader_parameter/cirrus_coverage = 0.5
+shader_parameter/cirrus_thickness = 1.7
+shader_parameter/cirrus_absorption = 2.0
+shader_parameter/cirrus_sky_tint_fade = 0.5
+shader_parameter/cirrus_size = 1.0
+shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
+shader_parameter/cirrus_position1 = Vector2(0.039530803, 0.039530803)
+shader_parameter/cirrus_position2 = Vector2(0.039530803, 0.039530803)
+shader_parameter/cirrus_texture = ExtResource("10_o4eni")
+shader_parameter/cumulus_visible = true
+shader_parameter/cumulus_intensity = 0.6
+shader_parameter/cumulus_coverage = 0.55
+shader_parameter/cumulus_thickness = 0.0243
+shader_parameter/cumulus_absorption = 2.0
+shader_parameter/cumulus_noise_freq = 2.7
+shader_parameter/cumulus_sky_tint_fade = 0.0
+shader_parameter/cumulus_size = 0.5
+shader_parameter/cumulus_position = Vector2(55.383743, 55.383743)
+shader_parameter/cumulus_texture = ExtResource("11_axw1c")
+shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
+shader_parameter/cumulus_mie_intensity = 1.0
+shader_parameter/show_azimuthal_grid = false
+shader_parameter/azimuthal_grid_color = Color(0.87058824, 0.72156864, 0.5294118, 1)
+shader_parameter/azimuthal_grid_rotation_offset = 0.03
+shader_parameter/show_equatorial_grid = false
+shader_parameter/equatorial_grid_color = Color(0, 0.75, 1, 1)
+shader_parameter/equatorial_grid_rotation_offset = 0.03
+shader_parameter/moon_matrix = Basis(0.9955214, -0.090874165, -0.026057746, 0.0018809289, 0.29462275, -0.95561177, 0.09451763, 0.95128304, 0.29347417)
+
+[sub_resource type="Sky" id="Sky_sky3d"]
+sky_material = SubResource("ShaderMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_tkp6j"]
+background_mode = 2
+sky = SubResource("Sky_sky3d")
+ambient_light_source = 3
+ambient_light_color = Color(0.6543907, 0.5094304, 0.43729335, 1)
+reflected_light_source = 2
+tonemap_mode = 3
+tonemap_white = 6.0
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_ikc3h"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_terreno"]
+material = ExtResource("2_pasto")
+size = Vector2(2400, 2400)
+
+[node name="RamalRoca" type="Node3D" unique_id=1078551956 node_paths=PackedStringArray("camara", "formacion_principal", "traza")]
+script = ExtResource("1_base")
+camara = NodePath("Camaras/CamaraLibre")
+formacion_principal = NodePath("Formaciones/TrenCSR")
+traza = NodePath("Infraestructura/Traza")
+
+[node name="Entorno" type="Node3D" parent="." unique_id=1779256999]
+
+[node name="Sky3D" type="WorldEnvironment" parent="Entorno" unique_id=1591821311]
+environment = SubResource("Environment_tkp6j")
+camera_attributes = SubResource("CameraAttributesPractical_ikc3h")
+script = ExtResource("16_2ihef")
+editor_time_enabled = false
+game_time_enabled = false
+current_time = 16.28
+wind_direction = 2.35619451204804
+metadata/_custom_type_script = "uid://deo0gxkmk2ahd"
+
+[node name="SunLight" type="DirectionalLight3D" parent="Entorno/Sky3D" unique_id=1828555900]
+transform = Transform3D(0.48922414, 0.2253264, -0.8425484, 0, 0.96605, 0.258355, 0.8721581, -0.1263935, 0.472615, -0.8425484, 0.258355, 0.472615)
+light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
+shadow_enabled = true
+directional_shadow_max_distance = 350.0
+
+[node name="MoonLight" type="DirectionalLight3D" parent="Entorno/Sky3D" unique_id=1734801737]
+transform = Transform3D(0, -0.9955232, 0.094517626, 0.2947939, 0.090317346, 0.951283, -0.95556086, 0.02786322, 0.29347417, 0.094517626, 0.951283, 0.29347417)
+light_color = Color(0.572549, 0.776471, 0.956863, 1)
+light_energy = 0.0
+directional_shadow_max_distance = 450.0
+directional_shadow_pancake_size = 50.0
+
+[node name="SkyDome" type="Node" parent="Entorno/Sky3D" unique_id=1079216220]
+script = ExtResource("17_ce0nq")
+sun_azimuth = -4.201189
+sun_altitude = -1.3094773
+moon_azimuth = -2.830018
+moon_altitude = -0.31342554
+wind_direction = 2.35619451204804
+
+[node name="TimeOfDay" type="Node" parent="Entorno/Sky3D" unique_id=2071910052]
+script = ExtResource("18_rboct")
+editor_time_enabled = false
+game_time_enabled = false
+dome_path = NodePath("../SkyDome")
+current_time = 16.28
+day = 5
+
+[node name="Terreno" type="MeshInstance3D" parent="." unique_id=619004984]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.69, 0)
+mesh = SubResource("PlaneMesh_terreno")
+
+[node name="Infraestructura" type="Node3D" parent="." unique_id=846129754]
+
+[node name="Traza" type="Path3D" parent="Infraestructura" unique_id=2080398040]
+curve = ExtResource("3_traza")
+
+[node name="Via" type="Node3D" parent="Infraestructura/Traza" unique_id=218517227 node_paths=PackedStringArray("traza")]
+script = ExtResource("4_via")
+traza = NodePath("..")
+separacion_durmientes = 1.145
+paso_muestreo = 1.5
+mat_riel = ExtResource("15_061dl")
+mat_balasto = ExtResource("16_hail4")
+mat_durmiente = ExtResource("17_1jyws")
+
+[node name="Catenaria" type="Node3D" parent="Infraestructura/Traza" unique_id=1175314373 node_paths=PackedStringArray("traza")]
+script = ExtResource("5_cat")
+traza = NodePath("..")
+
+[node name="Estaciones" type="Node3D" parent="Infraestructura" unique_id=580654129]
+
+[node name="EstacionBosques" parent="Infraestructura/Estaciones" unique_id=1784294504 node_paths=PackedStringArray("traza") instance=ExtResource("6_est")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.400251, 0, -260)
+traza = NodePath("../../Traza")
+progreso_en_via = 369.40000000000003
+desfasaje_parada_ida = 100.0
+desfasaje_parada_vuelta = -100.0
+nombre_estacion = "Bosques"
+es_terminal = true
+
+[node name="EstacionConstitucion" parent="Infraestructura/Estaciones" unique_id=1196130512 node_paths=PackedStringArray("traza") instance=ExtResource("6_est")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 72.02007, 0, 260)
+traza = NodePath("../../Traza")
+progreso_en_via = 1794.8000000000002
+desfasaje_parada_ida = 80.0
+desfasaje_parada_vuelta = -80.0
+nombre_estacion = "Constitución"
+
+[node name="Formaciones" type="Node3D" parent="." unique_id=421076639]
+
+[node name="TrenCSR" parent="Formaciones" unique_id=1340873556 node_paths=PackedStringArray("traza") instance=ExtResource("7_tren")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -209.3, 0, -260)
+traza = NodePath("../../Infraestructura/Traza")
+avance_inicial = 140.70000000000002
+cantidad_coches = 5
+paradas = PackedFloat32Array(369.4, 1794.8)
+escena_coche_motriz = ExtResource("18_mb6u5")
+escena_coche_remolcado = ExtResource("19_stcbo")
+
+[node name="TrenCSR2" parent="Formaciones" unique_id=129805321 node_paths=PackedStringArray("traza") instance=ExtResource("7_tren")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 330.50027, 0, -260)
+traza = NodePath("../../Infraestructura/Traza")
+avance_inicial = 680.5
+paradas = PackedFloat32Array(369.4, 1794.8)
+escena_coche_motriz = ExtResource("18_mb6u5")
+escena_coche_remolcado = ExtResource("19_stcbo")
+
+[node name="Camaras" type="Node3D" parent="." unique_id=2046339755]
+
+[node name="CamaraLibre" parent="Camaras" unique_id=1076305827 node_paths=PackedStringArray("formacion") instance=ExtResource("8_cam")]
+transform = Transform3D(-0.9615, 0, -0.2747, -0.0908, 0.9438, 0.3179, 0.2593, 0.3306, -0.9075, -250, 55, -400)
+formacion = NodePath("../../Formaciones/TrenCSR")

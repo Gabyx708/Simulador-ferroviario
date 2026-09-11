@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://6lpu62cb11gh"]
+
+[ext_resource type="Script" uid="uid://dlctp88rpehko" path="res://scenes/train/tren_csr.gd" id="1_csr"]
+[ext_resource type="PackedScene" uid="uid://8dy14wqqo0eo" path="res://assets/models/train/csr_roca_coche_motriz.tscn" id="2_x2vqh"]
+[ext_resource type="PackedScene" uid="uid://besy44a1kb1rf" path="res://assets/models/train/csr_roca_coche_remolcado.tscn" id="3_1s1l8"]
+
+[node name="TrenCSR" type="Node3D" unique_id=639139762]
+script = ExtResource("1_csr")
+paradas = PackedFloat32Array()
+escena_coche_motriz = ExtResource("2_x2vqh")
+escena_coche_remolcado = ExtResource("3_1s1l8")

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://u155rdkrryx3"]
+
+[resource]
+resource_name = "Enganches.002"
+albedo_color = Color(0.5017734, 0.52232945, 0.5457181, 1)
+metallic = 0.6
+roughness = 0.5

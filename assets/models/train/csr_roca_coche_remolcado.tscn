@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://besy44a1kb1rf"]
+
+[ext_resource type="PackedScene" uid="uid://ch3056n8l7qtf" path="res://assets/models/train/csr_roca_coche_remolcado.glb" id="1_lruky"]
+
+[node name="csr_roca_coche_remolcado" unique_id=358324273 instance=ExtResource("1_lruky")]

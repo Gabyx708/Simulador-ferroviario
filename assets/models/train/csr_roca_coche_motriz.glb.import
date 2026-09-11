@@ -1,0 +1,163 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://cqxvxsq3680pj"
+path="res://.godot/imported/csr_roca_coche_motriz.glb-9e3f5789ab0b0f2086d91fd5f0bf4e6e.scn"
+
+[deps]
+
+source_file="res://assets/models/train/csr_roca_coche_motriz.glb"
+dest_files=["res://.godot/imported/csr_roca_coche_motriz.glb-9e3f5789ab0b0f2086d91fd5f0bf4e6e.scn"]
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=true
+meshes/create_shadow_meshes=true
+meshes/light_baking=1
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=true
+animation/fps=30
+animation/trimming=false
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"materials": {
+"Bastidor.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Bastidor.002.tres",
+"use_external/path": "uid://vk3il0gokdrn"
+},
+"Bogie_0_bastidor.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Bogie_0_bastidor.002.tres",
+"use_external/path": "uid://ca71emeqxfc2p"
+},
+"Bogie_1_bastidor.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Bogie_1_bastidor.002.tres",
+"use_external/path": "uid://7uw1d6bbqcpp"
+},
+"Carroceria.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Carroceria.002.tres",
+"use_external/path": "uid://dywhwl80jw0vn"
+},
+"Eje_0.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Eje_0.002.tres",
+"use_external/path": "uid://cyjjaqckg2p7w"
+},
+"Eje_1.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Eje_1.002.tres",
+"use_external/path": "uid://dya503w5qee6g"
+},
+"Eje_2.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Eje_2.002.tres",
+"use_external/path": "uid://b47cxucpwh5qe"
+},
+"Eje_3.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Eje_3.002.tres",
+"use_external/path": "uid://dpk535d37hava"
+},
+"Enganches.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Enganches.002.tres",
+"use_external/path": "uid://u155rdkrryx3"
+},
+"Equipos_techo.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Equipos_techo.002.tres",
+"use_external/path": "uid://uhu67jduairv"
+},
+"Faro.001": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Faro.001.tres",
+"use_external/path": "uid://c73woidxnbu2p"
+},
+"Faro_bajo.001": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Faro_bajo.001.tres",
+"use_external/path": "uid://b4ss2jjbr56o6"
+},
+"Franja_celeste.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Franja_celeste.002.tres",
+"use_external/path": "uid://c66e6mt8a2rqk"
+},
+"Interior_asientos.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Interior_asientos.002.tres",
+"use_external/path": "uid://j2s40rmd3gwo"
+},
+"Interior_barras.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Interior_barras.002.tres",
+"use_external/path": "uid://ew8b6wi0akay"
+},
+"Interior_cielorraso.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Interior_cielorraso.002.tres",
+"use_external/path": "uid://dfrdmfosxf3qt"
+},
+"Interior_estructura.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Interior_estructura.002.tres",
+"use_external/path": "uid://bvhyys65wfcg8"
+},
+"Interior_piso.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Interior_piso.002.tres",
+"use_external/path": "uid://bvykk1orgexau"
+},
+"Pantografo.001": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Pantografo.001.tres",
+"use_external/path": "uid://dk3spdeu1328t"
+},
+"Puertas.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Puertas.002.tres",
+"use_external/path": "uid://clskruuy463e1"
+},
+"Techo.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Techo.002.tres",
+"use_external/path": "uid://b5ubedo3xl2sk"
+},
+"Vidrios.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Vidrios.002.tres",
+"use_external/path": "uid://tvew74ify4yd"
+},
+"Zocalo_azul.002": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://assets/models/train/motriz/Zocalo_azul.002.tres",
+"use_external/path": "uid://dj336rlkj5sxa"
+}
+}
+}
+gltf/naming_version=1
+gltf/embedded_image_handling=1
+gltf/texture_map_mode=0
