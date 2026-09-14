@@ -36,3 +36,21 @@ func _ready() -> void:
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
 	if velocimetro != null and velocimetro.tren == null and formacion_principal is Tren:
 		velocimetro.tren = formacion_principal
+
+	# Selección de tren por clic: con más de una formación en la escena, el
+	# HUD y el seguimiento de cámara pueden apuntar a un tren distinto del
+	# principal si el usuario hace clic sobre él.
+	get_viewport().physics_object_picking = true
+	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
+		if nodo is Tren and not nodo.seleccionado.is_connected(_on_tren_seleccionado):
+			nodo.seleccionado.connect(_on_tren_seleccionado.bind(nodo))
+
+
+## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
+func _on_tren_seleccionado(tren: Tren) -> void:
+	if camara != null and "formacion" in camara:
+		camara.set("formacion", tren)
+
+	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
+	if velocimetro != null:
+		velocimetro.tren = tren

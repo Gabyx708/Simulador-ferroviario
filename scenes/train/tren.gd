@@ -17,6 +17,7 @@ class_name Tren
 signal velocidad_cambiada(kmh: float)
 signal parada_alcanzada(indice_parada: int)
 signal marcha_reanudada()
+signal seleccionado() ## Emitida al hacer clic izquierdo sobre algún coche de la formación.
 
 @export_group("Previsualización en Editor")
 ## Si está activo, el tren se desplaza y simula su marcha dentro del visor del editor 3D.
@@ -416,12 +417,39 @@ func _instanciar_formacion() -> void:
 		# No asignamos owner para evitar inflar el .tscn con mallas estáticas
 		add_child(cuerpo)
 		_cuerpos.append(cuerpo)
+		_agregar_selector_clic(cuerpo)
 
 		var ejes: Array[Node3D] = []
 		for hijo: Node in cuerpo.get_children():
 			if hijo is Node3D and hijo.name.begins_with("Eje_"):
 				ejes.append(hijo)
 		_ruedas.append(ejes)
+
+
+## Agrega un volumen invisible "pickeable" a un coche para poder seleccionar
+## la formación completa con un clic en el viewport (ver señal `seleccionado`).
+## No participa de la física real: solo habilita el picking del mouse.
+func _agregar_selector_clic(cuerpo: Node3D) -> void:
+	var selector := Area3D.new()
+	selector.name = "SelectorClic"
+	selector.input_ray_pickable = true
+	selector.monitoring = false
+	selector.monitorable = false
+	selector.input_event.connect(_on_selector_input_event)
+
+	var forma := CollisionShape3D.new()
+	var caja := BoxShape3D.new()
+	caja.size = Vector3(3.2, 4.2, paso * 0.9)
+	forma.shape = caja
+	forma.position = Vector3(0.0, 2.1, 0.0)
+	selector.add_child(forma)
+
+	cuerpo.add_child(selector)
+
+
+func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, _normal: Vector3, _shape_idx: int) -> void:
+	if evento is InputEventMouseButton and evento.pressed and evento.button_index == MOUSE_BUTTON_LEFT:
+		seleccionado.emit()
 
 
 func _process(delta: float) -> void:
