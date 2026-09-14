@@ -31,3 +31,8 @@ func _ready() -> void:
 
 	if formacion_principal != null and "traza" in formacion_principal and formacion_principal.get("traza") == null:
 		formacion_principal.set("traza", traza)
+
+	# Autoconexión del HUD (velocímetro) con la formación principal
+	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
+	if velocimetro != null and velocimetro.tren == null and formacion_principal is Tren:
+		velocimetro.tren = formacion_principal
