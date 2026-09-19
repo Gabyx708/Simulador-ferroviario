@@ -26,6 +26,9 @@ size = Vector3(200, 0.5, 4)
 material = ExtResource("2_cha")
 size = Vector3(200, 0.1, 4.5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_seleccion"]
+size = Vector3(200, 8, 10)
+
 [node name="Estacion" type="Node3D" unique_id=1882755475]
 script = ExtResource("1_est")
 desfasaje_parada_ida = 99.5
@@ -96,3 +99,12 @@ color_cartel = Color(0.15, 0.6, 0.9, 1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.2, 0, 2)
 texto_cartel = "PARADA VUELTA"
 color_cartel = Color(0.95, 0.4, 0.1, 1)
+
+[node name="AreaSeleccion" type="Area3D" parent="."]
+input_ray_pickable = true
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AreaSeleccion"]
+position = Vector3(0, 4, 0)
+shape = SubResource("BoxShape3D_seleccion")

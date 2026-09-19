@@ -115,6 +115,13 @@ signal marcha_reanudada()
 @export var desaceleracion: float = 1.0        ## m/s²
 @export var tiempo_parada: float = 20.0        ## segundos en estación
 
+@export_group("Pasajeros")
+## Capacidad total de pasajeros de la formación.
+@export_range(0, 100000, 1) var capacidad_pasajeros: int = 500
+
+## Pasajeros actualmente dentro de la formación.
+var pasajeros_actuales: int = 0
+
 @export_group("Detección de Paradas")
 ## Detecta automáticamente las estaciones en la escena y calcula su progreso métrico en la traza.
 @export var autodetectar_estaciones: bool = true:
