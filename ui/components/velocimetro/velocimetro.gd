@@ -29,12 +29,14 @@ const COLOR_SIN_TREN: Color = Color(0.5, 0.52, 0.58)
 @onready var _etiqueta_valor: Label = %ValorVelocidad
 @onready var _etiqueta_estado: Label = %Estado
 @onready var _etiqueta_proxima: Label = %ProximaEstacion
+@onready var _boton_eliminar: Button = %BotonEliminar
 
 var _valor_mostrado: float = 0.0
 var _tween: Tween
 
 
 func _ready() -> void:
+	_boton_eliminar.pressed.connect(_on_boton_eliminar_pressed)
 	_conectar_tren()
 
 
@@ -54,6 +56,8 @@ func _desconectar_tren() -> void:
 		tren.parada_alcanzada.disconnect(_on_parada_alcanzada)
 	if tren.marcha_reanudada.is_connected(_on_marcha_reanudada):
 		tren.marcha_reanudada.disconnect(_on_marcha_reanudada)
+	if tren.eliminado.is_connected(_on_tren_eliminado):
+		tren.eliminado.disconnect(_on_tren_eliminado)
 
 
 func _conectar_tren() -> void:
@@ -63,6 +67,8 @@ func _conectar_tren() -> void:
 		_etiqueta_proxima.text = ""
 		_marcar_estado("SIN TREN", COLOR_SIN_TREN)
 		_actualizar_velocidad(0.0, true)
+		if _boton_eliminar != null:
+			_boton_eliminar.visible = false
 		return
 
 	if not tren.velocidad_cambiada.is_connected(_on_velocidad_cambiada):
@@ -71,6 +77,8 @@ func _conectar_tren() -> void:
 		tren.parada_alcanzada.connect(_on_parada_alcanzada)
 	if not tren.marcha_reanudada.is_connected(_on_marcha_reanudada):
 		tren.marcha_reanudada.connect(_on_marcha_reanudada)
+	if not tren.eliminado.is_connected(_on_tren_eliminado):
+		tren.eliminado.connect(_on_tren_eliminado)
 
 	_etiqueta_identificador.text = tren.name
 	_etiqueta_sentido.text = "◀" if tren.invertir_sentido else "▶"
@@ -80,6 +88,19 @@ func _conectar_tren() -> void:
 		_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
 	_actualizar_velocidad(tren.velocidad_actual(), true)
 	_actualizar_proxima_estacion()
+	if _boton_eliminar != null:
+		_boton_eliminar.visible = true
+
+
+## El tren que se estaba mostrando se eliminó: soltar la referencia para
+## no quedar mostrando datos de algo que ya no existe.
+func _on_tren_eliminado() -> void:
+	soltar_tren()
+
+
+func _on_boton_eliminar_pressed() -> void:
+	if tren != null and is_instance_valid(tren):
+		tren.eliminar()
 
 
 func _on_velocidad_cambiada(kmh: float) -> void:

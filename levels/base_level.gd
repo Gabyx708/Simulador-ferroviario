@@ -42,8 +42,11 @@ func _ready() -> void:
 	# principal si el usuario hace clic sobre él.
 	get_viewport().physics_object_picking = true
 	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
-		if nodo is Tren and not nodo.seleccionado.is_connected(_on_tren_seleccionado):
-			nodo.seleccionado.connect(_on_tren_seleccionado.bind(nodo))
+		if nodo is Tren:
+			if not nodo.seleccionado.is_connected(_on_tren_seleccionado):
+				nodo.seleccionado.connect(_on_tren_seleccionado.bind(nodo))
+			if not nodo.eliminado.is_connected(_on_tren_eliminado):
+				nodo.eliminado.connect(_on_tren_eliminado.bind(nodo))
 
 
 ## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
@@ -54,3 +57,10 @@ func _on_tren_seleccionado(tren: Tren) -> void:
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
 	if velocimetro != null:
 		velocimetro.tren = tren
+
+
+## Si la cámara estaba siguiendo al tren eliminado, la suelta (pasa a modo
+## libre). El HUD se suelta solo: escucha esta misma señal directamente.
+func _on_tren_eliminado(tren: Tren) -> void:
+	if camara != null and "formacion" in camara and camara.get("formacion") == tren:
+		camara.set("formacion", null)

@@ -18,6 +18,7 @@ signal velocidad_cambiada(kmh: float)
 signal parada_alcanzada(indice_parada: int)
 signal marcha_reanudada()
 signal seleccionado() ## Emitida al hacer clic izquierdo sobre algún coche de la formación.
+signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD suelten la referencia.
 
 @export_group("Previsualización en Editor")
 ## Si está activo, el tren se desplaza y simula su marcha dentro del visor del editor 3D.
@@ -167,8 +168,19 @@ signal seleccionado() ## Emitida al hacer clic izquierdo sobre algún coche de l
 		if is_inside_tree():
 			_reconstruir()
 
+@export_group("Eliminación")
+## Pulsador de prueba: elimina el tren en runtime. Provisorio hasta que exista
+## el sistema de eventos adversos, que va a llamar a `eliminar()` directamente.
+@export var eliminar_ahora: bool = false:
+	set(v):
+		eliminar_ahora = false
+		if is_inside_tree() and not Engine.is_editor_hint():
+			eliminar()
+
 var _cuerpos: Array[Node3D] = []
 var _ruedas: Array[Array] = []
+
+var _eliminado: bool = false
 
 var _avance: float = 0.0
 var _vel: float = 0.0
@@ -453,6 +465,9 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 
 
 func _process(delta: float) -> void:
+	if _eliminado:
+		return
+
 	if Engine.is_editor_hint():
 		if alinear_a_via and _pendiente_snap and not animar_en_editor:
 			var clic_izq: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -689,3 +704,21 @@ func distancia_a_proxima_estacion() -> float:
 	var diff: float = (objetivo_avance - _avance) * direccion
 	var dist_con_signo: float = fposmod(diff + largo * 0.5, largo) - largo * 0.5
 	return maxf(0.0, dist_con_signo)
+
+
+## True si a este tren ya se le llamó `eliminar()` (dejó de simular y está
+## a la espera de que Godot lo libere de la escena).
+func esta_eliminado() -> bool:
+	return _eliminado
+
+
+## Saca al tren de servicio: deja de moverse y procesar pasajeros, avisa por
+## señal a quien lo estuviera siguiendo (cámara, HUD) para que suelte la
+## referencia con gracia, y recién ahí se destruye. Es seguro llamarlo más
+## de una vez.
+func eliminar() -> void:
+	if _eliminado:
+		return
+	_eliminado = true
+	eliminado.emit()
+	queue_free()

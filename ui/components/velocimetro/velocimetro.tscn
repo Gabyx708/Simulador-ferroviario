@@ -12,14 +12,14 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="Velocimetro" type="PanelContainer"]
-custom_minimum_size = Vector2(170, 168)
+custom_minimum_size = Vector2(170, 198)
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -190.0
-offset_top = -188.0
+offset_top = -218.0
 offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 0
@@ -91,3 +91,11 @@ autowrap_mode = 2
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = ""
+
+[node name="BotonEliminar" type="Button" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.32, 0.32, 1)
+theme_override_font_sizes/font_size = 11
+text = "✕ Eliminar tren"
