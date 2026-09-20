@@ -31,3 +31,36 @@ func _ready() -> void:
 
 	if formacion_principal != null and "traza" in formacion_principal and formacion_principal.get("traza") == null:
 		formacion_principal.set("traza", traza)
+
+	# Autoconexión del HUD (velocímetro) con la formación principal
+	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
+	if velocimetro != null and velocimetro.tren == null and formacion_principal is Tren:
+		velocimetro.tren = formacion_principal
+
+	# Selección de tren por clic: con más de una formación en la escena, el
+	# HUD y el seguimiento de cámara pueden apuntar a un tren distinto del
+	# principal si el usuario hace clic sobre él.
+	get_viewport().physics_object_picking = true
+	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
+		if nodo is Tren:
+			if not nodo.seleccionado.is_connected(_on_tren_seleccionado):
+				nodo.seleccionado.connect(_on_tren_seleccionado.bind(nodo))
+			if not nodo.eliminado.is_connected(_on_tren_eliminado):
+				nodo.eliminado.connect(_on_tren_eliminado.bind(nodo))
+
+
+## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
+func _on_tren_seleccionado(tren: Tren) -> void:
+	if camara != null and "formacion" in camara:
+		camara.set("formacion", tren)
+
+	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
+	if velocimetro != null:
+		velocimetro.tren = tren
+
+
+## Si la cámara estaba siguiendo al tren eliminado, la suelta (pasa a modo
+## libre). El HUD se suelta solo: escucha esta misma señal directamente.
+func _on_tren_eliminado(tren: Tren) -> void:
+	if camara != null and "formacion" in camara and camara.get("formacion") == tren:
+		camara.set("formacion", null)
