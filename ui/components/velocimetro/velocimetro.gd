@@ -66,7 +66,10 @@ func _conectar_tren() -> void:
 		_etiqueta_sentido.text = ""
 		_etiqueta_proxima.text = ""
 		_marcar_estado("SIN TREN", COLOR_SIN_TREN)
-		_actualizar_velocidad(0.0, true)
+		if _tween != null and _tween.is_valid():
+			_tween.kill()
+		_valor_mostrado = 0.0
+		_etiqueta_valor.text = "—"
 		if _boton_eliminar != null:
 			_boton_eliminar.visible = false
 		return
