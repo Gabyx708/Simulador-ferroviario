@@ -654,3 +654,8 @@ func _ubicar(recorrido: float) -> void:
 ## Velocidad instantánea en km/h
 func velocidad_actual() -> float:
 	return _vel * 3.6
+
+
+## True si el tren está detenido en una estación (o frenando para hacerlo).
+func esta_detenido() -> bool:
+	return _detenido or _frenando_estacion

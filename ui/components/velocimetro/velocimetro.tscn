@@ -2,41 +2,82 @@
 
 [ext_resource type="Script" path="res://ui/components/velocimetro/velocimetro.gd" id="1_veloc"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
+border_width_left = 3
+border_color = Color(1, 0.756863, 0.278431, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [node name="Velocimetro" type="PanelContainer"]
-custom_minimum_size = Vector2(140, 76)
+custom_minimum_size = Vector2(170, 148)
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -96.0
+offset_left = -190.0
+offset_top = -168.0
 offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_veloc")
 
 [node name="Margen" type="MarginContainer" parent="."]
 layout_mode = 2
 theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 8
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 10
 
 [node name="Contenido" type="VBoxContainer" parent="Margen"]
 layout_mode = 2
-alignment = 1
+theme_override_constants/separation = 4
+
+[node name="FilaSuperior" type="HBoxContainer" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="Identificador" type="Label" parent="Margen/Contenido/FilaSuperior"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "—"
+
+[node name="Sentido" type="Label" parent="Margen/Contenido/FilaSuperior"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.756863, 0.278431, 1)
+text = "▶"
 
 [node name="ValorVelocidad" type="Label" parent="Margen/Contenido"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 40
 text = "0"
 
 [node name="UnidadVelocidad" type="Label" parent="Margen/Contenido"]
 layout_mode = 2
+size_flags_horizontal = 3
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "km/h"
+
+[node name="Estado" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
+text = "EN MARCHA"
