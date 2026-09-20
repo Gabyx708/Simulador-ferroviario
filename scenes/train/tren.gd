@@ -659,3 +659,33 @@ func velocidad_actual() -> float:
 ## True si el tren está detenido en una estación (o frenando para hacerlo).
 func esta_detenido() -> bool:
 	return _detenido or _frenando_estacion
+
+
+## Nombre de la próxima parada a la que se dirige el tren, o cadena vacía
+## si no hay paradas configuradas.
+func proxima_estacion_nombre() -> String:
+	if _idx_parada >= _datos_paradas.size():
+		return ""
+	return String(_datos_paradas[_idx_parada].get("nombre", ""))
+
+
+## Distancia en metros que falta recorrer hasta la próxima parada, siguiendo
+## la vía en el sentido de circulación actual. Usa el mismo cálculo que el
+## frenado real, así que coincide con el punto donde el tren se va a detener.
+## Devuelve -1.0 si no hay traza o paradas configuradas.
+func distancia_a_proxima_estacion() -> float:
+	if traza == null or not is_instance_valid(traza) or traza.curve == null:
+		return -1.0
+	if _idx_parada >= _datos_paradas.size():
+		return -1.0
+
+	var largo: float = traza.curve.get_baked_length()
+	if largo <= 0.0:
+		return -1.0
+
+	var direccion: float = -1.0 if invertir_sentido else 1.0
+	var info_parada: Dictionary = _datos_paradas[_idx_parada]
+	var objetivo_avance: float = _calcular_avance_objetivo(info_parada, direccion)
+	var diff: float = (objetivo_avance - _avance) * direccion
+	var dist_con_signo: float = fposmod(diff + largo * 0.5, largo) - largo * 0.5
+	return maxf(0.0, dist_con_signo)

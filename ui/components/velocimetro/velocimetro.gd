@@ -28,6 +28,7 @@ const COLOR_SIN_TREN: Color = Color(0.5, 0.52, 0.58)
 @onready var _etiqueta_sentido: Label = %Sentido
 @onready var _etiqueta_valor: Label = %ValorVelocidad
 @onready var _etiqueta_estado: Label = %Estado
+@onready var _etiqueta_proxima: Label = %ProximaEstacion
 
 var _valor_mostrado: float = 0.0
 var _tween: Tween
@@ -59,6 +60,7 @@ func _conectar_tren() -> void:
 	if tren == null or not is_instance_valid(tren):
 		_etiqueta_identificador.text = "—"
 		_etiqueta_sentido.text = ""
+		_etiqueta_proxima.text = ""
 		_marcar_estado("SIN TREN", COLOR_SIN_TREN)
 		_actualizar_velocidad(0.0, true)
 		return
@@ -77,19 +79,44 @@ func _conectar_tren() -> void:
 	else:
 		_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
 	_actualizar_velocidad(tren.velocidad_actual(), true)
+	_actualizar_proxima_estacion()
 
 
 func _on_velocidad_cambiada(kmh: float) -> void:
 	_actualizar_velocidad(kmh, false)
 	_etiqueta_sentido.text = "◀" if tren.invertir_sentido else "▶"
+	_actualizar_proxima_estacion()
 
 
 func _on_parada_alcanzada(_indice_parada: int) -> void:
 	_marcar_estado("EN ESTACIÓN", COLOR_EN_ESTACION)
+	_actualizar_proxima_estacion()
 
 
 func _on_marcha_reanudada() -> void:
 	_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
+	_actualizar_proxima_estacion()
+
+
+## Muestra el nombre de la próxima parada y cuánto falta para llegar.
+func _actualizar_proxima_estacion() -> void:
+	if tren == null or not is_instance_valid(tren):
+		_etiqueta_proxima.text = ""
+		return
+
+	var nombre: String = tren.proxima_estacion_nombre()
+	var distancia: float = tren.distancia_a_proxima_estacion()
+	if nombre.is_empty() or distancia < 0.0:
+		_etiqueta_proxima.text = ""
+		return
+
+	var texto_distancia: String
+	if distancia >= 1000.0:
+		texto_distancia = "%.1f km" % (distancia / 1000.0)
+	else:
+		texto_distancia = "%d m" % roundi(distancia)
+
+	_etiqueta_proxima.text = "→ %s · %s" % [nombre, texto_distancia]
 
 
 func _marcar_estado(texto: String, color: Color) -> void:
