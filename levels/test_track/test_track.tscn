@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scenes/tracks/postes_catenaria.gd" id="5_cat"]
 [ext_resource type="PackedScene" path="res://scenes/train/tren_csr.tscn" id="6_tren"]
 [ext_resource type="PackedScene" path="res://scenes/camera/camara_libre.tscn" id="7_cam"]
+[ext_resource type="PackedScene" path="res://ui/screens/hud.tscn" id="8_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.38, 0.52, 0.75, 1)
@@ -72,3 +73,5 @@ avance_inicial = 20.0
 [node name="CamaraLibre" parent="Camaras" node_paths=PackedStringArray("formacion") instance=ExtResource("7_cam")]
 transform = Transform3D(0.707107, -0.241845, 0.664463, 0, 0.939693, 0.34202, -0.707107, -0.241845, 0.664463, 50, 20, 50)
 formacion = NodePath("../../Formaciones/TrenCSR")
+
+[node name="HUD" parent="." instance=ExtResource("8_hud")]

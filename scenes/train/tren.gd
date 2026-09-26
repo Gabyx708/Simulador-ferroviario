@@ -17,6 +17,8 @@ class_name Tren
 signal velocidad_cambiada(kmh: float)
 signal parada_alcanzada(indice_parada: int)
 signal marcha_reanudada()
+signal seleccionado() ## Emitida al hacer clic izquierdo sobre algún coche de la formación.
+signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD suelten la referencia.
 
 @export_group("Previsualización en Editor")
 ## Si está activo, el tren se desplaza y simula su marcha dentro del visor del editor 3D.
@@ -166,8 +168,19 @@ signal marcha_reanudada()
 		if is_inside_tree():
 			_reconstruir()
 
+@export_group("Eliminación")
+## Pulsador de prueba: elimina el tren en runtime. Provisorio hasta que exista
+## el sistema de eventos adversos, que va a llamar a `eliminar()` directamente.
+@export var eliminar_ahora: bool = false:
+	set(v):
+		eliminar_ahora = false
+		if is_inside_tree() and not Engine.is_editor_hint():
+			eliminar()
+
 var _cuerpos: Array[Node3D] = []
 var _ruedas: Array[Array] = []
+
+var _eliminado: bool = false
 
 var _avance: float = 0.0
 var _vel: float = 0.0
@@ -416,6 +429,7 @@ func _instanciar_formacion() -> void:
 		# No asignamos owner para evitar inflar el .tscn con mallas estáticas
 		add_child(cuerpo)
 		_cuerpos.append(cuerpo)
+		_agregar_selector_clic(cuerpo)
 
 		var ejes: Array[Node3D] = []
 		for hijo: Node in cuerpo.get_children():
@@ -424,7 +438,36 @@ func _instanciar_formacion() -> void:
 		_ruedas.append(ejes)
 
 
+## Agrega un volumen invisible "pickeable" a un coche para poder seleccionar
+## la formación completa con un clic en el viewport (ver señal `seleccionado`).
+## No participa de la física real: solo habilita el picking del mouse.
+func _agregar_selector_clic(cuerpo: Node3D) -> void:
+	var selector := Area3D.new()
+	selector.name = "SelectorClic"
+	selector.input_ray_pickable = true
+	selector.monitoring = false
+	selector.monitorable = false
+	selector.input_event.connect(_on_selector_input_event)
+
+	var forma := CollisionShape3D.new()
+	var caja := BoxShape3D.new()
+	caja.size = Vector3(3.2, 4.2, paso * 0.9)
+	forma.shape = caja
+	forma.position = Vector3(0.0, 2.1, 0.0)
+	selector.add_child(forma)
+
+	cuerpo.add_child(selector)
+
+
+func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, _normal: Vector3, _shape_idx: int) -> void:
+	if evento is InputEventMouseButton and evento.pressed and evento.button_index == MOUSE_BUTTON_LEFT:
+		seleccionado.emit()
+
+
 func _process(delta: float) -> void:
+	if _eliminado:
+		return
+
 	if Engine.is_editor_hint():
 		if alinear_a_via and _pendiente_snap and not animar_en_editor:
 			var clic_izq: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -626,3 +669,56 @@ func _ubicar(recorrido: float) -> void:
 ## Velocidad instantánea en km/h
 func velocidad_actual() -> float:
 	return _vel * 3.6
+
+
+## True si el tren está detenido en una estación (o frenando para hacerlo).
+func esta_detenido() -> bool:
+	return _detenido or _frenando_estacion
+
+
+## Nombre de la próxima parada a la que se dirige el tren, o cadena vacía
+## si no hay paradas configuradas.
+func proxima_estacion_nombre() -> String:
+	if _idx_parada >= _datos_paradas.size():
+		return ""
+	return String(_datos_paradas[_idx_parada].get("nombre", ""))
+
+
+## Distancia en metros que falta recorrer hasta la próxima parada, siguiendo
+## la vía en el sentido de circulación actual. Usa el mismo cálculo que el
+## frenado real, así que coincide con el punto donde el tren se va a detener.
+## Devuelve -1.0 si no hay traza o paradas configuradas.
+func distancia_a_proxima_estacion() -> float:
+	if traza == null or not is_instance_valid(traza) or traza.curve == null:
+		return -1.0
+	if _idx_parada >= _datos_paradas.size():
+		return -1.0
+
+	var largo: float = traza.curve.get_baked_length()
+	if largo <= 0.0:
+		return -1.0
+
+	var direccion: float = -1.0 if invertir_sentido else 1.0
+	var info_parada: Dictionary = _datos_paradas[_idx_parada]
+	var objetivo_avance: float = _calcular_avance_objetivo(info_parada, direccion)
+	var diff: float = (objetivo_avance - _avance) * direccion
+	var dist_con_signo: float = fposmod(diff + largo * 0.5, largo) - largo * 0.5
+	return maxf(0.0, dist_con_signo)
+
+
+## True si a este tren ya se le llamó `eliminar()` (dejó de simular y está
+## a la espera de que Godot lo libere de la escena).
+func esta_eliminado() -> bool:
+	return _eliminado
+
+
+## Saca al tren de servicio: deja de moverse y procesar pasajeros, avisa por
+## señal a quien lo estuviera siguiendo (cámara, HUD) para que suelte la
+## referencia con gracia, y recién ahí se destruye. Es seguro llamarlo más
+## de una vez.
+func eliminar() -> void:
+	if _eliminado:
+		return
+	_eliminado = true
+	eliminado.emit()
+	queue_free()
