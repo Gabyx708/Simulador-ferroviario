@@ -117,6 +117,30 @@ signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD su
 @export var desaceleracion: float = 1.0        ## m/s²
 @export var tiempo_parada: float = 20.0        ## segundos en estación
 
+@export_group("Pasajeros")
+## Capacidad total de pasajeros de la formación.
+@export_range(0, 100000, 1) var capacidad_pasajeros: int = 500
+
+## Pasajeros actualmente dentro de la formación.
+var pasajeros_actuales: int = 0
+
+## Segundos entre cada pasajero individual al subir/bajar de a uno.
+@export var intervalo_pasajeros: float = 0.15
+
+## % de pasajeros a bordo que bajan en una parada intermedia yendo en el
+## sentido "directo" (`invertir_sentido = false`). Bajo a propósito: en la
+## línea real, casi todos los que van hacia la cabecera principal viajan
+## hasta el final, muy pocos bajan antes. Como el % se aplica parada tras
+## parada, el efecto se compone -- con este rango (2-4%), después de ~12
+## paradas llega vivo hasta el final ~70% de quien subió al principio.
+@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_directo_min: float = 0.02
+@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_directo_max: float = 0.04
+
+## Igual que arriba, pero en sentido "inverso" (`invertir_sentido = true`).
+## Alto a propósito: de vuelta la gente se reparte mucho más entre estaciones.
+@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_inverso_min: float = 0.15
+@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_inverso_max: float = 0.25
+
 @export_group("Detección de Paradas")
 ## Detecta automáticamente las estaciones en la escena y calcula su progreso métrico en la traza.
 @export var autodetectar_estaciones: bool = true:
@@ -181,6 +205,7 @@ var _cuerpos: Array[Node3D] = []
 var _ruedas: Array[Array] = []
 
 var _eliminado: bool = false
+var _procesando_pasajeros: bool = false
 
 var _avance: float = 0.0
 var _vel: float = 0.0
@@ -362,6 +387,7 @@ func _recalcular_paradas_dinamicas() -> void:
 				"nombre": nombre,
 				"tiempo_espera": tiempo,
 				"es_terminal": terminal,
+				"nodo": e,
 			})
 
 	paradas_nuevas.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["offset"]) < float(b["offset"]))
@@ -490,7 +516,7 @@ func _process(delta: float) -> void:
 
 	if _detenido:
 		_espera -= delta
-		if _espera <= 0.0:
+		if _espera <= 0.0 and not _procesando_pasajeros:
 			_detenido = false
 			marcha_reanudada.emit()
 			if _debe_invertir_en_salida:
@@ -566,6 +592,8 @@ func _process(delta: float) -> void:
 
 				_espera = maxf(tiempo_est, 1.0)
 				_debe_invertir_en_salida = es_term
+
+				_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
 
 				parada_alcanzada.emit(_idx_parada)
 				_ubicar(0.0)
@@ -722,3 +750,115 @@ func eliminar() -> void:
 	_eliminado = true
 	eliminado.emit()
 	queue_free()
+
+
+## Intervalo mínimo entre pasajeros, aunque haya muchísima gente para
+## procesar en poco tiempo (nunca "instantáneo", pero tampoco irreal).
+const INTERVALO_PASAJEROS_MINIMO: float = 0.02
+
+## Fracción del tiempo de parada que se le puede dedicar al intercambio de
+## pasajeros (deja un colchón antes de la salida real).
+const MARGEN_TIEMPO_PASAJEROS: float = 0.85
+
+
+## Orquesta el intercambio de pasajeros al llegar a una parada: primero
+## bajan (todos, si es terminal; un % sorteado según el sentido si no), y
+## recién cuando termina de bajar toda esa gente, sube lo que entre según
+## el lugar libre. El ritmo (`intervalo`) se ajusta solo según cuánta gente
+## hay y cuánto tiempo de parada real hay disponible -- en la vida real el
+## tren no espera a que baje el último, el tiempo de parada es fijo y el
+## flujo de gente tiene que entrar ahí. `_procesando_pasajeros` queda como
+## red de seguridad para el caso raro en que no alcance.
+## `estacion` se pasa como Node genérico a propósito: no depende de que la
+## clase Estacion esté disponible en esta rama, solo de que tenga los
+## métodos `embarcar_pasajeros`/`desembarcar_pasajeros` (acordado con el
+## equipo, ver Trello).
+func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direccion: float, tiempo_disponible: float) -> void:
+	if estacion == null or not is_instance_valid(estacion):
+		return
+
+	_procesando_pasajeros = true
+
+	var bajan: int = pasajeros_actuales if es_terminal_actual else _calcular_bajan(estacion, direccion)
+	var lugar_estimado: int = maxi(0, capacidad_pasajeros - (pasajeros_actuales - bajan))
+	var intervalo: float = _calcular_intervalo_pasajeros(bajan + lugar_estimado, tiempo_disponible)
+
+	if bajan > 0:
+		await bajar_pasajeros_escalonado(bajan, estacion, intervalo)
+
+	if _eliminado or not is_instance_valid(self):
+		return
+
+	var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
+	if lugar_disponible > 0:
+		await subir_pasajeros_escalonado(lugar_disponible, estacion, intervalo)
+
+	_procesando_pasajeros = false
+
+
+## Calcula el intervalo entre pasajeros para que todo el intercambio entre
+## cómodo dentro del tiempo de parada, en vez de estirarlo: con poca gente
+## se acerca al ritmo "ideal" (`intervalo_pasajeros`), con mucha gente se
+## acelera para no atrasar al tren.
+func _calcular_intervalo_pasajeros(total_personas: int, tiempo_disponible: float) -> float:
+	if total_personas <= 0:
+		return intervalo_pasajeros
+	var margen: float = maxf(0.0, tiempo_disponible) * MARGEN_TIEMPO_PASAJEROS
+	var intervalo_ajustado: float = margen / float(total_personas)
+	return clampf(intervalo_ajustado, INTERVALO_PASAJEROS_MINIMO, intervalo_pasajeros)
+
+
+## Sortea qué porcentaje de los pasajeros a bordo baja en una parada
+## intermedia (no terminal), según el sentido de circulación y un factor
+## propio de la estación (`factor_bajada`, ej. para nodos de combinación
+## con otras líneas como Lanús o Temperley). Duck-typed: si la estación no
+## tiene `factor_bajada`, usa 1.0 sin romper nada.
+func _calcular_bajan(estacion: Node, direccion: float) -> int:
+	var minimo: float = porcentaje_bajada_inverso_min if direccion < 0.0 else porcentaje_bajada_directo_min
+	var maximo: float = porcentaje_bajada_inverso_max if direccion < 0.0 else porcentaje_bajada_directo_max
+	var porcentaje: float = randf_range(minimo, maximo)
+	if "factor_bajada" in estacion:
+		porcentaje *= float(estacion.get("factor_bajada"))
+	porcentaje = clampf(porcentaje, 0.0, 1.0)
+	return roundi(pasajeros_actuales * porcentaje)
+
+
+## Baja `cantidad` pasajeros de a uno, separados por `intervalo` segundos,
+## avisándole a la estación en cada paso (su cartel se actualiza en vivo en
+## vez de saltar de golpe). Fire-and-forget: no hace falta esperarla.
+func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
+	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
+		return
+	if not estacion.has_method("desembarcar_pasajeros"):
+		return
+
+	var restante: int = mini(cantidad, pasajeros_actuales)
+	for _i: int in restante:
+		if _eliminado or not is_instance_valid(self):
+			return
+		pasajeros_actuales -= 1
+		estacion.call("desembarcar_pasajeros", 1)
+		if intervalo > 0.0:
+			await get_tree().create_timer(intervalo).timeout
+
+
+## Sube `cantidad` pasajeros de a uno (limitado por la capacidad libre de
+## la formación y por cuánta gente le entregue la estación), separados por
+## `intervalo` segundos. Fire-and-forget: no hace falta esperarla.
+func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
+	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
+		return
+	if not estacion.has_method("embarcar_pasajeros"):
+		return
+
+	var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
+	var restante: int = mini(cantidad, lugar_disponible)
+	for _i: int in restante:
+		if _eliminado or not is_instance_valid(self):
+			return
+		var suben: int = int(estacion.call("embarcar_pasajeros", 1))
+		if suben <= 0:
+			return
+		pasajeros_actuales += suben
+		if intervalo > 0.0:
+			await get_tree().create_timer(intervalo).timeout
