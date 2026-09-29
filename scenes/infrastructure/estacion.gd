@@ -14,6 +14,7 @@ signal transformada_cambiada(estacion: Estacion)
 signal pasajeros_actualizados(estacion: Estacion)
 
 const PACK_MODELOS_PASAJEROS: PackedScene = preload("res://assets/models/passengers/free_pack_-_lowpoly_people.glb")
+const ESCALA_ELEMENTOS_INFORMACION: float = 5.0
 const NOMBRES_VARIANTES_PASAJERO: Array[String] = [
 	"SM_People_Lowpoly_01",
 	"SM_People_Lowpoly_02",
@@ -150,12 +151,17 @@ static var _cache_bounds_mallas_pasajeros: Array[AABB] = []
 @export_range(0.0, 1000.0, 0.1) var tasa_generacion_pasajeros: float = 1.5
 ## Limite de figuras visibles por estacion; el contador conserva la cantidad real.
 @export_range(0, 150, 1) var maximo_pasajeros_visibles: int = 150
+## Segundos que los pasajeros desembarcados permanecen visibles antes de salir.
+@export_range(0.0, 60.0, 0.1) var tiempo_salida_pasajeros: float = 3.0
 
 var pasajeros_esperando: int = 0
+var pasajeros_saliendo: int = 0
 var pasajeros_totales_historicos: int = 0
 var pasajeros_subidos_total: int = 0
 var pasajeros_bajados_total: int = 0
 var _pasajeros_pendientes: float = 0.0
+var _reloj_pasajeros: float = 0.0
+var _salidas_pasajeros_pendientes: Array[Dictionary] = []
 var _mallas_pasajeros: Array[Mesh] = []
 var _transformaciones_mallas_pasajeros: Array[Transform3D] = []
 var _bounds_mallas_pasajeros: Array[AABB] = []
@@ -166,6 +172,7 @@ var _pendiente_snap: bool = false
 var _tiempo_ultimo_movimiento: int = 0
 var _poste_ida: Node3D
 var _poste_vuelta: Node3D
+var _area_icono_informacion: Area3D
 var _cartel_informacion: Label3D
 var _fondo_cartel: MeshInstance3D
 var _icono_informacion: Label3D
@@ -174,10 +181,13 @@ var _icono_informacion: Label3D
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		pasajeros_esperando = 0
+		pasajeros_saliendo = 0
 		pasajeros_totales_historicos = 0
 		pasajeros_subidos_total = 0
 		pasajeros_bajados_total = 0
 		_pasajeros_pendientes = 0.0
+		_reloj_pasajeros = 0.0
+		_salidas_pasajeros_pendientes.clear()
 	_conectar_postes()
 	_actualizar_dimensiones_anden()
 	_actualizar_posicion_postes()
@@ -194,33 +204,47 @@ func _configurar_cartel_informacion() -> void:
 	var area: Area3D = get_node_or_null("AreaSeleccion") as Area3D
 	if area != null and not area.input_event.is_connected(_on_area_input_event):
 		area.input_event.connect(_on_area_input_event)
+	_area_icono_informacion = get_node_or_null("AreaIconoInformacion") as Area3D
+	if _area_icono_informacion == null:
+		_area_icono_informacion = Area3D.new()
+		_area_icono_informacion.name = "AreaIconoInformacion"
+		_area_icono_informacion.collision_layer = 1
+		_area_icono_informacion.collision_mask = 0
+		_area_icono_informacion.input_ray_pickable = true
+		var colision_icono := CollisionShape3D.new()
+		colision_icono.name = "CollisionShape3D"
+		var forma_icono := SphereShape3D.new()
+		forma_icono.radius = 1.5
+		colision_icono.shape = forma_icono
+		_area_icono_informacion.add_child(colision_icono)
+		add_child(_area_icono_informacion)
+	if not _area_icono_informacion.input_event.is_connected(_on_area_input_event):
+		_area_icono_informacion.input_event.connect(_on_area_input_event)
 	if not pasajeros_actualizados.is_connected(_on_pasajeros_actualizados):
 		pasajeros_actualizados.connect(_on_pasajeros_actualizados)
 	_icono_informacion = get_node_or_null("IconoInformacion") as Label3D
 	if _icono_informacion == null:
 		_icono_informacion = Label3D.new()
 		_icono_informacion.name = "IconoInformacion"
-		_icono_informacion.text = "i"
-		_icono_informacion.position = Vector3(0.0, 11.0, 0.0)
-		_icono_informacion.font_size = 48
-		_icono_informacion.modulate = Color(0.2, 0.8, 1.0, 1.0)
-		_icono_informacion.outline_size = 8
-		_icono_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		add_child(_icono_informacion)
+	_icono_informacion.text = "ℹ"
+	_icono_informacion.position = Vector3(0.0, 30.0, 0.0)
+	_icono_informacion.font_size = 192
+	_icono_informacion.modulate = Color(0.2, 0.8, 1.0, 1.0)
+	_icono_informacion.outline_size = 16
+	_icono_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_area_icono_informacion.position = _icono_informacion.position
+	_area_icono_informacion.scale = Vector3.ONE * ESCALA_ELEMENTOS_INFORMACION
+	_icono_informacion.scale = Vector3.ONE * ESCALA_ELEMENTOS_INFORMACION
 	_cartel_informacion = get_node_or_null("CartelInformacion") as Label3D
 	if _cartel_informacion == null:
 		_cartel_informacion = Label3D.new()
 		_cartel_informacion.name = "CartelInformacion"
-		_cartel_informacion.position = Vector3(0.0, 8.0, 0.0)
-		_cartel_informacion.font_size = 32
-		_cartel_informacion.modulate = Color(1.0, 0.9, 0.2, 1.0)
-		_cartel_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		_cartel_informacion.outline_size = 8
 		_fondo_cartel = MeshInstance3D.new()
 		_fondo_cartel.name = "FondoCartelInformacion"
 		_fondo_cartel.position = Vector3(0.0, 0.0, 0.15)
 		var fondo_malla := QuadMesh.new()
-		fondo_malla.size = Vector2(9.0, 3.2)
+		fondo_malla.size = Vector2(90.0, 30.0)
 		var fondo_material := StandardMaterial3D.new()
 		fondo_material.albedo_color = Color(0.0, 0.0, 0.0, 0.9)
 		fondo_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -230,21 +254,40 @@ func _configurar_cartel_informacion() -> void:
 		_fondo_cartel.mesh = fondo_malla
 		_cartel_informacion.add_child(_fondo_cartel)
 		add_child(_cartel_informacion)
+	_cartel_informacion.position = Vector3(0.0, 30.0, 0.0)
+	_cartel_informacion.font_size = 320
+	_cartel_informacion.modulate = Color(1.0, 0.9, 0.2, 1.0)
+	_cartel_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_cartel_informacion.scale = Vector3.ONE
+	_cartel_informacion.outline_size = 60
+	if _fondo_cartel == null:
+		_fondo_cartel = _cartel_informacion.get_node_or_null("FondoCartelInformacion") as MeshInstance3D
+	if _fondo_cartel != null:
+		var fondo_malla_existente: QuadMesh = _fondo_cartel.mesh as QuadMesh
+		if fondo_malla_existente != null:
+			fondo_malla_existente.size = Vector2(90.0, 30.0)
 	_cartel_informacion.visible = false
+	_icono_informacion.visible = true
+	_area_icono_informacion.input_ray_pickable = true
 
 
 func _on_area_input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if _cartel_informacion == null:
 			_configurar_cartel_informacion()
-		_cartel_informacion.visible = not _cartel_informacion.visible
+		var mostrar_cartel: bool = not _cartel_informacion.visible
+		_cartel_informacion.visible = mostrar_cartel
+		_icono_informacion.visible = not mostrar_cartel
+		_area_icono_informacion.input_ray_pickable = not mostrar_cartel
+		get_viewport().set_input_as_handled()
 		_actualizar_cartel_informacion()
 
 
 func _actualizar_cartel_informacion() -> void:
 	if _cartel_informacion == null:
 		return
-	_cartel_informacion.text = "%s\nEsperando: %d / %d\nHistórico: %d\nSubieron: %d  Bajaron: %d" % [nombre_estacion, pasajeros_esperando, capacidad_maxima_espera, pasajeros_totales_historicos, pasajeros_subidos_total, pasajeros_bajados_total]
+	var presentes: int = pasajeros_esperando + pasajeros_saliendo
+	_cartel_informacion.text = "%s\nEn estación: %d / %d\nHistórico: %d\nSubieron: %d  Bajaron: %d" % [nombre_estacion, presentes, capacidad_maxima_espera, pasajeros_totales_historicos, pasajeros_subidos_total, pasajeros_bajados_total]
 
 
 func _on_pasajeros_actualizados(_estacion: Estacion) -> void:
@@ -334,7 +377,8 @@ func _sincronizar_pasajeros_visuales() -> void:
 	if _multimeshes_pasajeros.is_empty():
 		return
 
-	var cantidad_objetivo: int = mini(maxi(0, pasajeros_esperando), _limite_pasajeros_visibles())
+	var presentes: int = pasajeros_esperando + pasajeros_saliendo
+	var cantidad_objetivo: int = mini(maxi(0, presentes), _limite_pasajeros_visibles())
 	var cantidad_por_variante: Array[int] = []
 	for multimesh: MultiMesh in _multimeshes_pasajeros:
 		cantidad_por_variante.append(0)
@@ -404,6 +448,8 @@ func _reubicar_pasajeros_visuales() -> void:
 
 func _process(_delta: float) -> void:
 	if not Engine.is_editor_hint():
+		_reloj_pasajeros += _delta
+		_actualizar_pasajeros_saliendo()
 		_generar_pasajeros(_delta)
 		return
 	if not alinear_a_via or not _pendiente_snap:
@@ -433,16 +479,36 @@ func _generar_pasajeros(delta: float) -> void:
 	pasajeros_actualizados.emit(self)
 
 
-## Desembarca pasajeros inmediatamente. Puede llamarse con cantidad=1 desde un escalonador.
+## Registra pasajeros que bajan. Se muestran temporalmente en la estación,
+## pero no pasan a la fila de quienes esperan para subir.
 func desembarcar_pasajeros(cantidad: int) -> int:
-	var espacio_disponible: int = maxi(0, capacidad_maxima_espera - pasajeros_esperando)
-	var pasajeros: int = mini(maxi(0, cantidad), espacio_disponible)
+	var pasajeros: int = maxi(0, cantidad)
 	if pasajeros <= 0:
 		return 0
-	pasajeros_esperando += pasajeros
+	if tiempo_salida_pasajeros > 0.0:
+		pasajeros_saliendo += pasajeros
+		_salidas_pasajeros_pendientes.append({
+			"vence_en": _reloj_pasajeros + tiempo_salida_pasajeros,
+			"cantidad": pasajeros,
+		})
 	pasajeros_bajados_total += pasajeros
 	pasajeros_actualizados.emit(self)
 	return pasajeros
+
+
+func _actualizar_pasajeros_saliendo() -> void:
+	var desaparecieron: int = 0
+	while not _salidas_pasajeros_pendientes.is_empty():
+		var salida: Dictionary = _salidas_pasajeros_pendientes[0]
+		if float(salida["vence_en"]) > _reloj_pasajeros:
+			break
+		desaparecieron += int(salida["cantidad"])
+		_salidas_pasajeros_pendientes.pop_front()
+
+	if desaparecieron <= 0:
+		return
+	pasajeros_saliendo = maxi(0, pasajeros_saliendo - desaparecieron)
+	pasajeros_actualizados.emit(self)
 
 
 ## Embarca pasajeros inmediatamente. Puede llamarse con cantidad=1 desde un escalonador.
