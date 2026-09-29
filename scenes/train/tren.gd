@@ -124,23 +124,6 @@ signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD su
 ## Pasajeros actualmente dentro de la formación.
 var pasajeros_actuales: int = 0
 
-## Segundos entre cada pasajero individual al subir/bajar de a uno.
-@export var intervalo_pasajeros: float = 0.15
-
-## % de pasajeros a bordo que bajan en una parada intermedia yendo en el
-## sentido "directo" (`invertir_sentido = false`). Bajo a propósito: en la
-## línea real, casi todos los que van hacia la cabecera principal viajan
-## hasta el final, muy pocos bajan antes. Como el % se aplica parada tras
-## parada, el efecto se compone -- con este rango (2-4%), después de ~12
-## paradas llega vivo hasta el final ~70% de quien subió al principio.
-@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_directo_min: float = 0.02
-@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_directo_max: float = 0.04
-
-## Igual que arriba, pero en sentido "inverso" (`invertir_sentido = true`).
-## Alto a propósito: de vuelta la gente se reparte mucho más entre estaciones.
-@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_inverso_min: float = 0.15
-@export_range(0.0, 1.0, 0.01) var porcentaje_bajada_inverso_max: float = 0.25
-
 @export_group("Detección de Paradas")
 ## Detecta automáticamente las estaciones en la escena y calcula su progreso métrico en la traza.
 @export var autodetectar_estaciones: bool = true:
