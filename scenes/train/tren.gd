@@ -19,6 +19,7 @@ signal parada_alcanzada(indice_parada: int)
 signal marcha_reanudada()
 signal seleccionado() ## Emitida al hacer clic izquierdo sobre algún coche de la formación.
 signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD suelten la referencia.
+signal pasajeros_cambiados(cantidad: int) ## Emitida cada vez que cambia `pasajeros_actuales`.
 
 @export_group("Previsualización en Editor")
 ## Si está activo, el tren se desplaza y simula su marcha dentro del visor del editor 3D.
@@ -124,8 +125,13 @@ signal eliminado() ## Emitida justo antes de destruirse, para que cámara/HUD su
 ## Pasajeros actualmente dentro de la formación.
 var pasajeros_actuales: int = 0
 
-## Segundos entre cada pasajero individual al subir/bajar de a uno.
+## Segundos entre cada tanda de pasajeros al subir/bajar.
 @export var intervalo_pasajeros: float = 0.15
+
+## Cuántos pasajeros se mueven juntos en cada paso, en vez de 1 en 1 -- en
+## la realidad la gente sube/baja en tandas, no de a una persona con una
+## pausa entre cada una.
+@export var cantidad_pasajeros_por_tanda: int = 6
 
 ## % de pasajeros a bordo que bajan en una parada intermedia yendo en el
 ## sentido "directo" (`invertir_sentido = false`). Bajo a propósito: en la
@@ -795,6 +801,12 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 
 	_procesando_pasajeros = false
 
+	# Esta ronda inicial ya terminó, pero el tren puede seguir en el andén
+	# (todavía queda `_espera`) -- sigue intentando embarcar a quien llegue
+	# mientras tanto, sin bloquear la salida.
+	if not _eliminado and is_instance_valid(self):
+		_embarcar_mientras_en_parada(estacion, intervalo)
+
 
 ## Calcula el intervalo entre pasajeros para que todo el intercambio entre
 ## cómodo dentro del tiempo de parada, en vez de estirarlo: con poca gente
@@ -823,42 +835,94 @@ func _calcular_bajan(estacion: Node, direccion: float) -> int:
 	return roundi(pasajeros_actuales * porcentaje)
 
 
-## Baja `cantidad` pasajeros de a uno, separados por `intervalo` segundos,
-## avisándole a la estación en cada paso (su cartel se actualiza en vivo en
-## vez de saltar de golpe). Fire-and-forget: no hace falta esperarla.
+## Baja `cantidad` pasajeros de a tandas de `cantidad_pasajeros_por_tanda`,
+## separadas por `intervalo` segundos, avisándole a la estación en cada
+## paso (su cartel se actualiza en vivo en vez de saltar de golpe).
+## Fire-and-forget: no hace falta esperarla.
 func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
 	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("desembarcar_pasajeros"):
 		return
 
+	var tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
 	var restante: int = mini(cantidad, pasajeros_actuales)
-	for _i: int in restante:
+	while restante > 0:
 		if _eliminado or not is_instance_valid(self):
 			return
-		pasajeros_actuales -= 1
-		estacion.call("desembarcar_pasajeros", 1)
-		if intervalo > 0.0:
+		var baja_ahora: int = mini(tanda, restante)
+		pasajeros_actuales -= baja_ahora
+		estacion.call("desembarcar_pasajeros", baja_ahora)
+		pasajeros_cambiados.emit(pasajeros_actuales)
+		restante -= baja_ahora
+		if intervalo > 0.0 and restante > 0:
 			await get_tree().create_timer(intervalo).timeout
 
 
-## Sube `cantidad` pasajeros de a uno (limitado por la capacidad libre de
-## la formación y por cuánta gente le entregue la estación), separados por
-## `intervalo` segundos. Fire-and-forget: no hace falta esperarla.
+## Sube `cantidad` pasajeros de a tandas (limitado por la capacidad libre
+## de la formación y por cuánta gente le entregue la estación), separadas
+## por `intervalo` segundos. Fire-and-forget: no hace falta esperarla.
 func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
 	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("embarcar_pasajeros"):
 		return
 
-	var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
-	var restante: int = mini(cantidad, lugar_disponible)
-	for _i: int in restante:
+	var tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
+	var restante: int = cantidad
+	while restante > 0:
 		if _eliminado or not is_instance_valid(self):
 			return
-		var suben: int = int(estacion.call("embarcar_pasajeros", 1))
+		var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
+		if lugar_disponible <= 0:
+			return
+		var pedido: int = mini(tanda, mini(restante, lugar_disponible))
+		var suben: int = int(estacion.call("embarcar_pasajeros", pedido))
 		if suben <= 0:
 			return
 		pasajeros_actuales += suben
-		if intervalo > 0.0:
+		pasajeros_cambiados.emit(pasajeros_actuales)
+		restante -= suben
+		if intervalo > 0.0 and restante > 0:
 			await get_tree().create_timer(intervalo).timeout
+
+
+## Sigue intentando embarcar durante el tiempo restante de parada. Si el
+## andén se queda momentáneamente vacío, espera un poco y vuelve a
+## comprobarlo para recoger a quienes lleguen antes de que el tren reanude
+## la marcha. No bloquea la salida (no toca `_procesando_pasajeros`): es
+## oportunista, se corta solo cuando `_espera` llega a 0.
+func _embarcar_mientras_en_parada(estacion: Node, intervalo: float) -> void:
+	if estacion == null or not is_instance_valid(estacion):
+		return
+	if not estacion.has_method("embarcar_pasajeros"):
+		return
+
+	var intervalo_seguro: float = maxf(intervalo, INTERVALO_PASAJEROS_MINIMO)
+	var tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
+
+	while _espera > 0.0:
+		if _eliminado or not is_instance_valid(self):
+			return
+		if not is_instance_valid(estacion):
+			return
+
+		var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
+		if lugar_disponible <= 0:
+			return
+
+		var cantidad_tanda: int = mini(lugar_disponible, tanda)
+		var suben: int = mini(cantidad_tanda, maxi(0, int(estacion.call("embarcar_pasajeros", cantidad_tanda))))
+		if suben > 0:
+			pasajeros_actuales += suben
+			pasajeros_cambiados.emit(pasajeros_actuales)
+
+		var tiempo_entre_intentos: float = intervalo_seguro
+		if suben <= 0:
+			tiempo_entre_intentos = maxf(intervalo_seguro, 0.15)
+
+		var tiempo_restante: float = maxf(0.0, _espera)
+		var demora: float = minf(tiempo_entre_intentos, tiempo_restante)
+		if demora <= 0.0:
+			return
+		await get_tree().create_timer(demora).timeout

@@ -29,6 +29,7 @@ const COLOR_SIN_TREN: Color = Color(0.5, 0.52, 0.58)
 @onready var _etiqueta_valor: Label = %ValorVelocidad
 @onready var _etiqueta_estado: Label = %Estado
 @onready var _etiqueta_proxima: Label = %ProximaEstacion
+@onready var _etiqueta_pasajeros: Label = %Pasajeros
 @onready var _boton_eliminar: Button = %BotonEliminar
 
 var _valor_mostrado: float = 0.0
@@ -58,6 +59,8 @@ func _desconectar_tren() -> void:
 		tren.marcha_reanudada.disconnect(_on_marcha_reanudada)
 	if tren.eliminado.is_connected(_on_tren_eliminado):
 		tren.eliminado.disconnect(_on_tren_eliminado)
+	if tren.pasajeros_cambiados.is_connected(_on_pasajeros_cambiados):
+		tren.pasajeros_cambiados.disconnect(_on_pasajeros_cambiados)
 
 
 func _conectar_tren() -> void:
@@ -65,6 +68,7 @@ func _conectar_tren() -> void:
 		_etiqueta_identificador.text = "—"
 		_etiqueta_sentido.text = ""
 		_etiqueta_proxima.text = ""
+		_etiqueta_pasajeros.text = ""
 		_marcar_estado("SIN TREN", COLOR_SIN_TREN)
 		if _tween != null and _tween.is_valid():
 			_tween.kill()
@@ -82,6 +86,8 @@ func _conectar_tren() -> void:
 		tren.marcha_reanudada.connect(_on_marcha_reanudada)
 	if not tren.eliminado.is_connected(_on_tren_eliminado):
 		tren.eliminado.connect(_on_tren_eliminado)
+	if not tren.pasajeros_cambiados.is_connected(_on_pasajeros_cambiados):
+		tren.pasajeros_cambiados.connect(_on_pasajeros_cambiados)
 
 	_etiqueta_identificador.text = tren.name
 	_etiqueta_sentido.text = "◀" if tren.invertir_sentido else "▶"
@@ -91,6 +97,7 @@ func _conectar_tren() -> void:
 		_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
 	_actualizar_velocidad(tren.velocidad_actual(), true)
 	_actualizar_proxima_estacion()
+	_actualizar_pasajeros(tren.pasajeros_actuales)
 	if _boton_eliminar != null:
 		_boton_eliminar.visible = true
 
@@ -120,6 +127,17 @@ func _on_parada_alcanzada(_indice_parada: int) -> void:
 func _on_marcha_reanudada() -> void:
 	_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
 	_actualizar_proxima_estacion()
+
+
+func _on_pasajeros_cambiados(cantidad: int) -> void:
+	_actualizar_pasajeros(cantidad)
+
+
+func _actualizar_pasajeros(cantidad: int) -> void:
+	if tren == null or not is_instance_valid(tren):
+		_etiqueta_pasajeros.text = ""
+		return
+	_etiqueta_pasajeros.text = "%d / %d" % [cantidad, tren.capacidad_pasajeros]
 
 
 ## Muestra el nombre de la próxima parada y cuánto falta para llegar.
