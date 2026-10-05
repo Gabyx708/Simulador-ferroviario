@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://cqxvxsq3680pj" path="res://assets/models/train/csr_roca_coche_motriz.glb" id="18_mb6u5"]
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="18_rboct"]
 [ext_resource type="PackedScene" uid="uid://ch3056n8l7qtf" path="res://assets/models/train/csr_roca_coche_remolcado.glb" id="19_stcbo"]
+[ext_resource type="PackedScene" path="res://ui/screens/hud.tscn" id="20_hud"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("9_tfjle")
@@ -230,3 +231,5 @@ escena_coche_remolcado = ExtResource("19_stcbo")
 [node name="CamaraLibre" parent="Camaras" unique_id=1076305827 node_paths=PackedStringArray("formacion") instance=ExtResource("8_cam")]
 transform = Transform3D(-0.9615, 0, -0.2747, -0.0908, 0.9438, 0.3179, 0.2593, 0.3306, -0.9075, -250, 55, -400)
 formacion = NodePath("../../Formaciones/TrenCSR")
+
+[node name="HUD" parent="." instance=ExtResource("20_hud")]
