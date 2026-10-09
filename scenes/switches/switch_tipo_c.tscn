@@ -1,0 +1,109 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scenes/procedural_track/procedural_crossing.gd" id="1_crossing"]
+[ext_resource type="Script" path="res://scenes/procedural_track/flexible_track_lead.gd" id="2_lead"]
+[ext_resource type="Material" path="res://common/materials/mat_riel.tres" id="3_riel"]
+[ext_resource type="Material" path="res://common/materials/mat_balastro.tres" id="4_balasto"]
+[ext_resource type="Material" path="res://common/materials/mat_durmiente.tres" id="5_durmiente"]
+[ext_resource type="Material" path="res://common/materials/mat_metal.tres" id="6_metal"]
+
+[sub_resource type="Curve3D" id="Curve3D_via_a"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -1.305, 0, -9.914, 0, 0, 0, 0, 0, 0, 1.305, 0, 9.914),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_via_b"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 1.305, 0, -9.914, 0, 0, 0, 0, 0, 0, -1.305, 0, 9.914),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_a_in"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, -1.255, 0, -9.531, -1.305, 0, -9.914, 1.255, 0, 9.531, 0, 0, 0, -4.607, 0, -34.996),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_a_out"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 1.255, 0, 9.531, 1.305, 0, 9.914, -1.255, 0, -9.531, 0, 0, 0, 4.607, 0, 34.996),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_b_in"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 1.255, 0, -9.531, 1.305, 0, -9.914, -1.255, 0, 9.531, 0, 0, 0, 4.607, 0, -34.996),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_b_out"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, -1.255, 0, 9.531, -1.305, 0, 9.914, 1.255, 0, -9.531, 0, 0, 0, -4.607, 0, 34.996),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[node name="SwitchTipoC" type="Node3D"]
+script = ExtResource("1_crossing")
+posicion_centro = Vector3(0, 0, 0)
+angulo_cruce_rad = 0.2618
+largo_zona_cruce = 20.0
+curva_a = SubResource("Curve3D_via_a")
+curva_b = SubResource("Curve3D_via_b")
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+material_metal = ExtResource("6_metal")
+generar_extremos_flexibles = true
+
+[node name="GeometriaFija" type="Node3D" parent="."]
+
+[node name="MecanismoAgujas" type="Node3D" parent="."]
+
+[node name="ExtremosFlexibles" type="Node3D" parent="."]
+
+[node name="Extremo_Via_A_Entrada" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_a_in")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(-1.305, 0, -9.914)
+direccion_inicio = Vector3(-0.1305, 0, -0.9914)
+longitud_extension = 25.3
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_A_Salida" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_a_out")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(1.305, 0, 9.914)
+direccion_inicio = Vector3(0.1305, 0, 0.9914)
+longitud_extension = 25.3
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_B_Entrada" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_b_in")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(1.305, 0, -9.914)
+direccion_inicio = Vector3(0.1305, 0, -0.9914)
+longitud_extension = 25.3
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_B_Salida" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_b_out")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(-1.305, 0, 9.914)
+direccion_inicio = Vector3(-0.1305, 0, 0.9914)
+longitud_extension = 25.3
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")

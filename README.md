@@ -28,6 +28,7 @@ res://
 │   └── utils/               # Constantes matemáticas y helpers puros
 │
 ├── docs/                    # Documentación técnica, guías y licencias
+│   ├── integracion_switches_vias.md  # Aparatos de vía ↔ vías: diagnóstico, correcciones y propuesta
 │   ├── LEEME_OSM.md         # Guía de extracción y conversión OpenStreetMap
 │   └── audio_leeme.txt      # Licencias y autorías del pack de sonido
 │

@@ -1,8 +1,17 @@
 # Godot 4 engine cache & imports
 .godot/
+
+# Godot exported binaries & packages
+*.translation
 export_presets.cfg
 
+# Python (tools/osm)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .env
+
 # Temporary and archive files
 *.tmp
 *.bak

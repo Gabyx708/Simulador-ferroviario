@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Train-test"
-run/main_scene="res://levels/ramal_roca/ramal_roca.tscn"
+run/main_scene="res://levels/showcase_switches/showcase_switches.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
