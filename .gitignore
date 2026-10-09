@@ -16,6 +16,13 @@ __pycache__/
 *.tmp
 *.bak
 archive/
+*.log
+
+# Local exports used while converting OSM data
+/export.geojson
+/export.osm
+/export.png
+/export.png.import
 
 # Editor files (VS Code / JetBrains / etc)
 .vscode/*
