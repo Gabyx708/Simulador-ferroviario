@@ -57,7 +57,7 @@ signal marcha_reanudada()
 		if traza != null and is_instance_valid(traza) and traza.curve != null:
 			if not traza.curve.changed.is_connected(_on_curva_cambiada):
 				traza.curve.changed.connect(_on_curva_cambiada)
-		if is_inside_tree():
+		if is_inside_tree() and not _transicion_de_ruta:
 			_reconstruir()
 			_recalcular_paradas_dinamicas()
 
@@ -107,7 +107,7 @@ signal marcha_reanudada()
 @export var invertir_sentido: bool = false:
 	set(v):
 		invertir_sentido = v
-		if is_inside_tree():
+		if is_inside_tree() and not _transicion_de_ruta:
 			_buscar_proxima_parada(true)
 
 @export var velocidad_max_kmh: float = 90.0
@@ -176,6 +176,13 @@ var _detenido: bool = false
 var _espera: float = 0.0
 var _datos_paradas: Array[Dictionary] = []
 var _debe_invertir_en_salida: bool = false
+## Identificador de la última estación atendida. Evita que una actualización de
+## estaciones la vuelva a elegir como destino justo al reanudar la marcha.
+var _id_parada_atendida: int = 0
+var _tiene_proxima_parada: bool = true
+## Evita que los setters de `traza` y `invertir_sentido` reconstruyan la
+## formación con el avance del tramo anterior durante un cambio automático.
+var _transicion_de_ruta: bool = false
 
 var _ajustando_transform: bool = false
 var _pendiente_snap: bool = false
@@ -203,6 +210,27 @@ func _ready() -> void:
 	_reconstruir()
 	_recalcular_paradas_dinamicas()
 	_buscar_proxima_parada()
+
+	# En el editor la red puede terminar de cargar después: reintentar diferido para
+	# que la formación aparezca sobre la vía sin asignarla a mano.
+	if traza == null and Engine.is_editor_hint():
+		call_deferred("_autodetectar_y_reconstruir")
+
+
+## Reintenta detectar una vía (p. ej. desde la red topológica) y reconstruye la formación.
+func _autodetectar_y_reconstruir() -> void:
+	if traza != null or not is_inside_tree():
+		return
+	_autodetectar_traza()
+	if traza == null or traza.curve == null:
+		return
+	if not traza.curve.changed.is_connected(_on_curva_cambiada):
+		traza.curve.changed.connect(_on_curva_cambiada)
+	_avance = avance_inicial
+	_reconstruir()
+	_recalcular_paradas_dinamicas()
+	_buscar_proxima_parada()
+	notify_property_list_changed()
 
 
 func _notification(what: int) -> void:
@@ -252,12 +280,70 @@ func _autodetectar_traza() -> void:
 			encontrada = p.get_parent().find_child("Traza", true, false) as Path3D
 			if encontrada != null:
 				traza = encontrada
+				return
+
+	# Red topológica (TrackNetwork): tomar un tramo troncal como vía inicial. Permite
+	# ver/animar la formación en el editor sin asignar una traza a mano.
+	traza = _segmento_inicial_de_red()
+
+
+## Primer segmento disponible de la red topológica de la escena (prefiere un troncal
+## conocido). Devuelve null si no hay TrackNetwork con segmentos.
+func _segmento_inicial_de_red() -> Path3D:
+	if not is_inside_tree():
+		return null
+	var red: Node = get_tree().get_first_node_in_group("track_network")
+	if red == null:
+		var raiz: Node = get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene
+		if raiz != null:
+			red = raiz.find_child("TrackNetwork", true, false)
+	if red == null or not ("paths" in red):
+		return null
+	var paths_v: Variant = red.get("paths")
+	if not (paths_v is Dictionary):
+		return null
+	var dicc: Dictionary = paths_v as Dictionary
+	if dicc.is_empty():
+		return null
+	for id_cand: String in ["seg_470", "seg_471", "seg_1", "seg_179"]:
+		if dicc.has(id_cand) and dicc[id_cand] is Path3D:
+			return dicc[id_cand] as Path3D
+	for v: Variant in dicc.values():
+		if v is Path3D and (v as Path3D).curve != null and (v as Path3D).curve.point_count >= 2:
+			return v as Path3D
+	return null
 
 
 ## Proyecta la posición 3D actual del tren sobre la curva de la vía y ajusta avance_inicial.
+## Curva que el tren RECORRE: es la curva completa del tramo (el recorte automático
+## es sólo para el render de la vía). Así el tren no salta sobre la zona del aparato.
+func curva_recorrido() -> Curve3D:
+	if traza == null or not is_instance_valid(traza):
+		return null
+	if "curva_original" in traza:
+		var co: Variant = traza.get("curva_original")
+		if co is Curve3D and (co as Curve3D).point_count >= 2:
+			return co as Curve3D
+	return traza.curve
+
+
+## Proyecta la posición 3D actual del tren sobre la vía y ajusta avance_inicial.
+## Si el tren pertenece a una red, busca la vía MÁS CERCANA de toda la red (incluidos
+## los tramos de los switches) y se cambia a ella: permite soltarlo en cualquier vía.
 func _snap_a_posicion_actual() -> void:
 	if traza == null:
 		_autodetectar_traza()
+	if traza == null or not is_instance_valid(traza):
+		return
+
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("get_closest_segment") and red.has_method("get_segment_path"):
+		var seg_id: String = str(red.call("get_closest_segment", global_position))
+		if not seg_id.is_empty():
+			var p: Path3D = red.call("get_segment_path", seg_id) as Path3D
+			if p != null and p.curve != null and p.curve.point_count >= 2 and p != traza:
+				traza = p
+
 	if traza == null or not is_instance_valid(traza) or traza.curve == null or traza.curve.point_count < 2:
 		return
 
@@ -268,29 +354,43 @@ func _snap_a_posicion_actual() -> void:
 
 
 ## Busca y asigna la estación objetivo más próxima según el sentido de circulación actual.
-func _buscar_proxima_parada(ignorar_estacion_actual: bool = false) -> void:
+func _buscar_proxima_parada(ignorar_estacion_actual: bool = false) -> bool:
 	if paradas.size() == 0 or traza == null or not is_instance_valid(traza) or traza.curve == null:
-		return
+		_tiene_proxima_parada = false
+		return false
 	var largo: float = traza.curve.get_baked_length()
 	if largo <= 0.0:
-		return
+		_tiene_proxima_parada = false
+		return false
 
 	var direccion: float = -1.0 if invertir_sentido else 1.0
 	var mejor_idx: int = -1
 	var menor_dist: float = INF
 
 	for i: int in paradas.size():
-		if ignorar_estacion_actual and i == _idx_parada:
+		var info: Dictionary = _datos_paradas[i] if i < _datos_paradas.size() else {}
+		var id_parada: int = int(info.get("id", 0))
+		var es_parada_atendida: bool = _id_parada_atendida != 0 and id_parada == _id_parada_atendida
+		if ignorar_estacion_actual and (i == _idx_parada or es_parada_atendida):
 			continue
-		var dist: float = fposmod((float(paradas[i]) - _avance) * direccion, largo)
+		# Elegir por el punto real donde se detiene la cabina, no por el centro
+		# del andén. Así una parada recién completada no reaparece como destino.
+		var objetivo: float = _calcular_avance_objetivo(info, direccion) if not info.is_empty() else float(paradas[i])
+		var dist: float = fposmod((objetivo - _avance) * direccion, largo)
 		if dist < menor_dist:
 			menor_dist = dist
 			mejor_idx = i
 
 	if mejor_idx != -1:
 		_idx_parada = mejor_idx
-	elif paradas.size() > 0:
-		_idx_parada = posmod(_idx_parada + int(direccion), paradas.size())
+		_id_parada_atendida = 0
+		_tiene_proxima_parada = true
+		return true
+
+	# Si no hay otra estación, el tren sigue circulando sin intentar frenar de
+	# nuevo en la única estación disponible después de una vuelta completa.
+	_tiene_proxima_parada = false
+	return false
 
 
 func _recalcular_paradas_dinamicas() -> void:
@@ -333,6 +433,11 @@ func _recalcular_paradas_dinamicas() -> void:
 			var nombre: String = e.nombre_estacion if "nombre_estacion" in e else e.name
 			var tiempo: float = float(e.tiempo_espera) if "tiempo_espera" in e else tiempo_parada
 			var terminal: bool = bool(e.es_terminal) if "es_terminal" in e else false
+			var terminal_ida: bool = terminal
+			var terminal_vuelta: bool = terminal
+			if e.has_method("es_terminal_en_sentido"):
+				terminal_ida = bool(e.call("es_terminal_en_sentido", true))
+				terminal_vuelta = bool(e.call("es_terminal_en_sentido", false))
 			var off_ida: float = offset_m
 			var off_vuelta: float = offset_m
 			if e.has_method("obtener_offset_parada"):
@@ -343,12 +448,15 @@ func _recalcular_paradas_dinamicas() -> void:
 				off_vuelta = offset_m + float(e.desfasaje_parada_vuelta)
 
 			paradas_nuevas.append({
+				"id": e.get_instance_id(),
 				"offset": snappedf(offset_m, 0.01),
 				"offset_ida": snappedf(off_ida, 0.01),
 				"offset_vuelta": snappedf(off_vuelta, 0.01),
 				"nombre": nombre,
 				"tiempo_espera": tiempo,
 				"es_terminal": terminal,
+				"es_terminal_ida": terminal_ida,
+				"es_terminal_vuelta": terminal_vuelta,
 			})
 
 	paradas_nuevas.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["offset"]) < float(b["offset"]))
@@ -360,7 +468,7 @@ func _recalcular_paradas_dinamicas() -> void:
 	paradas = PackedFloat32Array(lista_offsets)
 
 	if paradas.size() > 0:
-		_buscar_proxima_parada()
+		_buscar_proxima_parada(_id_parada_atendida != 0)
 
 
 func _buscar_estaciones_recursivo(nodo: Node, resultado: Array[Node]) -> void:
@@ -376,6 +484,52 @@ func _on_curva_cambiada() -> void:
 		if _cuerpos.size() > 0:
 			_ubicar(0.0)
 		_recalcular_paradas_dinamicas()
+
+
+## Conmuta la circulación del tren a una nueva traza (Path3D) de forma continua (ej. al tomar un desvío).
+## Transición MANUAL/editor: re-proyecta la posición actual sobre la nueva vía.
+func cambiar_de_via(nueva_traza: Path3D) -> void:
+	if nueva_traza == null or not is_instance_valid(nueva_traza) or nueva_traza.curve == null:
+		return
+	if nueva_traza == traza:
+		return
+
+	if traza != null and is_instance_valid(traza) and traza.curve != null:
+		if traza.curve.changed.is_connected(_on_curva_cambiada):
+			traza.curve.changed.disconnect(_on_curva_cambiada)
+
+	traza = nueva_traza
+	if traza.curve != null and not traza.curve.changed.is_connected(_on_curva_cambiada):
+		traza.curve.changed.connect(_on_curva_cambiada)
+
+	# Calcular nuevo avance métrico sobre la curva de la nueva vía
+	var pos_local: Vector3 = traza.to_local(global_position)
+	_avance = traza.curve.get_closest_offset(pos_local)
+	avance_inicial = _avance
+
+	_recalcular_paradas_dinamicas()
+	if _cuerpos.size() > 0:
+		_ubicar(0.0)
+
+
+## Transición de RUTEO: encadena el tramo actual con el siguiente conservando el avance
+## y el sentido ya calculados. NO re-proyecta sobre `global_position` (la posición del
+## nodo raíz está fija: los coches se mueven como hijos) porque eso provocaba saltos en
+## cada switch. Es la clave de un recorrido continuo por la red.
+func _continuar_en_via(nueva_traza: Path3D, nuevo_avance: float, sentido_invertido: bool) -> void:
+	if nueva_traza == null or not is_instance_valid(nueva_traza) or nueva_traza.curve == null:
+		return
+	if traza != null and is_instance_valid(traza) and traza.curve != null and traza != nueva_traza:
+		if traza.curve.changed.is_connected(_on_curva_cambiada):
+			traza.curve.changed.disconnect(_on_curva_cambiada)
+	_transicion_de_ruta = true
+	traza = nueva_traza
+	if traza.curve != null and not traza.curve.changed.is_connected(_on_curva_cambiada):
+		traza.curve.changed.connect(_on_curva_cambiada)
+	invertir_sentido = sentido_invertido
+	_avance = clampf(nuevo_avance, 0.0, traza.curve.get_baked_length())
+	_transicion_de_ruta = false
+	_recalcular_paradas_dinamicas()
 
 
 func _limpiar() -> void:
@@ -454,22 +608,26 @@ func _process(delta: float) -> void:
 				_debe_invertir_en_salida = false
 				invertir_sentido = not invertir_sentido
 			else:
-				_buscar_proxima_parada(true)
+				# Una estación no terminal debe seguir siendo una parada válida en
+				# el siguiente paso por la línea. Si es la única de este tramo,
+				# se conserva como destino para la próxima vuelta, sin invertir.
+				var encontro_otra_parada: bool = _buscar_proxima_parada(true)
+				if not encontro_otra_parada:
+					_id_parada_atendida = 0
+					_tiene_proxima_parada = true
 
 			_aceleracion_actual = 0.0
 		return
 
 	var v_max: float = velocidad_max_kmh / 3.6
 
-	if paradas.size() > 0:
+	if paradas.size() > 0 and _tiene_proxima_parada:
 		var info_parada: Dictionary = _datos_paradas[_idx_parada] if _idx_parada < _datos_paradas.size() else {}
 		var objetivo_avance: float = _calcular_avance_objetivo(info_parada, direccion)
 
-		# Dispersión natural realista del maquinista (+/- 0.6 m)
-		if not _frenando_estacion:
-			_dispersion_parada = randf_range(-0.6, 0.6)
-
-		var objetivo_efectivo: float = fposmod(objetivo_avance + _dispersion_parada * direccion, largo)
+		# El punto de detención es exactamente el poste configurado para este
+		# sentido. No se introduce dispersión: el tren debe alinear su cabina con él.
+		var objetivo_efectivo: float = objetivo_avance
 		# Distancia con signo a lo largo de la traza para evitar desbordes modulares al cruzar la marca
 		var diff: float = (objetivo_efectivo - _avance) * direccion
 		var dist_con_signo: float = fposmod(diff + largo * 0.5, largo) - largo * 0.5
@@ -509,6 +667,9 @@ func _process(delta: float) -> void:
 
 			if parada_completada:
 				_vel = 0.0
+				# El frenado puede agotar la velocidad unos centímetros antes. Corregir
+				# el último tramo evita que la formación quede detenida en medio del andén.
+				_avance = objetivo_avance
 				_detenido = true
 				_frenando_estacion = false
 				_desaceleracion_actual = 0.0
@@ -518,8 +679,10 @@ func _process(delta: float) -> void:
 					_recalcular_paradas_dinamicas()
 					info_parada = _datos_paradas[_idx_parada] if _idx_parada < _datos_paradas.size() else {}
 
-				var es_term: bool = info_parada.get("es_terminal", false)
+				var clave_terminal: String = "es_terminal_ida" if direccion > 0.0 else "es_terminal_vuelta"
+				var es_term: bool = bool(info_parada.get(clave_terminal, info_parada.get("es_terminal", false)))
 				var tiempo_est: float = float(info_parada.get("tiempo_espera", tiempo_parada))
+				_id_parada_atendida = int(info_parada.get("id", 0))
 
 				_espera = maxf(tiempo_est, 1.0)
 				_debe_invertir_en_salida = es_term
@@ -535,7 +698,54 @@ func _process(delta: float) -> void:
 	velocidad_cambiada.emit(velocidad_actual())
 
 	var paso_avance: float = _vel * delta
-	_avance = fposmod(_avance + paso_avance * direccion, largo)
+	var proximo_avance: float = _avance + paso_avance * direccion
+
+	# Comprobar si la traza pertenece a una red topológica TrackNetwork
+	var net: Node = null
+	if traza != null:
+		var candidato: Node = traza.get_parent()
+		while candidato != null:
+			if candidato.has_method("get_opciones_siguientes"):
+				net = candidato
+				break
+			candidato = candidato.get_parent()
+	if net == null and is_inside_tree():
+		net = get_tree().get_first_node_in_group("track_network")
+
+	if net != null and traza != null and (proximo_avance >= largo or proximo_avance <= 0.0):
+		var extremo_actual: String = "end" if proximo_avance >= largo else "start"
+		var exceso: float = (proximo_avance - largo) if extremo_actual == "end" else (-proximo_avance)
+		var opciones: Array = net.call("get_opciones_siguientes", traza.name, extremo_actual) as Array
+
+		if opciones.is_empty():
+			# Tope de vía / paragolpes terminal
+			_vel = 0.0
+			_avance = largo if extremo_actual == "end" else 0.0
+			_ubicar(0.0)
+			return
+
+		var node_id: int = int((opciones[0] as Dictionary).get("node_id", 0))
+		var prox_opc: Dictionary = net.call("get_switch_target", node_id, opciones, traza.name) as Dictionary
+		var proximo_seg_id: String = str(prox_opc.get("segment_id", ""))
+		var prox_dir: String = str(prox_opc.get("direccion", "forward"))
+		var prox_path: Path3D = net.call("get_segment_path", proximo_seg_id) as Path3D
+
+		if prox_path != null and prox_path.curve != null:
+			var nuevo_largo: float = maxf(0.001, prox_path.curve.get_baked_length())
+			# La dirección describe cómo recorrer el tramo destino desde la unión.
+			var sentido_inv: bool = (prox_dir != "forward")
+			var nuevo_avance: float = fposmod(nuevo_largo - exceso, nuevo_largo) if sentido_inv else fposmod(exceso, nuevo_largo)
+			_continuar_en_via(prox_path, nuevo_avance, sentido_inv)
+			_ubicar(paso_avance)
+			return
+
+		# No hay continuación transitable: detener en el tope.
+		_vel = 0.0
+		_avance = largo if extremo_actual == "end" else 0.0
+		_ubicar(0.0)
+		return
+
+	_avance = fposmod(proximo_avance, largo)
 	_ubicar(paso_avance)
 
 
@@ -586,6 +796,86 @@ func _calcular_avance_objetivo(info_parada: Dictionary, direccion: float) -> flo
 		return fposmod(offset_poste + distancia_cola + MITAD_COCHE, largo)
 
 
+## Red ferroviaria (TrackNetwork) que contiene la traza actual, si existe.
+func _obtener_red() -> Node:
+	if traza != null:
+		var c: Node = traza.get_parent()
+		while c != null:
+			if c.has_method("get_opciones_siguientes"):
+				return c
+			c = c.get_parent()
+	if is_inside_tree():
+		return get_tree().get_first_node_in_group("track_network")
+	return null
+
+
+## Siguiente/previo tramo conectado a un extremo, con la dirección de recorrido.
+## Devuelve {} si no hay continuación transitable.
+func _vecino_ruta(path: Path3D, extremo: String) -> Dictionary:
+	var net: Node = _obtener_red()
+	if net == null or path == null:
+		return {}
+	var opciones: Array = net.call("get_opciones_siguientes", path.name, extremo) as Array
+	if opciones.is_empty():
+		return {}
+	var node_id: int = int((opciones[0] as Dictionary).get("node_id", 0))
+	var target: Dictionary = net.call("get_switch_target", node_id, opciones, path.name) as Dictionary
+	var seg_id: String = str(target.get("segment_id", ""))
+	if seg_id.is_empty():
+		return {}
+	var prox: Path3D = net.call("get_segment_path", seg_id) as Path3D
+	if prox == null or prox.curve == null:
+		return {}
+	return {"path": prox, "direccion": str(target.get("direccion", "forward"))}
+
+
+## Punto global a `dist` metros de la cabecera en el sentido de marcha (negativo = detrás).
+## Encadena segmentos por la red (no se pliega dentro de un tramo): así una formación
+## larga sobre tramos cortos entre switches sigue el trazado real sin doblarse.
+func _punto_en_red(dist: float) -> Vector3:
+	if traza == null or not is_instance_valid(traza) or traza.curve == null:
+		return global_position
+	var path: Path3D = traza
+	var av: float = _avance
+	var inv: bool = invertir_sentido
+	var restante: float = dist
+	var iter: int = 0
+	while iter < 96:
+		iter += 1
+		if path == null or path.curve == null:
+			break
+		var l: float = path.curve.get_baked_length()
+		if l <= 0.001:
+			break
+		var dir: float = -1.0 if inv else 1.0
+		var av_del: float = l if dir > 0.0 else 0.0
+		var av_tra: float = 0.0 if dir > 0.0 else l
+		var dist_del: float = (av_del - av) * dir
+		var dist_tra: float = (av_tra - av) * dir
+		if restante > dist_del:
+			restante -= dist_del
+			var vec: Dictionary = _vecino_ruta(path, "end" if dir > 0.0 else "start")
+			if vec.is_empty():
+				return path.to_global(path.curve.sample_baked(av_del))
+			var dv: String = str(vec.get("direccion", "forward"))
+			path = vec["path"] as Path3D
+			inv = (dv != "forward")
+			av = 0.0 if dv == "forward" else path.curve.get_baked_length()
+		elif restante < dist_tra:
+			restante -= dist_tra
+			var vec2: Dictionary = _vecino_ruta(path, "start" if dir > 0.0 else "end")
+			if vec2.is_empty():
+				return path.to_global(path.curve.sample_baked(av_tra))
+			var dv2: String = str(vec2.get("direccion", "forward"))
+			path = vec2["path"] as Path3D
+			# Retrocediendo, el vecino es el tramo PREVIO: se recorría con orientación inversa.
+			inv = (dv2 == "forward")
+			av = 0.0 if dv2 == "forward" else path.curve.get_baked_length()
+		else:
+			return path.to_global(path.curve.sample_baked(av + restante * dir))
+	return path.to_global(path.curve.sample_baked(av))
+
+
 func _ubicar(recorrido: float) -> void:
 	if traza == null or not is_instance_valid(traza) or traza.curve == null:
 		return
@@ -595,15 +885,10 @@ func _ubicar(recorrido: float) -> void:
 		return
 
 	for i: int in _cuerpos.size():
-		var centro: float = _avance - paso * float(i)
-		var offset_del: float = fposmod(centro + semi_bogie, largo)
-		var offset_tra: float = fposmod(centro - semi_bogie, largo)
-
-		var pos_del_local: Vector3 = traza.curve.sample_baked(offset_del)
-		var pos_tra_local: Vector3 = traza.curve.sample_baked(offset_tra)
-
-		var a: Vector3 = traza.to_global(pos_del_local)
-		var b: Vector3 = traza.to_global(pos_tra_local)
+		# Distancia de cada bogie respecto a la cabecera (la cabecera está en _avance).
+		var centro: float = -paso * float(i)
+		var a: Vector3 = _punto_en_red(centro + semi_bogie)
+		var b: Vector3 = _punto_en_red(centro - semi_bogie)
 		if a.distance_squared_to(b) < 0.001:
 			continue
 
