@@ -21,6 +21,7 @@
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="18_rboct"]
 [ext_resource type="PackedScene" uid="uid://ch3056n8l7qtf" path="res://assets/models/train/csr_roca_coche_remolcado.glb" id="19_stcbo"]
 [ext_resource type="PackedScene" uid="uid://di24cfwbrvy3b" path="res://vias.tscn" id="24_hail4"]
+[ext_resource type="PackedScene" path="res://ui/screens/hud.tscn" id="20_hud"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("9_tfjle")
@@ -284,3 +285,4 @@ curve = SubResource("Curve3D_bkyks")
 [node name="Via_004_Desvio_Crossover_2" type="Path3D" parent="Node3D" unique_id=938536475]
 curve = SubResource("Curve3D_qamfi")
 
+[node name="HUD" parent="." instance=ExtResource("20_hud")]

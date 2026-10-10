@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://w3ge5g3k2vgds"]
+
+[ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
+
+[node name="HUD" type="CanvasLayer"]
+
+[node name="Velocimetro" parent="." instance=ExtResource("1_veloc")]
