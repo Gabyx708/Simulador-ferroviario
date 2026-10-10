@@ -5,7 +5,7 @@ extends SceneTree
 ##
 ## Uso: godot --headless --path . -s res://tools/test_integridad_aparatos.gd
 
-const ESCENA: String = "res://levels/ramal_roca_switches/ramal_roca_switches.tscn"
+const ESCENA: String = "res://levels/ramal_roca_main/ramal_roca_main.tscn"
 const TEMPLATES: Array[String] = [
 	"res://scenes/switches/switch_tipo_a.tscn",
 	"res://scenes/switches/switch_tipo_b.tscn",

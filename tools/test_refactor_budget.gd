@@ -3,7 +3,7 @@ extends SceneTree
 ##
 ## Uso: godot --headless --path . -s res://tools/test_refactor_budget.gd
 
-const ESCENA: String = "res://levels/ramal_roca_switches/ramal_roca_switches.tscn"
+const ESCENA: String = "res://levels/ramal_roca_main/ramal_roca_main.tscn"
 const PRESUPUESTO_EDICION_MS: int = 160
 const PRESUPUESTO_BAJA_MS: int = 260
 

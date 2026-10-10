@@ -1,33 +1,119 @@
 [gd_scene format=3 uid="uid://b7rnb2032apw8"]
 
-[ext_resource type="Script" uid="uid://bjlptg54225q3" path="res://levels/ramal_roca_switches/ramal_roca_switches.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://bjlptg54225q3" path="res://levels/ramal_roca_main/ramal_roca_main.gd" id="1_level"]
+[ext_resource type="Shader" uid="uid://cvd0x7lon1ur6" path="res://addons/sky_3d/shaders/SkyMaterial.gdshader" id="2_3uoor"]
 [ext_resource type="Script" uid="uid://ctufcbbry6w3g" path="res://scenes/tracks/track_network.gd" id="2_tracknet"]
+[ext_resource type="Texture2D" uid="uid://cfqk60lpl5ljv" path="res://addons/sky_3d/assets/resources/SNoise.tres" id="3_ks8ua"]
 [ext_resource type="Script" uid="uid://bs7nc42e22aot" path="res://scenes/tracks/track_geometry.gd" id="3_trackgeo"]
 [ext_resource type="Script" uid="uid://c3d3d0a5rpv7i" path="res://scenes/tracks/editable_track_segment.gd" id="4_7yiem"]
+[ext_resource type="Texture2D" uid="uid://cecwdqjol0ckd" path="res://addons/sky_3d/assets/textures/noiseClouds.png" id="4_mksc4"]
 [ext_resource type="Material" uid="uid://btipd63o1nfnk" path="res://common/materials/mat_pasto.tres" id="4_pasto"]
 [ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_e.tscn" id="5_3ajao"]
 [ext_resource type="PackedScene" uid="uid://6lpu62cb11gh" path="res://scenes/train/tren_csr.tscn" id="5_tren"]
+[ext_resource type="Texture2D" uid="uid://2r8ylu6rg5dp" path="res://addons/sky_3d/assets/thirdparty/textures/moon/MoonMap.png" id="5_wvwbg"]
 [ext_resource type="PackedScene" path="res://scenes/camera/camara_libre.tscn" id="6_cam"]
+[ext_resource type="Texture2D" uid="uid://djpfuyxkryegn" path="res://addons/sky_3d/assets/textures/noise.jpg" id="6_hiqb5"]
+[ext_resource type="Texture2D" uid="uid://bm7dot7t7u1q4" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/StarField.jpg" id="7_so8vn"]
+[ext_resource type="Texture2D" uid="uid://c1vwcdcdvb74a" path="res://addons/sky_3d/assets/thirdparty/textures/milkyway/Milkyway.jpg" id="8_6r5d0"]
+[ext_resource type="Script" uid="uid://deo0gxkmk2ahd" path="res://addons/sky_3d/src/Sky3D.gd" id="9_faksr"]
+[ext_resource type="Script" uid="uid://b4tkplvh7fq40" path="res://addons/sky_3d/src/SkyDome.gd" id="10_uji7r"]
+[ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="11_x20jw"]
 [ext_resource type="PackedScene" uid="uid://c0chi55dc61kp" path="res://scenes/infrastructure/estacion.tscn" id="12_0io5y"]
 [ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_c.tscn" id="15_x20jw"]
 [ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_a.tscn" id="16_12tge"]
 [ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_d.tscn" id="17_rdn55"]
+[ext_resource type="PackedScene" uid="uid://dre166ib8u2ky" path="res://ui/screens/hud.tscn" id="18_hud"]
+[ext_resource type="PackedScene" uid="uid://dalrdkn60wkut" path="res://assets/models/constitucion/constitucion_terminal.tscn" id="24_8kx6l"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
-sky_top_color = Color(0.38, 0.52, 0.75, 1)
-sky_horizon_color = Color(0.7, 0.78, 0.85, 1)
-ground_bottom_color = Color(0.2, 0.25, 0.2, 1)
-ground_horizon_color = Color(0.7, 0.78, 0.85, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
+shader = ExtResource("2_3uoor")
+shader_parameter/sky_visible = true
+shader_parameter/color_correction = Vector2(0, 1)
+shader_parameter/ground_color = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/horizon_offset = 0.0
+shader_parameter/atm_darkness = 0.5
+shader_parameter/atm_sun_intensity = 18.0
+shader_parameter/atm_day_tint = Color(0.807843, 0.909804, 1, 1)
+shader_parameter/atm_horizon_light_tint = Color(0.980392, 0.635294, 0.462745, 1)
+shader_parameter/atm_night_tint = Color(0.0070224726, 0.008329002, 0.010452064, 0.04164501)
+shader_parameter/atm_level_params = Vector3(1, 0, 0)
+shader_parameter/atm_thickness = 0.7
+shader_parameter/atm_beta_ray = Vector3(5.804544e-06, 1.3562913e-05, 3.311258e-05)
+shader_parameter/atm_beta_mie = Vector3(3.038e-08, 3.038e-08, 3.038e-08)
+shader_parameter/sun_light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
+shader_parameter/sun_disk_color = Color(0.996094, 0.541334, 0.140076, 1)
+shader_parameter/sun_disk_intensity = 30.0
+shader_parameter/sun_disk_size = 0.02
+shader_parameter/atm_sun_mie_tint = Color(1, 1, 1, 1)
+shader_parameter/atm_sun_mie_intensity = 1.0
+shader_parameter/atm_sun_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/moon_color = Color(1, 1, 1, 1)
+shader_parameter/moon_texture = ExtResource("5_wvwbg")
+shader_parameter/moon_texture_alignment = Vector3(7, 1.4, 4.8)
+shader_parameter/moon_texture_flip_u = false
+shader_parameter/moon_texture_flip_v = false
+shader_parameter/moon_size = 0.07
+shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
+shader_parameter/atm_moon_mie_intensity = 0.029151484966278066
+shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
+shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
+shader_parameter/starmap_texture = ExtResource("8_6r5d0")
+shader_parameter/starmap_flip_u = false
+shader_parameter/starmap_flip_v = false
+shader_parameter/starmap_alignment = Vector3(2.68288, -0.25891, 0.40101)
+shader_parameter/star_rotation_offset = 9.38899
+shader_parameter/star_rotation = -12.439238260385984
+shader_parameter/star_tilt = -1.2915436464758039
+shader_parameter/star_field_color = Color(1, 1, 1, 1)
+shader_parameter/star_field_texture = ExtResource("7_so8vn")
+shader_parameter/star_scintillation = 0.75
+shader_parameter/star_scintillation_speed = 0.01
+shader_parameter/noise_tex = ExtResource("6_hiqb5")
+shader_parameter/clouds_night_color = Color(0.090196, 0.094118, 0.129412, 1)
+shader_parameter/cirrus_visible = true
+shader_parameter/cirrus_intensity = 2.0
+shader_parameter/cirrus_coverage = 0.5
+shader_parameter/cirrus_thickness = 1.7
+shader_parameter/cirrus_absorption = 2.0
+shader_parameter/cirrus_sky_tint_fade = 0.5
+shader_parameter/cirrus_size = 1.0
+shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
+shader_parameter/cirrus_position1 = Vector2(0.9997036, 0.9997036)
+shader_parameter/cirrus_position2 = Vector2(0.9997036, 0.9997036)
+shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
+shader_parameter/cumulus_visible = true
+shader_parameter/cumulus_intensity = 0.6
+shader_parameter/cumulus_coverage = 0.55
+shader_parameter/cumulus_thickness = 0.0243
+shader_parameter/cumulus_absorption = 2.0
+shader_parameter/cumulus_noise_freq = 2.7
+shader_parameter/cumulus_sky_tint_fade = 0.0
+shader_parameter/cumulus_size = 0.5
+shader_parameter/cumulus_position = Vector2(15.026652, 15.026652)
+shader_parameter/cumulus_texture = ExtResource("4_mksc4")
+shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
+shader_parameter/cumulus_mie_intensity = 1.0
+shader_parameter/show_azimuthal_grid = false
+shader_parameter/azimuthal_grid_color = Color(0.87058824, 0.72156864, 0.5294118, 1)
+shader_parameter/azimuthal_grid_rotation_offset = 0.03
+shader_parameter/show_equatorial_grid = false
+shader_parameter/equatorial_grid_color = Color(0, 0.75, 1, 1)
+shader_parameter/equatorial_grid_rotation_offset = 0.03
+shader_parameter/moon_matrix = Basis(0.9955214, -0.090874165, -0.026057746, 0.0018809289, 0.29462275, -0.95561177, 0.09451763, 0.95128304, 0.29347417)
 
-[sub_resource type="Sky" id="Sky_default"]
-sky_material = SubResource("ProceduralSkyMaterial_sky")
+[sub_resource type="Sky" id="Sky_sky3d"]
+sky_material = SubResource("ShaderMaterial_12tge")
 
-[sub_resource type="Environment" id="Environment_default"]
+[sub_resource type="Environment" id="Environment_rdn55"]
 background_mode = 2
-sky = SubResource("Sky_default")
+sky = SubResource("Sky_sky3d")
 ambient_light_source = 3
+ambient_light_color = Color(0.6543907, 0.5094304, 0.43729335, 1)
 reflected_light_source = 2
 tonemap_mode = 3
+tonemap_white = 6.0
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_nbeed"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_terreno"]
 material = ExtResource("4_pasto")
@@ -444,7 +530,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_m2pri"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.14650345, 0, 4.9817505, 193.277, 0, 403.159, -0.15065347, 0, -4.981627, 0, 0, 0, 193.863, 0, 423.086),
+"points": PackedVector3Array(-0.15065347, 0, -4.981627, 0, 0, 0, 193.863, 0, 423.086, 0, 0, 0, 0, 0, 0, 190.63907, 0, 92.11269),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -628,7 +714,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_fd1kp"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.1420002, 0, 4.9842453, 106.168, 0, 404.894, -0.1419018, 0, -4.984248, 0, 0, 0, 106.736, 0, 424.831),
+"points": PackedVector3Array(-0.1419018, 0, -4.984248, 0, 0, 0, 106.736, 0, 424.831, 0, 0, 0, 0, 0, 0, 103.59085, 0, 93.05764),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1500,7 +1586,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_wcdpn"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -1.6377466, 0, -34.45767, 115.63, 0, 562.691, 1.2583286, 0, 34.47361, 0, 0, 0, 109.728, 0, 424.831),
+"points": PackedVector3Array(0, 0, 0, -1.6377466, 0, -34.45767, 115.63, 0, 562.691, 1.2583286, 0, 34.47361, 0, 0, 0, 110.3921, 0, 424.831),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1508,7 +1594,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_let51"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.11425019, 0, 4.9869995, 123.801, 0, 404.661, -0.13672805, 0, -4.9864345, 0, 0, 0, 124.258, 0, 424.609),
+"points": PackedVector3Array(-0.13672805, 0, -4.9864345, 0, 0, 0, 124.258, 0, 424.609, 0, 0, 0, 0, 0, 0, 121.18794, 0, 92.638565),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1516,7 +1602,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_q5ale"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.9808019, 0, -34.45459, 133.289, 0, 562.346, 1.1558642, 0, 34.449165, 0, 0, 0, 127.14, 0, 424.609),
+"points": PackedVector3Array(0, 0, 0, -0.9808019, 0, -34.45459, 133.289, 0, 562.346, 1.1558642, 0, 34.449165, 0, 0, 0, 127.60875, 0, 424.609),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1524,7 +1610,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_r620u"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.08449936, 0, 4.9954987, 142.293, 0, 404.527, -0.102878, 0, -4.9951544, 0, 0, 0, 142.631, 0, 424.509),
+"points": PackedVector3Array(-0.102878, 0, -4.9951544, 0, 0, 0, 142.631, 0, 424.509, 0, 0, 0, 0, 0, 0, 138.6401, 0, 92.63634),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1556,7 +1642,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_v48cf"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.050247192, 0, 4.9869995, 159.102, 0, 404.238, -0.08995978, 0, -4.9864416, 0, 0, 0, 159.303, 0, 424.186),
+"points": PackedVector3Array(-0.08995978, 0, -4.9864416, 0, 0, 0, 159.303, 0, 424.186, 0, 0, 0, 0, 0, 0, 155.9932, 0, 92.364174),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1572,7 +1658,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_uyyxx"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0.10525131, 0, 4.9954987, 176.679, 0, 403.604, -0.14950423, 0, -4.9943705, 0, 0, 0, 177.1, 0, 423.586),
+"points": PackedVector3Array(-0.14950423, 0, -4.9943705, 0, 0, 0, 177.1, 0, 423.586, 0, 0, 0, 0, 0, 0, 173.29088, 0, 91.88328),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1804,10 +1890,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_hm3hh"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.1828921, 0, -4.9875274, 180.998, 0, 423.719, 0.19675064, 0, 4.9869995, 0, 0, 0, 180.211, 0, 403.771),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.1828921, 0, -4.9875274, 180.998, 0, 423.719, 0.19675064, 0, 4.9869995, 0, 0, 0, 180.211, 0, 403.771, 0, 0, 0, 0, 0, 0, 177.33575, 0, 91.98861),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_x32t4"]
 bake_interval = 2.0
@@ -1820,10 +1906,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_s6yy8"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.09433109, 0, -4.986317, 162.396, 0, 424.186, 0.045749664, 0, 4.9869995, 0, 0, 0, 162.213, 0, 404.238),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.09433109, 0, -4.986317, 162.396, 0, 424.186, 0.045749664, 0, 4.9869995, 0, 0, 0, 162.213, 0, 404.238, 0, 0, 0, 0, 0, 0, 159.89603, 0, 91.99378),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_upv0i"]
 bake_interval = 2.0
@@ -1836,10 +1922,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_mbvys"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.12292571, 0, -4.994952, 145.843, 0, 424.509, 0.09825134, 0, 4.9954987, 0, 0, 0, 145.45, 0, 404.527),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.12292571, 0, -4.994952, 145.843, 0, 424.509, 0.09825134, 0, 4.9954987, 0, 0, 0, 145.45, 0, 404.527, 0, 0, 0, 0, 0, 0, 142.84018, 0, 92.383354),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_h0th5"]
 bake_interval = 2.0
@@ -1852,10 +1938,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_f0a1p"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.16718355, 0, -4.9827075, 127.14, 0, 424.609, 0.11199951, 0, 4.984253, 0, 0, 0, 126.692, 0, 404.672),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.16718355, 0, -4.9827075, 127.563705, 0, 424.609, 0.11199951, 0, 4.984253, 0, 0, 0, 127.39815, 0, 404.672, 0, 0, 0, 0, 0, 0, 125.53924, 0, 92.873024),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_k73ot"]
 bake_interval = 2.0
@@ -1868,10 +1954,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_esjlq"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.1825042, 0, -4.999949, 109.728, 0, 424.831, 0.15099907, 0, 5.0009995, 0, 0, 0, 109.124, 0, 404.827),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.1825042, 0, -4.999949, 110.434135, 0, 424.831, 0.15099907, 0, 5.0009995, 0, 0, 0, 110.44094, 0, 404.827, 0, 0, 0, 0, 0, 0, 107.61533, 0, 92.92636),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_62vu8"]
 bake_interval = 2.0
@@ -1900,7 +1986,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_45vin"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 1.0396117, 0, 34.376625, 193.863, 0, 423.086, -0.25730294, 0, -34.39138, 0, 0, 0, 198.136, 0, 560.589),
+"points": PackedVector3Array(-1.0396117, 0, -34.376625, 1.0396117, 0, 34.376625, 193.863, 0, 423.086, -0.25730294, 0, -34.39138, 0.25730294, 0, 34.39138, 198.136, 0, 560.589),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1908,10 +1994,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_5hpr1"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.12951203, 0, -4.9817114, 197.184, 0, 423.086, 0.12800217, 0, 4.9817505, 0, 0, 0, 196.672, 0, 403.159),
-"tilts": PackedFloat32Array(0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.12951203, 0, -4.9817114, 197.184, 0, 423.086, 0.12800217, 0, 4.9817505, 0, 0, 0, 196.672, 0, 403.159, 0, 0, 0, 0, 0, 0, 194.75772, 0, 91.66154),
+"tilts": PackedFloat32Array(0, 0, 0)
 }
-point_count = 2
+point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_n3qbd"]
 bake_interval = 2.0
@@ -5714,7 +5800,7 @@ _data = {
 }
 point_count = 2
 
-[node name="RamalRocaSwitches" type="Node3D" unique_id=635642723 node_paths=PackedStringArray("red_ferroviaria", "camara", "formacion_principal")]
+[node name="RamalRocaMain" type="Node3D" unique_id=635642723 node_paths=PackedStringArray("red_ferroviaria", "camara", "formacion_principal")]
 script = ExtResource("1_level")
 red_ferroviaria = NodePath("TrackNetwork")
 camara = NodePath("Camaras/CamaraLibre")
@@ -5722,17 +5808,56 @@ formacion_principal = NodePath("Formaciones/TrenCSR")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="Entorno" unique_id=54518125]
-environment = SubResource("Environment_default")
+[node name="Entorno" type="Node3D" parent="Entorno" unique_id=2078593064]
 
-[node name="Sol" type="DirectionalLight3D" parent="Entorno" unique_id=378789098]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 50, 0)
+[node name="Sky3D" type="WorldEnvironment" parent="Entorno/Entorno" unique_id=216390816]
+environment = SubResource("Environment_rdn55")
+camera_attributes = SubResource("CameraAttributesPractical_nbeed")
+script = ExtResource("9_faksr")
+editor_time_enabled = false
+game_time_enabled = false
+current_time = 16.28
+wind_direction = 2.35619451204804
+metadata/_custom_type_script = "uid://deo0gxkmk2ahd"
+
+[node name="SunLight" type="DirectionalLight3D" parent="Entorno/Entorno/Sky3D" unique_id=966941617]
+transform = Transform3D(0.48922414, 0.2253264, -0.8425484, 0, 0.96605, 0.258355, 0.8721581, -0.1263935, 0.472615, -0.8425484, 0.258355, 0.472615)
+light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
 shadow_enabled = true
+directional_shadow_max_distance = 350.0
+
+[node name="MoonLight" type="DirectionalLight3D" parent="Entorno/Entorno/Sky3D" unique_id=748959423]
+transform = Transform3D(0, -0.9955232, 0.094517626, 0.2947939, 0.090317346, 0.951283, -0.95556086, 0.02786322, 0.29347417, 0.094517626, 0.951283, 0.29347417)
+light_color = Color(0.572549, 0.776471, 0.956863, 1)
+light_energy = 0.0
+directional_shadow_max_distance = 450.0
+directional_shadow_pancake_size = 50.0
+
+[node name="SkyDome" type="Node" parent="Entorno/Entorno/Sky3D" unique_id=383149433]
+script = ExtResource("10_uji7r")
+sun_azimuth = -4.201189
+sun_altitude = -1.3094773
+moon_azimuth = -2.830018
+moon_altitude = -0.31342554
+wind_direction = 2.35619451204804
+
+[node name="TimeOfDay" type="Node" parent="Entorno/Entorno/Sky3D" unique_id=1304742985]
+script = ExtResource("11_x20jw")
+editor_time_enabled = false
+game_time_enabled = false
+dome_path = NodePath("../SkyDome")
+current_time = 16.28
+day = 5
 
 [node name="Terreno" type="MeshInstance3D" parent="." unique_id=1428047352]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6000, -0.7, 10000)
 visible = false
 mesh = SubResource("PlaneMesh_terreno")
+
+[node name="constitucion_terminal" parent="." unique_id=555484109 instance=ExtResource("24_8kx6l")]
+transform = Transform3D(1.1249382, 0, 0.0117807565, 0, 1.125, 0, -0.0117807565, 0, 1.1249382, 148.791, 0, 87.774)
+metadata/_edit_lock_ = true
+metadata/_edit_group_ = true
 
 [node name="TrackNetwork" type="Node3D" parent="." unique_id=541304712]
 script = ExtResource("2_tracknet")
@@ -6172,7 +6297,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_161"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.93562
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 330.989
 
 [node name="seg_162" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1682065974]
 curve = SubResource("Curve3D_yfhie")
@@ -6356,7 +6483,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_186"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.945072
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.7883
 
 [node name="seg_187" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1694737639]
 curve = SubResource("Curve3D_slnpo")
@@ -7230,7 +7359,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_465"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 137.98671
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 137.96002
 
 [node name="seg_466" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2117293038]
 curve = SubResource("Curve3D_let51")
@@ -7238,7 +7369,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_466"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.953249
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.98438
 
 [node name="seg_467" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2029353717]
 curve = SubResource("Curve3D_q5ale")
@@ -7246,7 +7379,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_467"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 137.87589
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 137.85503
 
 [node name="seg_468" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2111249417]
 curve = SubResource("Curve3D_r620u")
@@ -7254,7 +7389,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_468"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.984863
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.89645
 
 [node name="seg_469" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=578720793]
 curve = SubResource("Curve3D_2ri3n")
@@ -7286,7 +7423,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_472"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.949062
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.83807
 
 [node name="seg_473" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1726587216]
 curve = SubResource("Curve3D_v466v")
@@ -7302,7 +7441,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_474"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.986494
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.72443
 
 [node name="seg_475" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2033220547]
 curve = SubResource("Curve3D_mamgl")
@@ -7318,6 +7459,8 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_476"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
+esta_modificada = true
+estado_edicion = "Modificado"
 longitud_metros = 200.39938
 
 [node name="seg_477" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=70210435]
@@ -7536,7 +7679,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_583"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.963522
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.75922
 
 [node name="seg_584" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1162326172]
 curve = SubResource("Curve3D_x32t4")
@@ -7552,7 +7697,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_585"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.948915
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 332.20157
 
 [node name="seg_586" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1847065946]
 curve = SubResource("Curve3D_upv0i")
@@ -7568,7 +7715,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_587"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.985878
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 332.1404
 
 [node name="seg_588" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1080920913]
 curve = SubResource("Curve3D_h0th5")
@@ -7584,7 +7733,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_589"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.942146
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.74274
 
 [node name="seg_590" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=975578333]
 curve = SubResource("Curve3D_k73ot")
@@ -7600,7 +7751,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_591"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 20.013145
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.91888
 
 [node name="seg_592" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2117193137]
 curve = SubResource("Curve3D_62vu8")
@@ -7632,6 +7785,8 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_621"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
+esta_modificada = true
+estado_edicion = "Modificado"
 longitud_metros = 137.57251
 
 [node name="seg_622" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=82657728]
@@ -7640,7 +7795,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_622"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
-longitud_metros = 19.933577
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 331.43655
 
 [node name="seg_660" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=460425072]
 curve = SubResource("Curve3D_n3qbd")
@@ -12090,18 +12247,16 @@ script = ExtResource("3_trackgeo")
 [node name="Formaciones" type="Node3D" parent="." unique_id=40777106]
 
 [node name="TrenCSR" parent="Formaciones" unique_id=1268589130 node_paths=PackedStringArray("traza") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 435.2875, 0, 3689.937)
-animar_en_editor = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 437.60522, 0, 3701.201)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda/seg_490")
-avance_inicial = 51.2
+avance_inicial = 62.7
 cantidad_coches = 3
-invertir_sentido = true
 paradas = PackedFloat32Array(245.1)
 
 [node name="Camaras" type="Node3D" parent="." unique_id=1068451313]
 
 [node name="CamaraLibre" parent="Camaras" unique_id=86635684 node_paths=PackedStringArray("formacion") instance=ExtResource("6_cam")]
-transform = Transform3D(0.965926, -0.0669873, 0.25, 0, 0.965926, 0.258819, -0.258819, -0.25, 0.933013, 160, 20, 710)
+transform = Transform3D(0.6036514, 0.20634302, -0.77008283, -7.1967086e-09, 0.9659259, 0.258819, 0.79724836, -0.15623644, 0.58308256, 359.32233, 20, 3802.187)
 formacion = NodePath("../../Formaciones/TrenCSR")
 seguir_al_inicio = false
 
@@ -12113,3 +12268,7 @@ progreso_en_via = 245.1
 separacion_vias = 13.1
 terminal_parada_ida = true
 esta_editada = true
+
+[node name="HUD" parent="." unique_id=1717866822 instance=ExtResource("18_hud")]
+
+[editable path="constitucion_terminal"]

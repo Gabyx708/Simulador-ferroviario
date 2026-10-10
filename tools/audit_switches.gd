@@ -5,9 +5,9 @@ func _init() -> void:
 
 func _run_audit() -> void:
 	print("--- INICIANDO AUDITORIA DETALLADA DE SWITCHES Y RAMAL ROCA ---")
-	var scn: PackedScene = load("res://levels/ramal_roca_switches/ramal_roca_switches.tscn")
+	var scn: PackedScene = load("res://levels/ramal_roca_main/ramal_roca_main.tscn")
 	if scn == null:
-		print("ERROR: No se pudo cargar ramal_roca_switches.tscn")
+		print("ERROR: No se pudo cargar ramal_roca_main.tscn")
 		quit(1)
 		return
 

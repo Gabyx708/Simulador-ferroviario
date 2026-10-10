@@ -2,7 +2,7 @@ extends SceneTree
 ## Sonda puntual: por qué la unión X no se clasifica como tijera (TIPO_E).
 ## Uso: godot --headless --path . -s res://tools/probe_tijera.gd
 
-const ESCENA: String = "res://levels/ramal_roca_switches/ramal_roca_switches.tscn"
+const ESCENA: String = "res://levels/ramal_roca_main/ramal_roca_main.tscn"
 var _centro: int = 2621609179
 
 

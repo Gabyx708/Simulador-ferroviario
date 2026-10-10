@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ## Uso: godot --headless --path . -s res://tools/diag_tipos_aparatos.gd
 
-const ESCENA: String = "res://levels/ramal_roca_switches/ramal_roca_switches.tscn"
+const ESCENA: String = "res://levels/ramal_roca_main/ramal_roca_main.tscn"
 
 
 func _init() -> void:

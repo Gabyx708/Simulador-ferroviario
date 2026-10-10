@@ -1,5 +1,5 @@
 extends BaseLevel
-class_name RamalRocaSwitchesLevel
+class_name RamalRocaMainLevel
 ## Nivel principal del Ramal General Roca (Constitución - Bosques)
 ## que utiliza la red ferroviaria topológica real (TrackNetwork)
 ## adaptada a los nuevos cambios de vía procedurales (Tipos A, B, C, D, E)

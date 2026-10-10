@@ -10,7 +10,7 @@ extends SceneTree
 ## Uso: godot --headless --path . -s res://tools/test_persistencia_edicion.gd
 
 const RUTA_EDITS_TEST: String = "res://tools/_test_persistencia_temporal.json"
-const ESCENA: String = "res://levels/ramal_roca_switches/ramal_roca_switches.tscn"
+const ESCENA: String = "res://levels/ramal_roca_main/ramal_roca_main.tscn"
 
 var _fallos: int = 0
 

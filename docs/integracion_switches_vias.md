@@ -1,7 +1,7 @@
-# Integración Aparatos de Vía ↔ Vías (ramal_roca_switches)
+# Integración Aparatos de Vía ↔ Vías (ramal_roca_main)
 
 Documento de diagnóstico, cambios aplicados y **propuesta de mejora** para la
-escena `levels/ramal_roca_switches/ramal_roca_switches.tscn`
+escena `levels/ramal_roca_main/ramal_roca_main.tscn`
 (Godot 4.7, tipado estático GDScript).
 
 ---
@@ -196,7 +196,7 @@ GODOT="/c/Program Files (x86)/Godot/Oficial/Godot4/GD/Godot_v4.7.2/Godot_v4.7.2-
 "$GODOT" --headless --path . -s res://tools/audit_integracion_switches.gd
 
 # Smoke test del nivel
-"$GODOT" --headless --path . --quit-after 150 res://levels/ramal_roca_switches/ramal_roca_switches.tscn
+"$GODOT" --headless --path . --quit-after 150 res://levels/ramal_roca_main/ramal_roca_main.tscn
 ```
 
 > Los tests escriben en journals temporales (`res://tools/_test_*_temporal.json`)
@@ -423,7 +423,7 @@ si se superan, para usarlo como *gate*: p. ej. `sin huecos < 10`,
 
 | Nivel | Archivo | Rol |
 | :-- | :-- | :-- |
-| Documento de trabajo | `ramal_roca_switches.tscn` | **Fuente de verdad** de qué existe y su geometría |
+| Documento de trabajo | `ramal_roca_main.tscn` | **Fuente de verdad** de qué existe y su geometría |
 | Journal de cambios | `red_godot_constitucion_bosques_edits.json` | Permite **regenerar** la red desde el JSON base de OSM respetando ediciones, bajas y poses de switches |
 
 **Qué guarda el journal** (sólo lo que cambió):

@@ -7,9 +7,9 @@ func _init() -> void:
 
 func _run_test() -> void:
 	print("=== INICIANDO TEST DE VÍAS EDITABLES Y PERSISTENCIA ===")
-	var scn: PackedScene = load("res://levels/ramal_roca_switches/ramal_roca_switches.tscn")
+	var scn: PackedScene = load("res://levels/ramal_roca_main/ramal_roca_main.tscn")
 	if scn == null:
-		print("FAIL: No se pudo cargar ramal_roca_switches.tscn")
+		print("FAIL: No se pudo cargar ramal_roca_main.tscn")
 		quit(1)
 		return
 

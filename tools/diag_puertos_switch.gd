@@ -17,7 +17,7 @@ func _run() -> void:
 	if args.size() > 0:
 		nombre_filtro = args[0]
 
-	var scn: PackedScene = load("res://levels/ramal_roca_switches/ramal_roca_switches.tscn")
+	var scn: PackedScene = load("res://levels/ramal_roca_main/ramal_roca_main.tscn")
 	var root_node: Node = scn.instantiate()
 	root.add_child(root_node)
 	await create_timer(1.5).timeout
