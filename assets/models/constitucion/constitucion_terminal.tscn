@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dalrdkn60wkut"]
+
+[ext_resource type="PackedScene" uid="uid://c1yeiuchqvy88" path="res://assets/models/constitucion/constitucion_terminal.glb" id="1_1cxgs"]
+
+[node name="constitucion_terminal" unique_id=555484109 instance=ExtResource("1_1cxgs")]
+
+[node name="Vias" parent="." index="9" unique_id=1331496338]
+visible = false
