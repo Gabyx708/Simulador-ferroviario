@@ -476,9 +476,9 @@ func _ready() -> void:
 	# Cargar registros de ediciones y exclusiones guardadas
 	_recargar_journal()
 
-	# Si la escena ya contiene tramos de vía serializados en el árbol (ej. en ramal_roca_switches.tscn):
+	# Si la escena ya contiene tramos de vía serializados en el árbol (ej. en ramal_roca_main.tscn):
 	if _tiene_vias_en_arbol():
-		print("TrackNetwork: Vías existentes detectadas en escena. Sincronizando árbol de escena...")
+		#print("TrackNetwork: Vías existentes detectadas en escena. Sincronizando árbol de escena...")
 		recolectar_paths_desde_arbol()
 		recolectar_switches_desde_arbol()
 		# IMPORTANTE: la escena manda. Nunca se aplica la lista persistente de
@@ -548,7 +548,7 @@ func _reconciliar_eliminados_con_escena() -> void:
 	if descartados > 0:
 		_sincronizar_lista_eliminados_en_ediciones()
 		_escribir_archivo_ediciones()
-		print("TrackNetwork: %d bajas persistentes descartadas (los tramos siguen en la escena)." % descartados)
+		#print("TrackNetwork: %d bajas persistentes descartadas (los tramos siguen en la escena)." % descartados)
 
 
 ## Vuelca los diccionarios de bajas dentro del journal de ediciones.
@@ -599,7 +599,8 @@ func _depurar_tramos_invalidos() -> void:
 		paths.erase(seg_id)
 		_recortes_segmentos.erase(seg_id)
 	if not invalidos.is_empty():
-		print("TrackNetwork: %d tramos liberados fueron depurados del registro." % invalidos.size())
+		pass
+		#print("TrackNetwork: %d tramos liberados fueron depurados del registro." % invalidos.size())
 
 
 func _buscar_nodo_segmento_recursivo(nodo: Node, seg_id: String) -> Path3D:
@@ -731,7 +732,7 @@ func restaurar_tramos_eliminados() -> int:
 	var geo: Node = get_node_or_null("GeometriaVias")
 	if geo != null and geo.has_method("construir_geometria"):
 		geo.call_deferred("construir_geometria")
-	print("TrackNetwork: %d tramos restaurados desde la topología base." % restaurados)
+	#print("TrackNetwork: %d tramos restaurados desde la topología base." % restaurados)
 	return restaurados
 
 
@@ -1273,7 +1274,7 @@ func recolectar_switches_desde_arbol() -> void:
 	_switches_ordenados.clear()
 	if _contenedor_switches != null:
 		_recolectar_switches_recursivo(_contenedor_switches)
-	print("TrackNetwork: Sincronizados %d aparatos de vía desde el árbol de escena." % aparatos_de_via.size())
+	#print("TrackNetwork: Sincronizados %d aparatos de vía desde el árbol de escena." % aparatos_de_via.size())
 
 
 func _recolectar_switches_recursivo(nodo: Node) -> void:
@@ -3615,7 +3616,7 @@ func _registrar_recorte_segmento(seg_id: String, end_tipo: String, largo_recorte
 			# cada reconstrucción (cientos de líneas por edición y costo real en el Output).
 			if not _absorbidos_avisados.has(seg_id):
 				_absorbidos_avisados[seg_id] = true
-				print("TrackNetwork: el tramo '%s' queda absorbido por los aparatos de vía (sin separación libre entre extremos)." % seg_id)
+				#print("TrackNetwork: el tramo '%s' queda absorbido por los aparatos de vía (sin separación libre entre extremos)." % seg_id)
 		actual = Vector2.ZERO
 	_recortes_segmentos[seg_id] = actual
 
