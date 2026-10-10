@@ -19,6 +19,8 @@ res://
 │   │   └── train/           # Sonidos de tracción, compresor, frenos
 │   ├── legacy/              # Archivos de definición heredados (ej. MSTS / OpenBVE .sms)
 │   └── models/              # Mallas 3D crudas (.glb) y sus archivos .import
+│       ├── constitucion/    # Terminal y entorno de Constitución
+│       ├── passengers/      # Modelos de pasajeros y atribución
 │       ├── tracks/          # Tramos de vía, postes de catenaria
 │       └── train/           # Coches motrices y remolcados
 │
@@ -28,11 +30,14 @@ res://
 │   └── utils/               # Constantes matemáticas y helpers puros
 │
 ├── docs/                    # Documentación técnica, guías y licencias
+│   ├── integracion_switches_vias.md  # Ramal Roca: vías, switches, diagnóstico y pruebas
 │   ├── LEEME_OSM.md         # Guía de extracción y conversión OpenStreetMap
 │   └── audio_leeme.txt      # Licencias y autorías del pack de sonido
 │
 ├── levels/                  # Escenas de ensamblado de mundo y circuitos
-│   ├── ramal_roca/          # Nivel principal del Ramal Roca
+│   ├── ramal_roca_main/     # Escena de inicio del Ramal Roca
+│   ├── ramal_roca/          # Variante del nivel Ramal Roca
+│   ├── showcase_switches/   # Escena de demostración de switches
 │   └── test_track/          # Circuito cerrado de pruebas
 │
 ├── resources/               # Datos del juego (.tres, .res)
@@ -46,8 +51,9 @@ res://
 ├── systems/                 # Lógica global, reglas de simulación y Autoloads
 │                            # Control de tráfico, sistema horario, señalización
 │
-├── tools/                   # Herramientas y scripts externos fuera del motor
-│   └── osm/                 # Pipeline Python OSM -> Godot (osm_a_godot.py)
+├── tools/                   # Herramientas, pruebas y auditorías
+│   ├── osm/                 # Pipeline Python OSM -> Godot (osm_a_godot.py)
+│   └── test_*.gd / audit_*.gd # Pruebas y auditorías headless
 │
 ├── ui/                      # Interfaz de usuario
 │   ├── components/          # Widgets reutilizables (velocímetro, tacómetro, reloj)
@@ -76,6 +82,35 @@ En Godot, una entidad y su lógica son inseparables. Por ello, **los scripts (`.
 
 ### 3. Ensamblado de Mundos (`levels/`)
 Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_level.gd`) donde se orquestan las entidades: un `Path3D` de la traza, el generador `ViaGenerada`, los postes de catenaria, las estaciones modulares y la formación `TrenCSR`.
+
+---
+
+## Ejecutar el proyecto y validar cambios
+
+- Abrí `project.godot` con **Godot 4.7** (la integración se verificó con Godot 4.7.2) y esperá a que termine la importación inicial de recursos.
+- La escena de inicio es `levels/ramal_roca_main/ramal_roca_main.tscn`. Usá **F5** para ejecutar el proyecto; con **F6** podés ejecutar la escena abierta en el editor.
+- El nivel principal reúne la red ferroviaria y sus aparatos de vía, el tren CSR, la terminal de Constitución y el HUD. `BaseLevel` conecta el velocímetro con la formación principal al iniciar.
+- Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
+
+### Pruebas headless
+
+Con `godot` disponible en el `PATH`, ejecutá desde la raíz del repositorio:
+
+```bash
+# Carga rápida de la escena de inicio
+godot --headless --path . --quit-after 150
+
+# Vías editables, persistencia e integridad de aparatos
+godot --headless --path . -s res://tools/test_editable_tracks.gd
+godot --headless --path . -s res://tools/test_persistencia_edicion.gd
+godot --headless --path . -s res://tools/test_integridad_aparatos.gd
+
+# Auditorías de switches y empalmes con las vías
+godot --headless --path . -s res://tools/audit_switches.gd
+godot --headless --path . -s res://tools/audit_integracion_switches.gd
+```
+
+Las pruebas de persistencia usan journals temporales dentro de `tools/`; no reemplazan el archivo de ediciones del ramal. Para el detalle de métricas y resolución de problemas de la integración, consultá [docs/integracion_switches_vias.md](docs/integracion_switches_vias.md).
 
 ---
 
@@ -172,4 +207,4 @@ Para importar trazas reales de OpenStreetMap:
    ```bash
    python tools/osm/osm_a_godot.py mapa.osm --salida ./salida --ferrocarril Roca
    ```
-3. Consultar la guía completa en [docs/LEEME_OSM.md](file:///c:/Users/diego/Boveda/04-Facultad/2026/2C/Programacion%20en%20tiempo%20real/Train-simulator/docs/LEEME_OSM.md).
+3. Consultar la guía completa en [docs/LEEME_OSM.md](docs/LEEME_OSM.md).

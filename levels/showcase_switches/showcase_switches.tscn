@@ -1,0 +1,166 @@
+[gd_scene load_steps=14 format=3 uid="uid://df8x7y6w5u4v3"]
+
+[ext_resource type="Script" path="res://levels/showcase_switches/showcase_switches.gd" id="1_switches"]
+[ext_resource type="Script" path="res://levels/showcase_switches/showcase_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://levels/showcase_switches/showcase_hud.gd" id="3_hud"]
+[ext_resource type="Material" uid="uid://btipd63o1nfnk" path="res://common/materials/mat_pasto.tres" id="4_pasto"]
+[ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_a.tscn" id="5_switch_a"]
+[ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_b.tscn" id="6_switch_b"]
+[ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_c.tscn" id="7_switch_c"]
+[ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_d.tscn" id="8_switch_d"]
+[ext_resource type="PackedScene" path="res://scenes/switches/switch_tipo_e.tscn" id="9_switch_e"]
+[ext_resource type="Script" path="res://levels/showcase_switches/carro_prueba.gd" id="10_carro"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.35, 0.55, 0.85, 1)
+sky_horizon_color = Color(0.7, 0.76, 0.84, 1)
+ground_bottom_color = Color(0.18, 0.2, 0.22, 1)
+ground_horizon_color = Color(0.6, 0.65, 0.7, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_env"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.75, 0.8, 0.85, 1)
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_terreno"]
+material = ExtResource("4_pasto")
+size = Vector2(300, 300)
+
+[node name="ShowcaseSwitches" type="Node3D" node_paths=PackedStringArray("camara", "hud")]
+script = ExtResource("1_switches")
+camara = NodePath("ShowcaseCamera")
+hud = NodePath("HUD/ShowcaseHUD")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_env")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 10, 35, 10)
+shadow_enabled = true
+
+[node name="Terreno" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.65, 0)
+mesh = SubResource("PlaneMesh_terreno")
+
+[node name="ShowcaseCamera" type="Camera3D" parent="."]
+transform = Transform3D(-1, 0.286788, -0.958001, 0, 0.958001, 0.286788, 1, 0.286788, -0.958001, 1, 18, -32)
+script = ExtResource("2_camera")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="ShowcaseHUD" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_hud")
+
+[node name="Bahia_1_Tipo_A" type="Node3D" parent="."]
+
+[node name="Rotulo3D" type="Label3D" parent="Bahia_1_Tipo_A"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3.8, -4)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.95, 0.95, 1, 1)
+outline_modulate = Color(0, 0, 0, 0.85)
+text = "BAHÍA 1: DESVÍO ESTÁNDAR (TIPO A)
+[Recta Principal + Curva Asimétrica]"
+font_size = 36
+outline_size = 10
+
+[node name="DesvioEstandar_A" parent="Bahia_1_Tipo_A" instance=ExtResource("5_switch_a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -15)
+
+[node name="CarroPrueba_A" type="Node3D" parent="Bahia_1_Tipo_A"]
+script = ExtResource("10_carro")
+
+[node name="Bahia_2_Tipo_B" type="Node3D" parent="."]
+
+[node name="Rotulo3D" type="Label3D" parent="Bahia_2_Tipo_B"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.8, -5)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.95, 0.95, 1, 1)
+outline_modulate = Color(0, 0, 0, 0.85)
+text = "BAHÍA 2: DESVÍO SIMÉTRICO EN Y (TIPO B)
+[Bifurcación Equilátera (+/- θ/2)]"
+font_size = 36
+outline_size = 10
+
+[node name="DesvioSimetrico_B" parent="Bahia_2_Tipo_B" instance=ExtResource("6_switch_b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+
+[node name="CarroPrueba_B" type="Node3D" parent="Bahia_2_Tipo_B"]
+script = ExtResource("10_carro")
+
+[node name="Bahia_3_Tipo_C" type="Node3D" parent="."]
+
+[node name="Rotulo3D" type="Label3D" parent="Bahia_3_Tipo_C"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 4.2, 0)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.95, 0.95, 1, 1)
+outline_modulate = Color(0, 0, 0, 0.85)
+text = "BAHÍA 3: DIAMOND CROSSING (TIPO C)
+[Cruce de Vías en X a Nivel (15°)]"
+font_size = 36
+outline_size = 10
+
+[node name="DiamondCrossing_C" parent="Bahia_3_Tipo_C" instance=ExtResource("7_switch_c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 0)
+
+[node name="CarroPrueba_C" type="Node3D" parent="Bahia_3_Tipo_C"]
+script = ExtResource("10_carro")
+
+[node name="Bahia_4_Tipo_D" type="Node3D" parent="."]
+
+[node name="Rotulo3D" type="Label3D" parent="Bahia_4_Tipo_D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 4.2, -6)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.95, 0.95, 1, 1)
+outline_modulate = Color(0, 0, 0, 0.85)
+text = "BAHÍA 4: ESCAPE EN H / CROSSOVER (TIPO D)
+[Enlace entre 2 Vías Paralelas con 2 Desvíos Sincronizados]"
+font_size = 36
+outline_size = 10
+
+[node name="Crossover_D" parent="Bahia_4_Tipo_D" instance=ExtResource("8_switch_d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 0)
+
+[node name="CarroPrueba_D" type="Node3D" parent="Bahia_4_Tipo_D"]
+script = ExtResource("10_carro")
+
+[node name="Bahia_5_Tipo_E" type="Node3D" parent="."]
+
+[node name="Rotulo3D" type="Label3D" parent="Bahia_5_Tipo_E"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 4.2, -6)
+billboard = 1
+no_depth_test = true
+modulate = Color(0.95, 0.95, 1, 1)
+outline_modulate = Color(0, 0, 0, 0.85)
+text = "BAHÍA 5: ESCAPE DOBLE EN X / BRETELLE (TIPO E)
+[Scissors Crossover: 4 Desvíos + Diamante Central (3 Modos)]"
+font_size = 36
+outline_size = 10
+
+[node name="Bretelle_E" parent="Bahia_5_Tipo_E" instance=ExtResource("9_switch_e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, 0)
+
+[node name="CarroPrueba_E" type="Node3D" parent="Bahia_5_Tipo_E"]
+script = ExtResource("10_carro")
+
+[editable path="Bahia_1_Tipo_A/DesvioEstandar_A"]
+[editable path="Bahia_2_Tipo_B/DesvioSimetrico_B"]
+[editable path="Bahia_3_Tipo_C/DiamondCrossing_C"]
+[editable path="Bahia_4_Tipo_D/Crossover_D"]
+[editable path="Bahia_5_Tipo_E/Bretelle_E"]

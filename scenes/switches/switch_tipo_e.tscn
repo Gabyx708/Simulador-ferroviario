@@ -1,0 +1,94 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scenes/procedural_track/procedural_scissors_crossover.gd" id="1_scissors"]
+[ext_resource type="Script" path="res://scenes/procedural_track/flexible_track_lead.gd" id="2_lead"]
+[ext_resource type="Material" path="res://common/materials/mat_riel.tres" id="3_riel"]
+[ext_resource type="Material" path="res://common/materials/mat_balastro.tres" id="4_balasto"]
+[ext_resource type="Material" path="res://common/materials/mat_durmiente.tres" id="5_durmiente"]
+[ext_resource type="Material" path="res://common/materials/mat_metal.tres" id="6_metal"]
+
+[sub_resource type="Curve3D" id="Curve3D_lead_v1_in"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, -4.56, -2.5, 0, -23, 0, 0, 4.56, 0, 0, 0, -2.5, 0, -35),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_v1_out"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 4.56, -2.5, 0, 23, 0, 0, -4.56, 0, 0, 0, -2.5, 0, 35),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_v2_in"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, -4.56, 2.5, 0, -23, 0, 0, 4.56, 0, 0, 0, 2.5, 0, -35),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lead_v2_out"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 4.56, 2.5, 0, 23, 0, 0, -4.56, 0, 0, 0, 2.5, 0, 35),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[node name="SwitchTipoE" type="Node3D"]
+script = ExtResource("1_scissors")
+posicion_centro = Vector3(0, 0, 0)
+distancia_ejes = 5.0
+largo_crossover = 46.0
+largo_turnout = 16.0
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+material_metal = ExtResource("6_metal")
+generar_extremos_flexibles = true
+
+[node name="GeometriaFija" type="Node3D" parent="."]
+
+[node name="MecanismoAgujas" type="Node3D" parent="."]
+
+[node name="ExtremosFlexibles" type="Node3D" parent="."]
+
+[node name="Extremo_Via_1_Entrada" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_v1_in")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(-2.5, 0, -23)
+direccion_inicio = Vector3(0, 0, -1)
+longitud_extension = 12.0
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_1_Salida" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_v1_out")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(-2.5, 0, 23)
+direccion_inicio = Vector3(0, 0, 1)
+longitud_extension = 12.0
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_2_Entrada" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_v2_in")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(2.5, 0, -23)
+direccion_inicio = Vector3(0, 0, -1)
+longitud_extension = 12.0
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
+
+[node name="Extremo_Via_2_Salida" type="Path3D" parent="ExtremosFlexibles"]
+curve = SubResource("Curve3D_lead_v2_out")
+script = ExtResource("2_lead")
+punto_inicio = Vector3(2.5, 0, 23)
+direccion_inicio = Vector3(0, 0, 1)
+longitud_extension = 12.0
+material_riel = ExtResource("3_riel")
+material_balasto = ExtResource("4_balasto")
+material_durmiente = ExtResource("5_durmiente")
