@@ -9,8 +9,9 @@ proyecto).
 
 Archivos: `scenes/simulation/reloj_simulacion.gd`,
 `scenes/simulation/estadisticas_retraso.gd`,
-`scenes/simulation/gestor_eventos.gd`. Los tres son nodos hijos del nivel,
-hermanos de `SimulacionController`, instanciados en
+`scenes/simulation/gestor_eventos.gd`,
+`scenes/simulation/indicador_eventos.gd`. Los cuatro son nodos hijos del
+nivel, hermanos de `SimulacionController`, instanciados en
 `levels/ramal_roca_main/ramal_roca_main.tscn`.
 
 ## RelojSimulacion
@@ -127,6 +128,28 @@ a diferencia de los eventos de zona. Queda como snapshot consultable
   dibuja nada -- expone el dato para que el panel de Persona 2 pinte la
   fila o el ícono. Los íconos quedan del lado de Persona 2.
 - Señales `evento_disparado(datos)` / `evento_finalizado(datos)`.
+
+## IndicadorEventos (efecto visual provisorio)
+
+Trabajo adicional fuera de las 5 etapas originales, pedido después de
+probar que los eventos funcionaban pero no se veían. No modifica `Tren` ni
+`Estacion`: les cuelga un `GPUParticles3D` como hijo visual, generado por
+código (sin assets externos), escuchando las señales de `GestorEventos`.
+
+| Evento | Efecto | Dónde | Dura |
+| --- | --- | --- | --- |
+| Falla eléctrica | Chispas amarillas | Arriba del tren que entra al tramo (simula el pantógrafo arqueando) | Hasta que ESE tren reanuda |
+| Piquete | Humo negro/naranja | En la estación afectada, no en un tren puntual | Mientras la zona esté activa |
+| Desperfecto mecánico | Humo gris | Saliendo del tren roto | Permanente, como el evento |
+
+`GestorEventos` expone una señal nueva para esto,
+`tren_afectado_por_evento(id_tren, tipo)`, emitida recién cuando un tren
+puntual entra a una zona activa -- al disparar la zona todavía no se sabe
+qué tren va a entrar, así que `evento_disparado` solo no alcanza para saber
+dónde colgar el efecto en los casos de falla eléctrica.
+
+Es explícitamente provisorio: reemplaza el hueco visual mientras no existe
+el panel de Persona 2, no un ícono final.
 
 ### Disparo manual (teclas de debug)
 

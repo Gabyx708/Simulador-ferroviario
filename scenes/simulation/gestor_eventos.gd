@@ -25,6 +25,11 @@ class_name GestorEventos
 
 signal evento_disparado(datos: Dictionary)
 signal evento_finalizado(datos: Dictionary)
+## Un tren puntual entró a una zona activa. Distinto de evento_disparado
+## (que es sobre la zona, no sobre un tren) -- lo necesita IndicadorEventos
+## para saber recién en este momento a qué tren colgarle el efecto visual,
+## ya que al disparar una zona todavía no se sabe qué tren va a entrar.
+signal tren_afectado_por_evento(id_tren: int, tipo: TipoEvento)
 
 enum TipoEvento { FALLA_ELECTRICA, PIQUETE, DESPERFECTO_MECANICO }
 
@@ -314,6 +319,7 @@ func _aplicar_zona_a_tren(id: int, zona: Dictionary) -> void:
 		return
 	if _controlador.detener_tren_temporalmente(id, str(zona["motivo"]), restante):
 		_tipo_activo_por_tren[id] = int(zona["tipo"])
+		tren_afectado_por_evento.emit(id, int(zona["tipo"]))
 
 
 func _on_tren_eliminado(id: int) -> void:

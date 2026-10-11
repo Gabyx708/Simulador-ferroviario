@@ -29,6 +29,7 @@
 [ext_resource type="Script" path="res://scenes/simulation/reloj_simulacion.gd" id="26_reloj_simulacion"]
 [ext_resource type="Script" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
 [ext_resource type="Script" path="res://scenes/simulation/gestor_eventos.gd" id="28_gestor_eventos"]
+[ext_resource type="Script" path="res://scenes/simulation/indicador_eventos.gd" id="29_indicador_eventos"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -4654,6 +4655,9 @@ script = ExtResource("27_estadisticas_retraso")
 
 [node name="GestorEventos" type="Node" parent="."]
 script = ExtResource("28_gestor_eventos")
+
+[node name="IndicadorEventos" type="Node" parent="."]
+script = ExtResource("29_indicador_eventos")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
 
