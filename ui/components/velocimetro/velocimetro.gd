@@ -29,6 +29,10 @@ const COLOR_SIN_TREN: Color = Color(0.5, 0.52, 0.58)
 @onready var _etiqueta_valor: Label = %ValorVelocidad
 @onready var _etiqueta_estado: Label = %Estado
 @onready var _etiqueta_proxima: Label = %ProximaEstacion
+@onready var _etiqueta_ocupacion: Label = %Ocupacion
+@onready var _barra_ocupacion: ProgressBar = %BarraOcupacion
+@onready var _etiqueta_flujo: Label = %FlujoPasajeros
+@onready var _etiqueta_itinerario: Label = %Itinerario
 @onready var _boton_eliminar: Button = %BotonEliminar
 
 var _valor_mostrado: float = 0.0
@@ -58,13 +62,22 @@ func _desconectar_tren() -> void:
 		tren.marcha_reanudada.disconnect(_on_marcha_reanudada)
 	if tren.eliminado.is_connected(_on_tren_eliminado):
 		tren.eliminado.disconnect(_on_tren_eliminado)
+	if tren.pasajeros_cambiados.is_connected(_on_pasajeros_cambiados):
+		tren.pasajeros_cambiados.disconnect(_on_pasajeros_cambiados)
+	if tren.ruta_actualizada.is_connected(_on_ruta_actualizada):
+		tren.ruta_actualizada.disconnect(_on_ruta_actualizada)
 
 
 func _conectar_tren() -> void:
 	if tren == null or not is_instance_valid(tren):
+		visible = false
 		_etiqueta_identificador.text = "—"
 		_etiqueta_sentido.text = ""
 		_etiqueta_proxima.text = ""
+		_etiqueta_ocupacion.text = "Ocupación —"
+		_barra_ocupacion.value = 0.0
+		_etiqueta_flujo.text = ""
+		_etiqueta_itinerario.text = "Sin itinerario"
 		_marcar_estado("SIN TREN", COLOR_SIN_TREN)
 		if _tween != null and _tween.is_valid():
 			_tween.kill()
@@ -82,8 +95,13 @@ func _conectar_tren() -> void:
 		tren.marcha_reanudada.connect(_on_marcha_reanudada)
 	if not tren.eliminado.is_connected(_on_tren_eliminado):
 		tren.eliminado.connect(_on_tren_eliminado)
+	if not tren.pasajeros_cambiados.is_connected(_on_pasajeros_cambiados):
+		tren.pasajeros_cambiados.connect(_on_pasajeros_cambiados)
+	if not tren.ruta_actualizada.is_connected(_on_ruta_actualizada):
+		tren.ruta_actualizada.connect(_on_ruta_actualizada)
 
 	_etiqueta_identificador.text = tren.name
+	visible = true
 	_etiqueta_sentido.text = "◀" if tren.invertir_sentido else "▶"
 	if tren.esta_detenido():
 		_marcar_estado("EN ESTACIÓN", COLOR_EN_ESTACION)
@@ -91,6 +109,8 @@ func _conectar_tren() -> void:
 		_marcar_estado("EN MARCHA", COLOR_EN_MARCHA)
 	_actualizar_velocidad(tren.velocidad_actual(), true)
 	_actualizar_proxima_estacion()
+	_actualizar_ocupacion(tren.pasajeros_actuales, tren.capacidad_pasajeros, 0, 0, false)
+	_actualizar_itinerario()
 	if _boton_eliminar != null:
 		_boton_eliminar.visible = true
 
@@ -122,6 +142,15 @@ func _on_marcha_reanudada() -> void:
 	_actualizar_proxima_estacion()
 
 
+func _on_pasajeros_cambiados(actuales: int, capacidad: int, suben: int, bajan: int, intercambio_activo: bool) -> void:
+	_actualizar_ocupacion(actuales, capacidad, suben, bajan, intercambio_activo)
+
+
+func _on_ruta_actualizada(_destino: String, _distancia_m: float) -> void:
+	_actualizar_proxima_estacion()
+	_actualizar_itinerario()
+
+
 ## Muestra el nombre de la próxima parada y cuánto falta para llegar.
 func _actualizar_proxima_estacion() -> void:
 	if tren == null or not is_instance_valid(tren):
@@ -131,7 +160,7 @@ func _actualizar_proxima_estacion() -> void:
 	var nombre: String = tren.proxima_estacion_nombre()
 	var distancia: float = tren.distancia_a_proxima_estacion()
 	if nombre.is_empty() or distancia < 0.0:
-		_etiqueta_proxima.text = ""
+		_etiqueta_proxima.text = "Sin destino asignado"
 		return
 
 	var texto_distancia: String
@@ -141,6 +170,31 @@ func _actualizar_proxima_estacion() -> void:
 		texto_distancia = "%d m" % roundi(distancia)
 
 	_etiqueta_proxima.text = "→ %s · %s" % [nombre, texto_distancia]
+
+
+func _actualizar_ocupacion(actuales: int, capacidad: int, suben: int, bajan: int, intercambio_activo: bool) -> void:
+	var porcentaje: float = (float(actuales) / float(capacidad) * 100.0) if capacidad > 0 else 0.0
+	_etiqueta_ocupacion.text = "Ocupación  %d / %d · %d%%" % [actuales, capacidad, roundi(porcentaje)]
+	_barra_ocupacion.value = porcentaje
+	if intercambio_activo:
+		_etiqueta_flujo.text = "Intercambio: ↑ %d   ↓ %d" % [suben, bajan]
+	else:
+		_etiqueta_flujo.text = ""
+
+
+func _actualizar_itinerario() -> void:
+	if tren == null or not is_instance_valid(tren):
+		_etiqueta_itinerario.text = "Sin itinerario"
+		return
+	var paradas: Array[String] = tren.itinerario_estaciones()
+	if paradas.is_empty():
+		_etiqueta_itinerario.text = "Sin itinerario"
+		return
+	var lineas: PackedStringArray = PackedStringArray()
+	for i: int in paradas.size():
+		lineas.append("▶ " if i == 0 else "• ")
+		lineas[i] += paradas[i]
+	_etiqueta_itinerario.text = "\n".join(lineas)
 
 
 func _marcar_estado(texto: String, color: Color) -> void:
