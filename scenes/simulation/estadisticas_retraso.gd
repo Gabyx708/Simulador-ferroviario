@@ -28,6 +28,13 @@ class_name EstadisticasRetraso
 ## acumulado del tren (no se resta la tolerancia).
 
 signal retraso_tren_actualizado(id_tren: int, retraso_s: float)
+## Aporte de UN tramo (puede ser 0.0), emitida en cada llegada que tiene
+## tramo anterior con qué comparar. Distinta de retraso_tren_actualizado
+## (que es el acumulado total y sólo se emite si aportó algo > 0): esta
+## existe para que GestorEventos pueda atribuir el retraso de un tramo
+## puntual al evento que lo causó, sin tener que inferirlo restando
+## totales acumulados.
+signal retraso_tramo_sumado(id_tren: int, aporte_s: float)
 
 ## Velocidad nominal documentada de Tren/TrenCSR (ver plan_diego.md). Si una
 ## instancia puntual cambia su nominal por Inspector, este cálculo no se
@@ -45,6 +52,7 @@ var _reloj: RelojSimulacion
 var _pico_distancia: Dictionary = {}  ## id_tren -> float
 var _tiempo_ultima_llegada: Dictionary = {}  ## id_tren -> float
 var _retraso_acumulado: Dictionary = {}  ## id_tren -> float
+var _estaciones_recorridas: Dictionary = {}  ## id_tren -> int
 var _trenes_conectados: Dictionary = {}  ## id_tren -> Tren
 
 
@@ -100,6 +108,7 @@ func _conectar_tren(tren: Tren) -> void:
 	_trenes_conectados[id] = tren
 	_pico_distancia[id] = 0.0
 	_retraso_acumulado[id] = 0.0
+	_estaciones_recorridas[id] = 0
 	tren.llego_a_estacion.connect(_on_llego_a_estacion.bind(id))
 	tren.recorrido_incompleto.connect(_on_recorrido_incompleto.bind(id))
 	tren.eliminado.connect(_on_tren_eliminado.bind(id))
@@ -108,6 +117,7 @@ func _conectar_tren(tren: Tren) -> void:
 func _on_llego_a_estacion(_datos_tren: Dictionary, _datos_estacion: Dictionary, id: int) -> void:
 	if _reloj == null:
 		return
+	_estaciones_recorridas[id] = int(_estaciones_recorridas.get(id, 0)) + 1
 	var t_ahora: float = _reloj.tiempo_simulado_s()
 	var distancia_m: float = float(_pico_distancia.get(id, 0.0))
 	var tiene_llegada_previa: bool = _tiempo_ultima_llegada.has(id)
@@ -125,6 +135,10 @@ func _on_llego_a_estacion(_datos_tren: Dictionary, _datos_estacion: Dictionary, 
 	var tolerancia_efectiva: float = maxf(tolerancia_minima_s, tiempo_esperado * tolerancia_porcentual)
 
 	var aporte: float = diferencia if diferencia > tolerancia_efectiva else 0.0
+	# Se emite siempre (incluso aporte 0.0): GestorEventos la usa para saber
+	# que este tramo ya se resolvió y dejar de esperar más aporte de él, aun
+	# cuando el tramo haya quedado dentro de tolerancia.
+	retraso_tramo_sumado.emit(id, aporte)
 	if aporte <= 0.0:
 		return
 
@@ -145,8 +159,13 @@ func _on_tren_eliminado(id: int) -> void:
 	_tiempo_ultima_llegada.erase(id)
 	_pico_distancia.erase(id)
 	_retraso_acumulado.erase(id)
+	_estaciones_recorridas.erase(id)
 	_trenes_conectados.erase(id)
 
 
 func obtener_retraso(id_tren: int) -> float:
 	return float(_retraso_acumulado.get(id_tren, 0.0))
+
+
+func obtener_estaciones_recorridas(id_tren: int) -> int:
+	return int(_estaciones_recorridas.get(id_tren, 0))

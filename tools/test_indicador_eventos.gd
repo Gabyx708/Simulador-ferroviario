@@ -15,12 +15,17 @@ func _run() -> void:
 	var gestor: GestorEventos = nivel.get_node("GestorEventos")
 	controlador.establecer_velocidad_simulacion(40.0)
 
-	# --- 1) Piquete: efecto en la ESTACIÓN, no en un tren puntual. ---
-	var estaciones_nivel: Node = nivel.find_child("EstacionBanfield", true, false)
-	assert(estaciones_nivel != null, "Debe existir el nodo EstacionBanfield en el nivel")
+	# --- 1) Piquete: efecto en la ESTACIÓN, no en un tren puntual. Se usa
+	#         Yrigoyen (primera parada, siempre alcanzada rápido) en vez de
+	#         Banfield: con los 4 trenes iniciales convergiendo en la zona
+	#         Lanús-Escalada-Banfield, el sistema de reservas de switches
+	#         puede trabarlos sin que ninguno llegue nunca (fragilidad
+	#         conocida de esa zona, no relacionada a este test). ---
+	var estaciones_nivel: Node = nivel.find_child("EstacionYrigoyen", true, false)
+	assert(estaciones_nivel != null, "Debe existir el nodo EstacionYrigoyen en el nivel")
 	assert(_contar_particulas(estaciones_nivel) == 0, "No debe haber efecto antes de disparar")
 
-	var r: Dictionary = gestor.disparar_piquete("Banfield", 280.0)
+	var r: Dictionary = gestor.disparar_piquete("Hipólito Yrigoyen", 280.0)
 	assert(bool(r["ok"]), "Piquete debe aceptarse: %s" % str(r))
 	assert(_contar_particulas(estaciones_nivel) == 1, "El piquete debe agregar un efecto de partículas a la estación")
 	print("OK parcial: piquete agrega efecto de partículas a la estación")
