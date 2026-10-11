@@ -79,8 +79,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.0025552392, 0.0025552392)
-shader_parameter/cirrus_position2 = Vector2(0.0025552392, 0.0025552392)
+shader_parameter/cirrus_position1 = Vector2(0.87121236, 0.87121236)
+shader_parameter/cirrus_position2 = Vector2(0.87121236, 0.87121236)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -90,7 +90,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(15.040961, 15.040961)
+shader_parameter/cumulus_position = Vector2(19.400927, 19.400927)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -9804,6 +9804,45 @@ tipo_aparato_override = "TIPO_B"
 [node name="GeometriaVias" type="Node3D" parent="TrackNetwork" unique_id=1693733523]
 script = ExtResource("3_trackgeo")
 
+[node name="MarcadoresDeInstancia" type="Node3D" parent="." unique_id=1172369120]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 149.4656, 0, 78.02248)
+
+[node name="MarkerTren1" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=2097724934]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.021538, 0, 49.59752)
+
+[node name="MarkerTren2" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=27080311]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.644142, 0, 49.59752)
+
+[node name="MarkerTren3" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1572477066]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.744347, 0, 49.59752)
+
+[node name="MarkerTren4" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1110368556]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.946419, 0, 49.59752)
+
+[node name="MarkerTren5" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=2106381999]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.583832, 0, 49.59752)
+
+[node name="MarkerTren6" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1123219031]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.755356, 0, 49.59752)
+
+[node name="MarkerTren7" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1157053780]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2428894, 0, 49.59752)
+
+[node name="MarkerTren8" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1044032855]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2079315, 0, 49.59752)
+
+[node name="MarkerTren9" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=969728413]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.819748, 0, 49.59752)
+
+[node name="MarkerTren10" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1817749223]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.72435, 0, 49.59752)
+
+[node name="MarkerTren11" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1021257429]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.550186, 0, 49.59752)
+
+[node name="MarkerTren12" type="Marker3D" parent="MarcadoresDeInstancia" unique_id=1210161741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.196198, 0, 49.59752)
+
 [node name="Formaciones" type="Node3D" parent="." unique_id=40777106]
 
 [node name="TrenCSR" parent="Formaciones" unique_id=1268589130 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
@@ -9842,9 +9881,9 @@ autodetectar_estaciones = false
 distancia_maxima_via = 1.0
 
 [node name="TrenCSR_04" parent="Formaciones" unique_id=171155855 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139.63885, 0, 175.12839)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139.5946, 0, 171.52867)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_468")
-avance_inicial = 82.2
+avance_inicial = 78.60000000000001
 cantidad_coches = 3
 demora_salida_inicial = 18.0
 tiempo_parada_servicio = 6.0

@@ -379,6 +379,33 @@ func configurar_tiempos_servicio(demora_salida: float, espera_estaciones: float)
 		_espera = tiempo_parada_servicio + demora_salida_inicial
 
 
+## Ajusta el avance de una cabecera para que toda la formación quede dentro del
+## tramo inicial. El marcador representa la posición deseada de la cabecera;
+## si la cola no entraría, se desplaza sólo lo necesario hacia el interior.
+func avance_inicial_ajustado_a_formacion(avance_deseado: float, sentido_invertido: bool) -> float:
+	if traza == null or traza.curve == null:
+		return avance_deseado
+	var largo: float = traza.curve.get_baked_length()
+	if largo <= 0.0:
+		return avance_deseado
+	var cola: float = float(maxi(0, cantidad_coches - 1)) * paso + semi_bogie
+	var minimo: float = semi_bogie if sentido_invertido else cola
+	var maximo: float = largo - cola if sentido_invertido else largo - semi_bogie
+	# Un tramo excepcionalmente corto no puede contener la formación completa;
+	# centrarla evita que quede por completo fuera de la vía y conserva el snap.
+	if minimo > maximo:
+		return largo * 0.5
+	return clampf(avance_deseado, minimo, maximo)
+
+
+## Indica si la cabecera o la cola todavía ocupa un puesto de despacho.
+func ocupa_puesto_instancia(path: Path3D, avance_puesto: float) -> bool:
+	if traza != path or traza == null:
+		return false
+	var alcance: float = float(maxi(0, cantidad_coches - 1)) * paso + semi_bogie + 3.0
+	return absf(_avance - avance_puesto) <= alcance
+
+
 func factores_prueba() -> Dictionary:
 	return {"velocidad": _factor_velocidad_prueba, "aceleracion": _factor_aceleracion_prueba, "frenado": _factor_frenado_prueba}
 

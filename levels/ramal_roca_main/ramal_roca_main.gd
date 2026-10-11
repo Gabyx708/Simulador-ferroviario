@@ -18,6 +18,10 @@ var _flotilla_inicializada: bool = false
 var _estacion_origen: Estacion
 var _servicio: ServicioFerroviario
 var _vias_salida: Array[Dictionary] = []
+## Puestos de despacho definidos visualmente mediante Marker3D. Cada uno se
+## proyecta sobre su propia vía, por lo que el nivel no está limitado a cuatro
+## formaciones iniciales.
+var _puestos_instancia: Array[Dictionary] = []
 var _vagones_en_cola: int = 0
 
 
@@ -40,11 +44,11 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _vagones_en_cola <= 0 or not _flotilla_inicializada:
 		return
-	var libre: Dictionary = _primera_via_libre()
+	var libre: Dictionary = _primer_puesto_libre()
 	if libre.is_empty():
 		return
 	_vagones_en_cola -= 1
-	var tren: Tren = _crear_tren_en_via(libre.get("traza") as Path3D, bool(libre.get("invertido", true)), get_tree().get_nodes_in_group("trenes").size())
+	var tren: Tren = _crear_tren_en_puesto(libre, get_tree().get_nodes_in_group("trenes").size())
 	if tren != null and _vagones_en_cola > 0:
 		tren.configurar_tiempos_servicio(tren.demora_salida_inicial + float(_vagones_en_cola) * intervalo_salida_inicial, tren.tiempo_parada_servicio)
 
@@ -62,9 +66,9 @@ func _inicializar_flotilla() -> void:
 	var formaciones: Node = find_child("Formaciones", true, false)
 	if _estacion_origen == null or _servicio == null or formaciones == null or _servicio.cantidad_paradas() < 2:
 		return
-	_vias_salida = _resolver_vias_salida()
-	if _vias_salida.is_empty():
-		push_error("RamalRocaMainLevel: no hay vías de Constitución con ruta válida a Yrigoyen.")
+	_puestos_instancia = _resolver_puestos_instancia()
+	if _puestos_instancia.is_empty():
+		push_error("RamalRocaMainLevel: no hay puestos de instancia con ruta válida a Yrigoyen.")
 		return
 	# Las formaciones iniciales viven en la escena para que se puedan ubicar y
 	# ajustar desde el editor. Sólo las altas del HUD se instancian en runtime.
@@ -158,6 +162,47 @@ func _resolver_vias_salida() -> Array[Dictionary]:
 	return resultado
 
 
+## Convierte cada Marker3D de MarcadoresDeInstancia en un puesto real. El
+## sentido se elige por una ruta válida a la segunda estación del servicio.
+func _resolver_puestos_instancia() -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	if red_ferroviaria == null or _servicio == null:
+		return resultado
+	var contenedor: Node = find_child("MarcadoresDeInstancia", true, false)
+	var destino: Node = _servicio.obtener_parada(1)
+	if contenedor == null or destino == null or not destino.has_method("obtener_puntos_parada_multivia"):
+		return resultado
+	var destinos: Array[Dictionary] = destino.call("obtener_puntos_parada_multivia", red_ferroviaria, true) as Array[Dictionary]
+	var marcadores: Array[Marker3D] = []
+	for hijo: Node in contenedor.get_children():
+		if hijo is Marker3D:
+			marcadores.append(hijo as Marker3D)
+	marcadores.sort_custom(func(a: Marker3D, b: Marker3D) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
+	for marcador: Marker3D in marcadores:
+		var segmento: String = str(red_ferroviaria.call("get_closest_segment", marcador.global_position))
+		var path: Path3D = red_ferroviaria.call("get_segment_path", segmento) as Path3D
+		if path == null or path.curve == null or path.curve.point_count < 2:
+			push_warning("%s no está sobre una vía válida." % marcador.name)
+			continue
+		var avance: float = path.curve.get_closest_offset(path.to_local(marcador.global_position))
+		var mejor: Dictionary = {}
+		var invertido: bool = false
+		for sentido: bool in [false, true]:
+			for parada_destino: Dictionary in destinos:
+				var destino_traza: Path3D = parada_destino.get("traza") as Path3D
+				if destino_traza == null:
+					continue
+				var ruta: Dictionary = red_ferroviaria.planificar_ruta(path.name, avance, sentido, destino_traza.name, float(parada_destino.get("offset", 0.0)))
+				if bool(ruta.get("ok", false)) and (mejor.is_empty() or float(ruta.get("distancia_m", INF)) < float(mejor.get("distancia_m", INF))):
+					mejor = ruta
+					invertido = sentido
+		if mejor.is_empty():
+			push_warning("%s no tiene ruta desde %s hacia Yrigoyen." % [marcador.name, path.name])
+			continue
+		resultado.append({"marcador": marcador, "traza": path, "avance": avance, "invertido": invertido})
+	return resultado
+
+
 func _buscar_via_por_traza(path: Path3D) -> Dictionary:
 	for via: Dictionary in _vias_salida:
 		if via.get("traza") == path:
@@ -165,8 +210,9 @@ func _buscar_via_por_traza(path: Path3D) -> Dictionary:
 	return {}
 
 
-func _crear_tren_en_via(path: Path3D, invertido: bool, indice: int) -> Tren:
+func _crear_tren_en_puesto(puesto: Dictionary, indice: int) -> Tren:
 	var formaciones: Node = find_child("Formaciones", true, false)
+	var path: Path3D = puesto.get("traza") as Path3D
 	if formaciones == null or path == null:
 		return null
 	var tren: Tren = ESCENA_TREN.instantiate() as Tren
@@ -175,9 +221,12 @@ func _crear_tren_en_via(path: Path3D, invertido: bool, indice: int) -> Tren:
 	tren.name = "TrenCSR_%02d" % (indice + 1)
 	tren.traza = path
 	tren.servicio = _servicio
-	tren.sentido_local_inicio_invertido = invertido
+	tren.sentido_local_inicio_invertido = bool(puesto.get("invertido", false))
+	var avance_marcador: float = float(puesto.get("avance", 0.0))
+	tren.avance_inicial = tren.avance_inicial_ajustado_a_formacion(avance_marcador, tren.sentido_local_inicio_invertido)
 	tren.configurar_tiempos_servicio(float(indice) * intervalo_salida_inicial, 3.0 + float(indice % 4) * 1.0)
 	tren.set_meta("via_salida_constitucion", path.name)
+	tren.set_meta("puesto_instancia", str((puesto.get("marcador") as Node).name))
 	formaciones.add_child(tren)
 	_vincular_tren(tren)
 	tren_agregado.emit(tren)
@@ -198,28 +247,27 @@ func agregar_tren() -> Tren:
 		_inicializar_flotilla()
 	if _vias_salida.is_empty():
 		return null
-	var mejor: Dictionary = _primera_via_libre()
+	var mejor: Dictionary = _primer_puesto_libre()
 	if mejor.is_empty():
 		_vagones_en_cola += 1
 		push_warning("Tren agregado a la cola de despacho de Constitución (%d pendientes)." % _vagones_en_cola)
 		return null
-	var path_elegido: Path3D = mejor.get("traza") as Path3D
-	var tren_nuevo: Tren = _crear_tren_en_via(path_elegido, bool(mejor.get("invertido", true)), get_tree().get_nodes_in_group("trenes").size())
+	var tren_nuevo: Tren = _crear_tren_en_puesto(mejor, get_tree().get_nodes_in_group("trenes").size())
 	return tren_nuevo
 
 
-func _primera_via_libre() -> Dictionary:
-	for via: Dictionary in _vias_salida:
-		var path: Path3D = via.get("traza") as Path3D
+func _primer_puesto_libre() -> Dictionary:
+	for puesto: Dictionary in _puestos_instancia:
+		var path: Path3D = puesto.get("traza") as Path3D
 		if path == null:
 			continue
 		var en_uso: bool = false
 		for nodo: Node in get_tree().get_nodes_in_group("trenes"):
-			if nodo is Tren and not (nodo as Tren).esta_eliminado() and (nodo as Tren).traza == path:
+			if nodo is Tren and not (nodo as Tren).esta_eliminado() and (nodo as Tren).ocupa_puesto_instancia(path, float(puesto.get("avance", 0.0))):
 				en_uso = true
 				break
 		if not en_uso and not red_ferroviaria.segmento_reservado(path.name):
-			return via
+			return puesto
 	return {}
 
 
