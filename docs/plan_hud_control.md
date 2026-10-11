@@ -113,4 +113,41 @@ a un evento coincida con el retraso real que sufrieron sus trenes.
 
 ## 7. Decisiones tomadas de forma autónoma
 
-Se completa esta sección a medida que aparecen ambigüedades durante la ejecución.
+- **Etapas 2, 3 y 4 originales (reloj+flota, formulario de eventos, feedback)
+  se consolidan en una sola "Etapa 2: Panel de control completo".** Las tres
+  son parte de la misma escena/script (`panel_control_simulacion.gd`); separar
+  los commits habría significado reescribir el mismo archivo tres veces sin
+  una etapa intermedia verdaderamente usable por sí sola. Se probó y commiteó
+  como una unidad.
+- **Test de Etapa 0 (`test_atribucion_eventos.gd`) y el piquete de
+  `test_indicador_eventos.gd` usan "Hipólito Yrigoyen" en vez de "Banfield".**
+  Se encontró que con los 4 trenes iniciales convergiendo en la zona
+  Lanús-Escalada-Banfield, el sistema de reservas de switches puede trabarlos
+  sin que ninguno llegue nunca (fragilidad conocida de esa zona, documentada
+  en `docs/integracion_switches_vias.md`, no relacionada a este HUD). Yrigoyen
+  es la primera parada real y se alcanza rápido y de forma confiable.
+- **Etapa 2 (Panel de control) y Etapa 5 (Panel de Métricas) se commitean
+  juntas.** Ambas tocan `hud.tscn` en las mismas líneas (la fila de
+  `ext_resource` y las propiedades de `NavegacionPaneles`), así que separar
+  el commit habría significado editar ese archivo dos veces sin una etapa
+  intermedia realmente independiente. Cada panel tiene su propio test y
+  ambos están en verde antes del commit único.
+- **Bug real encontrado y corregido durante el test de Etapa 2:**
+  `PanelControlSimulacion._actualizar_feedback()` y
+  `PanelMetricas._vaciar_filas()` vaciaban las filas viejas con
+  `queue_free()` (borrado diferido al próximo frame) y agregaban las nuevas
+  en la misma llamada síncrona -- dos generaciones de filas coexistían como
+  hijas hasta que terminara el frame, así que una lectura inmediata después
+  de refrescar podía encontrar datos viejos. Con el refresco periódico cada
+  0.5s de uso normal esto es invisible (sobra tiempo entre refrescos para que
+  el borrado diferido se procese), pero rompía toda refrescada inmediata
+  (p.ej. justo después de disparar un evento desde el formulario). Corregido
+  usando `free()` inmediato en ambos -- son Labels propios sin señales
+  conectadas, así que es seguro.
+- **`PanelControlSimulacion._resolver_nivel()` no depende de
+  `get_tree().current_scene`.** Ese panel entra al árbol varios niveles por
+  debajo de la raíz del nivel (HUD → NavegacionPaneles → panel), y
+  `current_scene` puede no estar asignado todavía cuando eso pasa -- el mismo
+  riesgo que ya documenta `hud.gd` en `_agregar_formacion`. Se resuelve
+  subiendo por los ancestros hasta encontrar al que tiene `SimulacionController`
+  como hijo. `PanelMetricas` usa el mismo mecanismo.

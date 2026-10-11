@@ -3,6 +3,8 @@
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
 [ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
 [ext_resource type="Script" path="res://ui/screens/navegacion_paneles.gd" id="3_navegacion"]
+[ext_resource type="PackedScene" path="res://ui/screens/panel_control_simulacion.tscn" id="4_panel_control"]
+[ext_resource type="PackedScene" path="res://ui/screens/panel_metricas.tscn" id="5_panel_metricas"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
 bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
@@ -20,6 +22,8 @@ script = ExtResource("2_hud")
 
 [node name="NavegacionPaneles" type="Control" parent="."]
 script = ExtResource("3_navegacion")
+escena_panel_control = ExtResource("4_panel_control")
+escena_panel_metricas = ExtResource("5_panel_metricas")
 
 [node name="Paneles" type="VBoxContainer" parent="."]
 offset_left = 20.0
@@ -98,27 +102,6 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Sin tren seleccionado"
-
-[node name="EtiquetaVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
-layout_mode = 2
-text = "Velocidad de simulación"
-theme_override_font_sizes/font_size = 10
-
-[node name="VelocidadSimulacion" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
-unique_name_in_owner = true
-layout_mode = 2
-max_value = 10.0
-step = 0.1
-value = 1.0
-
-[node name="ValorVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
-text = "×1.0"
-
-[node name="SeparadorVelocidadSimulacion" type="HSeparator" parent="Paneles/PanelPruebas/Margen/Contenido"]
-layout_mode = 2
 
 [node name="EtiquetaVelocidadPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
 layout_mode = 2
