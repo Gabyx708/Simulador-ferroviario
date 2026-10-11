@@ -152,7 +152,6 @@ func _actualizar_flota() -> void:
 	var retrasados: int = 0
 	var detenidos_evento: int = 0
 	var incompletos: int = 0
-	var finalizados: int = 0
 	var activos: int = 0
 	var suma_retraso: float = 0.0
 	var cantidad_con_retraso_medido: int = 0
@@ -162,7 +161,6 @@ func _actualizar_flota() -> void:
 			incompletos += 1
 			continue
 		if estado == Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES:
-			finalizados += 1
 			continue
 		activos += 1
 		var retraso: float = float(tren.get("retraso_s", 0.0))
