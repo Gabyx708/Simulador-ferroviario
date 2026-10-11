@@ -95,6 +95,27 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Sin tren seleccionado"
 
+[node name="EtiquetaVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Velocidad de simulación"
+theme_override_font_sizes/font_size = 10
+
+[node name="VelocidadSimulacion" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="ValorVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
+text = "×1.0"
+
+[node name="SeparadorVelocidadSimulacion" type="HSeparator" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+
 [node name="EtiquetaVelocidadPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
 layout_mode = 2
 text = "Velocidad máxima"

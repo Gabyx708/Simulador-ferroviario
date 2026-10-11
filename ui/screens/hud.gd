@@ -10,6 +10,8 @@ extends CanvasLayer
 @onready var _contenido_pruebas: VBoxContainer = $Paneles/PanelPruebas/Margen/Contenido
 @onready var _titulo_pruebas: Button = $Paneles/PanelPruebas/Margen/Contenido/Titulo
 @onready var _tren_pruebas: Label = %TrenPruebas
+@onready var _velocidad_simulacion: HSlider = %VelocidadSimulacion
+@onready var _valor_velocidad_simulacion: Label = %ValorVelocidadSimulacion
 @onready var _velocidad_prueba: HSlider = %VelocidadPrueba
 @onready var _aceleracion_prueba: HSlider = %AceleracionPrueba
 @onready var _frenado_prueba: HSlider = %FrenadoPrueba
@@ -34,13 +36,15 @@ var _titulos_switch: Dictionary = {}
 var _firma_switches: String = ""
 var _switch_seleccionado: int = 0
 var _paneles_abiertos: Dictionary = {"trenes": false, "pruebas": false, "switches": false}
+var _controlador_simulacion: Node
 const ALTURA_PANEL_CERRADO := 28.0
 const SEPARACION_PANELES := 6.0
-const ALTURAS_PANELES := {"trenes": 145.0, "pruebas": 245.0, "switches": 230.0}
+const ALTURAS_PANELES := {"trenes": 145.0, "pruebas": 305.0, "switches": 230.0}
 
 
 func _ready() -> void:
 	_aplicar_estilo_minimalista(self)
+	_velocidad_simulacion.value_changed.connect(_cambiar_velocidad_simulacion)
 	_velocidad_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_aceleracion_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_frenado_prueba.value_changed.connect(_cambiar_parametros_prueba)
@@ -54,6 +58,10 @@ func _ready() -> void:
 	_mostrar_mas_switches.pressed.connect(_mostrar_siguiente_bloque_switches)
 	if _nivel != null and _nivel.has_signal("tren_agregado"):
 		_nivel.connect("tren_agregado", _on_tren_agregado)
+	_controlador_simulacion = _obtener_controlador_simulacion()
+	if _controlador_simulacion != null and _controlador_simulacion.has_signal("velocidad_simulacion_cambiada"):
+		_controlador_simulacion.velocidad_simulacion_cambiada.connect(_on_velocidad_simulacion_cambiada)
+	_sincronizar_velocidad_simulacion()
 	_actualizar_panel_pruebas()
 	_aplicar_estado_paneles()
 	call_deferred("_construir_lista")
@@ -149,7 +157,11 @@ func _marcar_seleccion(tren: Tren) -> void:
 
 func _actualizar_panel_pruebas() -> void:
 	var disponible: bool = _tren_seleccionado != null and is_instance_valid(_tren_seleccionado)
-	_panel_pruebas.modulate.a = 1.0 if disponible else 0.55
+	# La velocidad global siempre está disponible, incluso cuando no hay una
+	# formación elegida; sólo los ajustes propios del tren se deshabilitan.
+	_panel_pruebas.modulate.a = 1.0
+	_velocidad_simulacion.editable = _obtener_controlador_simulacion() != null
+	_sincronizar_velocidad_simulacion()
 	_velocidad_prueba.editable = disponible
 	_aceleracion_prueba.editable = disponible
 	_frenado_prueba.editable = disponible
@@ -375,6 +387,13 @@ func _agregar_formacion() -> void:
 		_nivel = get_tree().current_scene
 	if _nivel == null or not _nivel.has_method("agregar_tren"):
 		return
+	var controlador: Node = _nivel.get_node_or_null("SimulacionController")
+	if controlador != null and controlador.has_method("agregar_tren"):
+		var resultado: Dictionary = controlador.call("agregar_tren") as Dictionary
+		if bool(resultado.get("ok", false)):
+			_construir_lista()
+		_actualizar_estado_agregar()
+		return
 	var tren: Variant = _nivel.call("agregar_tren")
 	if tren is Tren:
 		_construir_lista()
@@ -436,6 +455,49 @@ func _cambiar_parametros_prueba(_valor: float) -> void:
 		return
 	_tren_seleccionado.establecer_factores_prueba(_velocidad_prueba.value, _aceleracion_prueba.value, _frenado_prueba.value)
 	_mostrar_valores_prueba()
+
+
+func _obtener_controlador_simulacion() -> Node:
+	if _controlador_simulacion != null and is_instance_valid(_controlador_simulacion):
+		return _controlador_simulacion
+	if _nivel == null or not is_instance_valid(_nivel):
+		_nivel = get_tree().current_scene
+	if _nivel == null or not is_instance_valid(_nivel):
+		# El HUD puede entrar al árbol antes de que Godot asigne current_scene.
+		# En el nivel principal su padre inmediato es la escena que contiene al
+		# SimulacionController, por lo que conserva el control disponible.
+		_nivel = get_parent()
+	if _nivel == null:
+		return null
+	_controlador_simulacion = _nivel.get_node_or_null("SimulacionController")
+	return _controlador_simulacion
+
+
+func _sincronizar_velocidad_simulacion() -> void:
+	var controlador: Node = _obtener_controlador_simulacion()
+	var factor: float = 1.0
+	if controlador != null and controlador.has_method("obtener_velocidad_simulacion"):
+		factor = float(controlador.call("obtener_velocidad_simulacion"))
+	_velocidad_simulacion.set_value_no_signal(clampf(factor, _velocidad_simulacion.min_value, _velocidad_simulacion.max_value))
+	_mostrar_velocidad_simulacion(factor)
+
+
+func _cambiar_velocidad_simulacion(factor: float) -> void:
+	var controlador: Node = _obtener_controlador_simulacion()
+	if controlador == null or not controlador.has_method("establecer_velocidad_simulacion"):
+		_sincronizar_velocidad_simulacion()
+		return
+	if not bool(controlador.call("establecer_velocidad_simulacion", factor)):
+		_sincronizar_velocidad_simulacion()
+
+
+func _on_velocidad_simulacion_cambiada(factor: float) -> void:
+	_velocidad_simulacion.set_value_no_signal(clampf(factor, _velocidad_simulacion.min_value, _velocidad_simulacion.max_value))
+	_mostrar_velocidad_simulacion(factor)
+
+
+func _mostrar_velocidad_simulacion(factor: float) -> void:
+	_valor_velocidad_simulacion.text = "Pausada" if is_zero_approx(factor) else "×%.1f" % factor
 
 
 func _restablecer_parametros_prueba() -> void:
