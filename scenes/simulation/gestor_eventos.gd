@@ -41,6 +41,20 @@ const COLOR_DESPERFECTO_MECANICO: Color = Color(0.85, 0.15, 0.15)  ## rojo
 ## cuando ese panel exista.
 @export var teclas_debug_activas: bool = true
 
+@export_group("Disparo aleatorio")
+## Eventos promedio por hora SIMULADA (no real). Se evalúa como probabilidad
+## continua por segundo simulado (prob_por_hora/3600 * delta), así que el
+## valor es directamente la frecuencia esperada, no hace falta convertir
+## nada a mano. 0.0 desactiva ese tipo de evento aleatorio.
+## Desactivado por defecto: por ahora el disparo es manual (vía teclas de
+## debug o, más adelante, el panel de Persona 2). Se puede prender desde el
+## Inspector si en algún momento se quiere complementar con disparo
+## automático; el código queda listo pero no se usa por ahora.
+@export var aleatorio_activo: bool = false
+@export_range(0.0, 20.0, 0.1) var falla_electrica_por_hora: float = 2.0
+@export_range(0.0, 20.0, 0.1) var piquete_por_hora: float = 2.0
+@export_range(0.0, 20.0, 0.1) var desperfecto_por_hora: float = 0.5
+
 var _controlador: SimulacionController
 var _reloj: RelojSimulacion
 var _zonas_estacion: Dictionary = {}  ## nombre_estacion -> {tipo, fin_s, motivo}
@@ -67,12 +81,62 @@ func _registrar_trenes_iniciales() -> void:
 			_conectar_tren(nodo as Tren)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _reloj == null:
 		return
 	var ahora: float = _reloj.tiempo_simulado_s()
 	_expirar_zonas(_zonas_estacion, ahora)
 	_expirar_zonas(_zonas_tramo, ahora)
+	if aleatorio_activo:
+		# `delta` ya viene escalado por Engine.time_scale (el mismo mecanismo
+		# que usa RelojSimulacion), así que es directamente tiempo simulado:
+		# no hace falta pasar por _reloj para esta cuenta.
+		_evaluar_disparo_aleatorio(falla_electrica_por_hora, delta, _disparar_falla_electrica_aleatoria)
+		_evaluar_disparo_aleatorio(piquete_por_hora, delta, _disparar_piquete_aleatorio)
+		_evaluar_disparo_aleatorio(desperfecto_por_hora, delta, _disparar_desperfecto_aleatorio)
+
+
+func _evaluar_disparo_aleatorio(eventos_por_hora: float, delta_simulado: float, disparar: Callable) -> void:
+	if eventos_por_hora <= 0.0:
+		return
+	var probabilidad_este_frame: float = (eventos_por_hora / 3600.0) * delta_simulado
+	if randf() < probabilidad_este_frame:
+		disparar.call()
+
+
+func _disparar_falla_electrica_aleatoria() -> void:
+	var nombre: String = _estacion_al_azar()
+	if not nombre.is_empty():
+		disparar_falla_electrica(nombre)
+
+
+func _disparar_piquete_aleatorio() -> void:
+	var nombre: String = _estacion_al_azar()
+	if not nombre.is_empty():
+		disparar_piquete(nombre)
+
+
+func _disparar_desperfecto_aleatorio() -> void:
+	var id: int = _tren_al_azar()
+	if id > 0:
+		disparar_desperfecto_mecanico(id, "Desperfecto mecánico (aleatorio)")
+
+
+func _estacion_al_azar() -> String:
+	if _controlador == null:
+		return ""
+	var estaciones: Array[Dictionary] = _controlador.obtener_estaciones()
+	return str(estaciones[randi() % estaciones.size()].get("nombre", "")) if not estaciones.is_empty() else ""
+
+
+func _tren_al_azar() -> int:
+	if _controlador == null:
+		return -1
+	var activos: Array[Dictionary] = []
+	for datos: Dictionary in _controlador.obtener_trenes():
+		if int(datos.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.INCOMPLETO]:
+			activos.append(datos)
+	return int(activos[randi() % activos.size()].get("id", -1)) if not activos.is_empty() else -1
 
 
 func _expirar_zonas(zonas: Dictionary, ahora: float) -> void:
