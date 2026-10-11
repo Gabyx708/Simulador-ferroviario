@@ -112,6 +112,15 @@ static var _cache_bounds_mallas_pasajeros: Array[AABB] = []
 		if is_inside_tree():
 			_actualizar_disposicion_transversal()
 
+@export_group("Cobertura de Vías Paralelas")
+## Ancho total del corredor físico de la estación. Todo Path3D paralelo que
+## atraviese este rectángulo puede ser usado como vía de parada.
+@export_range(5.0, 200.0, 1.0, "or_greater") var ancho_cobertura_vias: float = 35.0:
+	set(v):
+		ancho_cobertura_vias = maxf(5.0, v)
+		if is_inside_tree():
+			_notificar_trenes()
+
 @export_group("Puntos de Parada")
 ## Distancia métrica respecto al centro del andén para el frenado de ida (hacia adelante).
 ## Se sincroniza automáticamente al arrastrar el PosteParadaIda en el visor 3D.
@@ -756,6 +765,51 @@ func obtener_offset_parada(sentido_ida: bool) -> float:
 	return snappedf(progreso_en_via + desfasaje, 0.01)
 
 
+## Devuelve las vías paralelas que cruzan el área física de la estación y el
+## punto de frenado obtenido al proyectar el poste correspondiente sobre cada
+## una. La traza de referencia sólo ubica el andén; no limita el servicio.
+func obtener_puntos_parada_multivia(red: Node, sentido_ida: bool) -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	if red == null or not ("paths" in red):
+		return resultado
+	_conectar_postes()
+	var poste: Node3D = _poste_ida if sentido_ida else _poste_vuelta
+	if poste == null or not is_instance_valid(poste):
+		return resultado
+	var paths_var: Variant = red.get("paths")
+	if not (paths_var is Dictionary):
+		return resultado
+	var paths: Dictionary = paths_var as Dictionary
+	var eje_estacion: Vector3 = global_transform.basis.x.normalized()
+	var mitad_largo: float = longitud_anden * 0.5 + 3.0
+	var mitad_ancho: float = ancho_cobertura_vias * 0.5
+
+	for segmento: String in paths.keys():
+		var via: Path3D = paths[segmento] as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		var offset: float = via.curve.get_closest_offset(via.to_local(poste.global_position))
+		var punto_global: Vector3 = via.to_global(via.curve.sample_baked(offset, true))
+		var punto_estacion: Vector3 = to_local(punto_global)
+		if absf(punto_estacion.x) > mitad_largo or absf(punto_estacion.z) > mitad_ancho:
+			continue
+		if punto_global.distance_to(poste.global_position) > mitad_ancho + 3.0:
+			continue
+		var muestra: Transform3D = via.curve.sample_baked_with_rotation(offset, true, true)
+		var eje_via: Vector3 = (via.global_transform.basis * -muestra.basis.z).normalized()
+		if absf(eje_via.dot(eje_estacion)) < 0.7:
+			continue
+		resultado.append({
+			"segmento": segmento,
+			"traza": via,
+			"offset": snappedf(offset, 0.01),
+			"offset_ida": snappedf(offset, 0.01),
+			"offset_vuelta": snappedf(offset, 0.01),
+			"punto_global": punto_global,
+		})
+	return resultado
+
+
 ## Indica si el poste correspondiente al sentido de marcha actúa como cabecera.
 func es_terminal_en_sentido(sentido_ida: bool) -> bool:
 	return terminal_parada_ida if sentido_ida else terminal_parada_vuelta
@@ -924,6 +978,7 @@ func serializar_datos() -> Dictionary:
 		"desfasaje_lateral": desfasaje_lateral,
 		"longitud_anden": longitud_anden,
 		"separacion_vias": separacion_vias,
+		"ancho_cobertura_vias": ancho_cobertura_vias,
 		"desfasaje_parada_ida": desfasaje_parada_ida,
 		"desfasaje_parada_vuelta": desfasaje_parada_vuelta,
 		"nombre_estacion": nombre_estacion,
@@ -946,6 +1001,7 @@ func deserializar_datos(data: Dictionary) -> void:
 	desfasaje_lateral = float(data.get("desfasaje_lateral", desfasaje_lateral))
 	longitud_anden = maxf(30.0, float(data.get("longitud_anden", longitud_anden)))
 	separacion_vias = maxf(2.0, float(data.get("separacion_vias", separacion_vias)))
+	ancho_cobertura_vias = maxf(5.0, float(data.get("ancho_cobertura_vias", ancho_cobertura_vias)))
 	desfasaje_parada_ida = float(data.get("desfasaje_parada_ida", desfasaje_parada_ida))
 	desfasaje_parada_vuelta = float(data.get("desfasaje_parada_vuelta", desfasaje_parada_vuelta))
 	nombre_estacion = str(data.get("nombre_estacion", nombre_estacion))

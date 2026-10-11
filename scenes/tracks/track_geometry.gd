@@ -56,6 +56,7 @@ var _red_lista: bool = false
 var _cache_tramos: Dictionary = {}
 ## Cola de construcción progresiva: la carga inicial no bloquea un frame entero.
 var _cola_construccion: Array[String] = []
+var _indice_cola_construccion: int = 0
 var _construyendo: bool = false
 var _mallas_generadas: int = 0
 var _mallas_reusadas: int = 0
@@ -67,7 +68,6 @@ var _t_inicio_construccion: int = 0
 var _limpieza_manual: bool = false
 ## Presupuesto de milisegundos de construcción de mallas por frame.
 @export_range(2.0, 32.0, 1.0) var presupuesto_frame_ms: float = 8.0
-const PRESUPUESTO_FRAME_MS: int = 8
 
 ## Límite de segmentos a generar (0 = toda la red disponible).
 @export var limite_segmentos: int = 0:
@@ -195,6 +195,12 @@ func _enter_tree() -> void:
 
 
 func _process(_delta: float) -> void:
+	# La generación puede ocurrir también durante el juego. Procesarla desde
+	# _process garantiza que el presupuesto se reparte entre frames; una cadena
+	# de call_deferred podía consumir una ráfaga completa durante la carga.
+	if _construyendo:
+		_procesar_cola_geometria()
+		return
 	if not Engine.is_editor_hint() or not generar_en_editor or _limpieza_manual:
 		return
 	var red: TrackNetwork = get_parent() as TrackNetwork
@@ -259,6 +265,7 @@ func construir_geometria() -> void:
 	if _construyendo:
 		return
 	_cola_construccion.clear()
+	_indice_cola_construccion = 0
 	for k: Variant in paths_dict.keys():
 		_cola_construccion.append(str(k))
 	_construyendo = true
@@ -274,15 +281,17 @@ func construir_geometria() -> void:
 ## bloquear el editor (antes eran ~1,8 s en un solo frame).
 func _procesar_cola_geometria() -> void:
 	var t_frame: int = Time.get_ticks_msec()
-	while not _cola_construccion.is_empty():
-		if Time.get_ticks_msec() - t_frame >= PRESUPUESTO_FRAME_MS:
+	while _indice_cola_construccion < _cola_construccion.size():
+		if Time.get_ticks_msec() - t_frame >= int(presupuesto_frame_ms):
 			break
-		var seg_id: String = _cola_construccion.pop_front()
+		var seg_id: String = _cola_construccion[_indice_cola_construccion]
+		_indice_cola_construccion += 1
 		_construir_tramo_de_cola(seg_id)
-	if not _cola_construccion.is_empty():
-		call_deferred("_procesar_cola_geometria")
+	if _indice_cola_construccion < _cola_construccion.size():
 		return
 	_construyendo = false
+	_cola_construccion.clear()
+	_indice_cola_construccion = 0
 	# Limpiar la caché de tramos que ya no existen en la red.
 	var red_actual: TrackNetwork = get_parent() as TrackNetwork
 	if red_actual != null:

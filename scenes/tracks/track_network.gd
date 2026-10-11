@@ -26,6 +26,7 @@ const PASO_BUSQUEDA_ADAPTACION_SWITCH: float = 10.0
 const DOT_TANGENTE_ADAPTACION_SWITCH: float = 0.985
 signal red_cargada(total_segmentos: int, total_uniones: int)
 signal switch_conmutado(nodo_id: int, segmento_destino: String)
+signal reservas_cambiadas()
 signal switch_movido(nodo_id: int, desviada: bool, segmento_activo: String)
 
 # Caché en memoria universal para evitar re-lecturas constantes de disco
@@ -402,6 +403,11 @@ var paths: Dictionary = {}
 var junctions: Dictionary = {}
 ## Estado seleccionado de cada switch: node_id (int) -> segment_id de destino (String)
 var switch_states: Dictionary = {}
+## Exclusión mutua por tramo y por aparato. Las reservas se mantienen hasta
+## que la cola completa del tren despeja el recurso.
+var _propietarios_recursos: Dictionary = {}
+var _reservas_por_tren: Dictionary = {}
+var _cola_solicitudes_reserva: Array[Dictionary] = []
 ## Diccionario de aparatos de vía instanciados: node_id (int) -> BaseTurnout
 var aparatos_de_via: Dictionary = {}
 ## Rango métrico útil de vía plena por segmento [d_inicio, d_fin] libre de solapes con switches
@@ -3991,6 +3997,53 @@ func get_opciones_siguientes(segment_id: String, extremo_actual: String) -> Arra
 	return opciones
 
 
+## Recorre la continuidad física inmediata de una vía sin tomar ninguna
+## bifurcación. Cada paso conserva el sentido local y el intervalo métrico que
+## queda por delante de la cabecera. Es la referencia autoritativa para decidir
+## si una estación se puede atender antes de una aguja.
+func obtener_corredor_inmediato(segmento_inicial: String, offset_inicial: float, sentido_invertido: bool, max_pasos: int = 64) -> Array[Dictionary]:
+	var corredor: Array[Dictionary] = []
+	if not paths.has(segmento_inicial):
+		return corredor
+	var segmento: String = segmento_inicial
+	var direccion: String = "reversed" if sentido_invertido else "forward"
+	var entrada: float = offset_inicial
+	var distancia_acumulada := 0.0
+	var visitados: Dictionary = {}
+	for _paso: int in max_pasos:
+		var clave: String = "%s|%s" % [segmento, direccion]
+		if visitados.has(clave):
+			break
+		visitados[clave] = true
+		var path: Path3D = get_segment_path(segmento)
+		if path == null or path.curve == null:
+			break
+		var largo: float = path.curve.get_baked_length()
+		var desde: float = clampf(entrada, 0.0, largo)
+		var hasta: float = 0.0 if direccion == "reversed" else largo
+		corredor.append({
+			"segmento": segmento,
+			"direccion": direccion,
+			"desde": desde,
+			"hasta": hasta,
+			"distancia_inicio": distancia_acumulada,
+		})
+		distancia_acumulada += absf(hasta - desde)
+		var extremo: String = "start" if direccion == "reversed" else "end"
+		var opciones: Array[Dictionary] = get_opciones_siguientes(segmento, extremo)
+		# La primera decisión pertenece a la siguiente sección; no se la atraviesa.
+		if opciones.size() != 1:
+			break
+		var siguiente: Dictionary = opciones[0]
+		segmento = str(siguiente.get("segment_id", ""))
+		direccion = str(siguiente.get("direccion", "forward"))
+		var siguiente_path: Path3D = get_segment_path(segmento)
+		if siguiente_path == null or siguiente_path.curve == null:
+			break
+		entrada = siguiente_path.curve.get_baked_length() if direccion == "reversed" else 0.0
+	return corredor
+
+
 ## Indica si el extremo de un segmento desemboca en un cambio de vía (switch).
 func es_switch(segment_id: String, extremo_actual: String) -> bool:
 	if not segments_data.has(segment_id):
@@ -4011,13 +4064,151 @@ func es_switch(segment_id: String, extremo_actual: String) -> bool:
 
 
 ## Establece la posición/rama activa de una aguja (switch).
-func set_switch_target(node_id: int, target_segment_id: String) -> void:
+func set_switch_target(node_id: int, target_segment_id: String, solicitante_id: int = 0) -> void:
+	var propietario: int = int(_propietarios_recursos.get("switch:%d" % node_id, 0))
+	if propietario != 0 and propietario != solicitante_id:
+		push_warning("TrackNetwork: no se cambia la aguja %d; está reservada por el tren %d." % [node_id, propietario])
+		return
 	switch_states[node_id] = target_segment_id
 	if aparatos_de_via.has(node_id):
 		var ap: BaseTurnout = aparatos_de_via[node_id] as BaseTurnout
 		if ap != null:
 			ap.conmutar_a(1 if target_segment_id == ap.via_desviada_id else 0)
 	switch_conmutado.emit(node_id, target_segment_id)
+
+
+## Reserva de forma atómica el próximo Path3D y el switch de entrada. Las
+## solicitudes se ordenan FIFO en cada recurso para que ningún tren saltee a
+## otro que llegó antes.
+func solicitar_reserva_seccion(tren_id: int, segmento: String, nodo_switch: int, odometro: float, largo_tren: float) -> bool:
+	if tren_id <= 0 or not paths.has(segmento):
+		return false
+	var recursos: Array[String] = ["via:%s" % segmento]
+	if nodo_switch > 0:
+		recursos.append("switch:%d" % nodo_switch)
+	if not _adquirir_recursos_fifo(tren_id, recursos):
+		return false
+
+	var path: Path3D = get_segment_path(segmento)
+	var largo_segmento: float = path.curve.get_baked_length() if path != null and path.curve != null else 0.0
+	for recurso: String in recursos:
+		var limite: float = odometro + largo_tren + 8.0
+		if recurso.begins_with("via:"):
+			limite = odometro + largo_segmento + largo_tren
+		_agregar_reserva_tren(tren_id, recurso, limite)
+	reservas_cambiadas.emit()
+	return true
+
+
+## Reserva la vía bajo una formación que empieza detenida en Constitución.
+func reservar_tramo_inicial(tren_id: int, segmento: String, offset: float, invertido: bool, odometro: float, largo_tren: float) -> bool:
+	if tren_id <= 0 or not paths.has(segmento):
+		return false
+	var path: Path3D = get_segment_path(segmento)
+	if path == null or path.curve == null:
+		return false
+	var largo: float = path.curve.get_baked_length()
+	var hasta_salida: float = offset if invertido else largo - offset
+	var recurso: String = "via:%s" % segmento
+	var recursos: Array[String] = [recurso]
+	if not _adquirir_recursos_fifo(tren_id, recursos):
+		return false
+	_propietarios_recursos[recurso] = tren_id
+	_agregar_reserva_tren(tren_id, recurso, odometro + hasta_salida + largo_tren)
+	reservas_cambiadas.emit()
+	return true
+
+
+func _agregar_reserva_tren(tren_id: int, recurso: String, limite_odometro: float) -> void:
+	var reservas: Array = _reservas_por_tren.get(tren_id, []) as Array
+	for reserva_raw: Variant in reservas:
+		var reserva: Dictionary = reserva_raw as Dictionary
+		if str(reserva.get("recurso", "")) == recurso:
+			reserva["limite"] = maxf(float(reserva.get("limite", 0.0)), limite_odometro)
+			reservas_cambiadas.emit()
+			return
+	reservas.append({"recurso": recurso, "limite": limite_odometro})
+	_reservas_por_tren[tren_id] = reservas
+
+
+func _adquirir_recursos_fifo(tren_id: int, recursos: Array[String]) -> bool:
+	var solicitud_indice: int = -1
+	for indice: int in _cola_solicitudes_reserva.size():
+		if int(_cola_solicitudes_reserva[indice].get("tren", 0)) == tren_id:
+			solicitud_indice = indice
+			_cola_solicitudes_reserva[indice]["recursos"] = recursos.duplicate()
+			break
+	if solicitud_indice < 0:
+		solicitud_indice = _cola_solicitudes_reserva.size()
+		_cola_solicitudes_reserva.append({"tren": tren_id, "recursos": recursos.duplicate()})
+	# FIFO por recurso: una solicitud anterior sólo detiene ésta si necesita
+	# alguno de los mismos recursos; solicitudes independientes no se bloquean.
+	for indice: int in solicitud_indice:
+		var anteriores: Array = _cola_solicitudes_reserva[indice].get("recursos", []) as Array
+		for recurso: String in recursos:
+			if anteriores.has(recurso):
+				return false
+	for recurso: String in recursos:
+		var propietario: int = int(_propietarios_recursos.get(recurso, 0))
+		if propietario != 0 and propietario != tren_id:
+			return false
+	for recurso: String in recursos:
+		_propietarios_recursos[recurso] = tren_id
+	_cola_solicitudes_reserva.remove_at(solicitud_indice)
+	return true
+
+
+## Libera las reservas que la cola del tren ya despejó.
+func actualizar_reservas_tren(tren_id: int, odometro: float) -> void:
+	var reservas: Array = _reservas_por_tren.get(tren_id, []) as Array
+	var restantes: Array = []
+	var hubo_cambios := false
+	for reserva_raw: Variant in reservas:
+		var reserva: Dictionary = reserva_raw as Dictionary
+		var recurso: String = str(reserva.get("recurso", ""))
+		if odometro >= float(reserva.get("limite", INF)) and int(_propietarios_recursos.get(recurso, 0)) == tren_id:
+			_propietarios_recursos.erase(recurso)
+			hubo_cambios = true
+		else:
+			restantes.append(reserva)
+	if restantes.is_empty():
+		_reservas_por_tren.erase(tren_id)
+	else:
+		_reservas_por_tren[tren_id] = restantes
+	if hubo_cambios:
+		reservas_cambiadas.emit()
+
+
+func liberar_reservas_tren(tren_id: int) -> void:
+	for recurso: Variant in _propietarios_recursos.keys():
+		if int(_propietarios_recursos[recurso]) == tren_id:
+			_propietarios_recursos.erase(recurso)
+	_cola_solicitudes_reserva = _cola_solicitudes_reserva.filter(func(solicitud: Dictionary) -> bool: return int(solicitud.get("tren", 0)) != tren_id)
+	_reservas_por_tren.erase(tren_id)
+	reservas_cambiadas.emit()
+
+
+func recurso_reservado_por_otro(tren_id: int, segmento: String = "", nodo_switch: int = 0) -> bool:
+	if not segmento.is_empty() and int(_propietarios_recursos.get("via:%s" % segmento, 0)) not in [0, tren_id]:
+		return true
+	if nodo_switch > 0 and int(_propietarios_recursos.get("switch:%d" % nodo_switch, 0)) not in [0, tren_id]:
+		return true
+	return false
+
+
+func segmento_reservado(segmento: String) -> bool:
+	return int(_propietarios_recursos.get("via:%s" % segmento, 0)) != 0
+
+
+func nombre_opcion_switch(nodo_id: int, segmento: String) -> String:
+	if aparatos_de_via.has(nodo_id):
+		var aparato: BaseTurnout = aparatos_de_via[nodo_id] as BaseTurnout
+		if aparato != null:
+			if segmento == aparato.via_directa_id:
+				return "Directa · %s" % segmento
+			if segmento == aparato.via_desviada_id:
+				return "Desviada · %s" % segmento
+	return segmento
 
 
 ## Obtiene la opción seleccionada para un switch. Si no está definida, devuelve la primera disponible.
@@ -4118,6 +4309,98 @@ func get_segment_path(segment_id: String) -> Path3D:
 	if paths.has(segment_id):
 		return paths[segment_id] as Path3D
 	return null
+
+
+## Calcula un itinerario por la topología, no por el orden de los nodos de la
+## escena. El resultado contiene los IDs de tramos, en el orden de circulación,
+## y la distancia métrica hasta el offset de destino.
+func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String] = [], switches_forzados: Dictionary = {}) -> Dictionary:
+	if not paths.has(segmento_origen) or not paths.has(segmento_destino):
+		return {"ok": false, "motivo": "segmento inexistente", "segmentos": []}
+	if not override_segmentos.is_empty():
+		var forzada: Array[String] = override_segmentos.duplicate()
+		if forzada.front() != segmento_origen:
+			forzada.push_front(segmento_origen)
+		if forzada.back() != segmento_destino:
+			forzada.append(segmento_destino)
+		var pasos_forzados: Array[Dictionary] = []
+		for sid: String in forzada:
+			pasos_forzados.append({"segmento": sid, "direccion": ""})
+		return {"ok": true, "segmentos": forzada, "pasos": pasos_forzados, "distancia_m": -1.0, "cambios_aguja": 0, "forzada": true, "sentido_invertido": sentido_invertido}
+
+	var dir_inicial: String = "reversed" if sentido_invertido else "forward"
+	var cola: Array[Dictionary] = [{"seg": segmento_origen, "dir": dir_inicial, "entrada": offset_origen, "costo": 0.0}]
+	var costos: Dictionary = {"%s|%s" % [segmento_origen, dir_inicial]: 0.0}
+	var anterior: Dictionary = {}
+	var visitados: Dictionary = {}
+	var estado_final: String = ""
+	var distancia_final: float = INF
+
+	while not cola.is_empty():
+		cola.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["costo"]) < float(b["costo"]))
+		var actual: Dictionary = cola.pop_front()
+		var seg_id: String = str(actual["seg"])
+		var dir: String = str(actual["dir"])
+		var clave: String = "%s|%s" % [seg_id, dir]
+		if visitados.has(clave):
+			continue
+		visitados[clave] = true
+		var path: Path3D = get_segment_path(seg_id)
+		if path == null or path.curve == null:
+			continue
+		var largo: float = path.curve.get_baked_length()
+		var entrada: float = clampf(float(actual["entrada"]), 0.0, largo)
+		var destino_adelante: bool = seg_id == segmento_destino and ((dir == "forward" and offset_destino >= entrada) or (dir == "reversed" and offset_destino <= entrada))
+		if destino_adelante:
+			estado_final = clave
+			distancia_final = float(actual["costo"]) + absf(offset_destino - entrada)
+			break
+
+		var distancia_salida: float = (largo - entrada) if dir == "forward" else entrada
+		var extremo: String = "end" if dir == "forward" else "start"
+		var opciones: Array[Dictionary] = get_opciones_siguientes(seg_id, extremo)
+		var nodo_union: int = int(opciones[0].get("node_id", 0)) if not opciones.is_empty() else 0
+		var segmento_forzado: String = str(switches_forzados.get(nodo_union, switches_forzados.get(str(nodo_union), "")))
+		for opcion: Dictionary in opciones:
+			var prox_id: String = str(opcion.get("segment_id", ""))
+			if not segmento_forzado.is_empty() and prox_id != segmento_forzado:
+				continue
+			var prox_dir: String = str(opcion.get("direccion", "forward"))
+			var prox_clave: String = "%s|%s" % [prox_id, prox_dir]
+			var nuevo_costo: float = float(actual["costo"]) + distancia_salida
+			if costos.has(prox_clave) and float(costos[prox_clave]) <= nuevo_costo:
+				continue
+			costos[prox_clave] = nuevo_costo
+			anterior[prox_clave] = clave
+			var prox_path: Path3D = get_segment_path(prox_id)
+			if prox_path == null or prox_path.curve == null:
+				continue
+			var prox_largo: float = prox_path.curve.get_baked_length()
+			cola.append({"seg": prox_id, "dir": prox_dir, "entrada": 0.0 if prox_dir == "forward" else prox_largo, "costo": nuevo_costo})
+
+	if estado_final.is_empty():
+		return {"ok": false, "motivo": "no existe conexión ferroviaria", "segmentos": []}
+	var pasos_inversos: Array[Dictionary] = []
+	var cursor: String = estado_final
+	while not cursor.is_empty():
+		pasos_inversos.append({"segmento": cursor.get_slice("|", 0), "direccion": cursor.get_slice("|", 1)})
+		cursor = str(anterior.get(cursor, ""))
+	pasos_inversos.reverse()
+	var segmentos: Array[String] = []
+	var usados: Dictionary = {}
+	for paso: Dictionary in pasos_inversos:
+		var sid: String = str(paso.get("segmento", ""))
+		if usados.has(sid):
+			return {"ok": false, "motivo": "la ruta repite el segmento %s" % sid, "segmentos": [], "pasos": []}
+		usados[sid] = true
+		segmentos.append(sid)
+	var cambios_aguja: int = 0
+	for indice: int in maxi(0, pasos_inversos.size() - 1):
+		var paso_actual: Dictionary = pasos_inversos[indice]
+		var extremo: String = "end" if str(paso_actual.get("direccion", "forward")) == "forward" else "start"
+		if es_switch(str(paso_actual.get("segmento", "")), extremo):
+			cambios_aguja += 1
+	return {"ok": true, "segmentos": segmentos, "pasos": pasos_inversos, "distancia_m": distancia_final, "cambios_aguja": cambios_aguja, "forzada": false, "sentido_invertido": sentido_invertido}
 
 
 ## Obtiene los datos de una unión por su ID de nodo OSM.
