@@ -74,6 +74,7 @@ func _contar_particulas(nodo: Node) -> int:
 	for hijo: Node in nodo.get_children():
 		if hijo is GPUParticles3D:
 			total += 1
+		total += _contar_particulas(hijo)
 	return total
 
 

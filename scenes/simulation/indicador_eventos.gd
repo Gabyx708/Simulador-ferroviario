@@ -108,16 +108,21 @@ func _agregar_efecto_tren(id_tren: int, es_chispa: bool, color: Color) -> void:
 	var tren: Tren = _trenes.get(id_tren) as Tren
 	if tren == null or not is_instance_valid(tren):
 		return
-	var particulas: GPUParticles3D = _crear_particulas(color, es_chispa)
-	particulas.position = Vector3(0.0, 3.2, 0.0) if es_chispa else Vector3(0.0, 1.0, 0.0)
-	tren.add_child(particulas)
-	_efectos_tren[id_tren] = particulas
+	var contenedor: Node3D = Node3D.new()
+	contenedor.position = Vector3(0.0, 3.5, 0.0) if es_chispa else Vector3(0.0, 1.5, 0.0)
+	tren.add_child(contenedor)
+	contenedor.add_child(_crear_particulas(color, es_chispa))
+	if es_chispa:
+		# Las partículas solas pueden perderse a distancia; una luz
+		# parpadeante no, por eso se usa para la falla eléctrica.
+		contenedor.add_child(_crear_luz_chispa(color))
+	_efectos_tren[id_tren] = contenedor
 
 
 func _quitar_efecto_tren(id_tren: int) -> void:
-	var particulas: GPUParticles3D = _efectos_tren.get(id_tren) as GPUParticles3D
-	if particulas != null and is_instance_valid(particulas):
-		particulas.queue_free()
+	var contenedor: Node3D = _efectos_tren.get(id_tren) as Node3D
+	if contenedor != null and is_instance_valid(contenedor):
+		contenedor.queue_free()
 	_efectos_tren.erase(id_tren)
 
 
@@ -127,29 +132,41 @@ func _agregar_efecto_estacion(nombre: String) -> void:
 	var estacion: Estacion = _estaciones.get(nombre) as Estacion
 	if estacion == null or not is_instance_valid(estacion):
 		return
-	var particulas: GPUParticles3D = _crear_particulas(Color(0.22, 0.13, 0.08, 0.85), false)
-	particulas.position = Vector3(0.0, 1.5, 0.0)
-	estacion.add_child(particulas)
-	_efectos_estacion[nombre] = particulas
+	var contenedor: Node3D = Node3D.new()
+	contenedor.position = Vector3(0.0, 2.0, 0.0)
+	estacion.add_child(contenedor)
+	contenedor.add_child(_crear_particulas(Color(0.22, 0.13, 0.08, 0.9), false))
+	_efectos_estacion[nombre] = contenedor
 
 
 func _quitar_efecto_estacion(nombre: String) -> void:
-	var particulas: GPUParticles3D = _efectos_estacion.get(nombre) as GPUParticles3D
-	if particulas != null and is_instance_valid(particulas):
-		particulas.queue_free()
+	var contenedor: Node3D = _efectos_estacion.get(nombre) as Node3D
+	if contenedor != null and is_instance_valid(contenedor):
+		contenedor.queue_free()
 	_efectos_estacion.erase(nombre)
 
 
-## --- Partículas procedurales, sin assets externos ---
+## --- Partículas y luz procedurales, sin assets externos ---
+
+## El AABB por defecto que Godot calcula para un GPUParticles3D creado por
+## código puede quedar más chico que el recorrido real de las partículas
+## (sobre todo el humo, que sube con velocidad y gravedad propias) y
+## Godot directamente no dibuja lo que cae fuera -- por eso se fija a mano,
+## generoso, en vez de confiar en el default.
+const _AABB_VISIBILIDAD: AABB = AABB(Vector3(-4, -1, -4), Vector3(8, 8, 8))
 
 func _crear_particulas(color: Color, es_chispa: bool) -> GPUParticles3D:
 	var particulas: GPUParticles3D = GPUParticles3D.new()
-	particulas.amount = 28 if es_chispa else 14
-	particulas.lifetime = 0.35 if es_chispa else 2.5
+	particulas.amount = 40 if es_chispa else 20
+	particulas.lifetime = 0.5 if es_chispa else 3.0
 	particulas.emitting = true
+	particulas.visibility_aabb = _AABB_VISIBILIDAD
 
 	var malla: QuadMesh = QuadMesh.new()
-	malla.size = Vector2(0.06, 0.06) if es_chispa else Vector2(0.6, 0.6)
+	# Tamaños grandes a propósito: a la escala de este mundo (tramos de
+	# kilómetros, cámara casi siempre lejos) un efecto "realista" chico es
+	# invisible en la práctica. Mejor que se note de sobra.
+	malla.size = Vector2(0.5, 0.5) if es_chispa else Vector2(2.5, 2.5)
 
 	var material: StandardMaterial3D = StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -159,19 +176,36 @@ func _crear_particulas(color: Color, es_chispa: bool) -> GPUParticles3D:
 	if es_chispa:
 		material.emission_enabled = true
 		material.emission = color
-		material.emission_energy_multiplier = 2.0
+		material.emission_energy_multiplier = 4.0
 	malla.material = material
 	particulas.draw_pass_1 = malla
 
 	var proceso: ParticleProcessMaterial = ParticleProcessMaterial.new()
 	proceso.direction = Vector3(0.0, 0.0, 0.0) if es_chispa else Vector3(0.0, 1.0, 0.0)
 	proceso.spread = 180.0 if es_chispa else 20.0
-	proceso.initial_velocity_min = 1.2 if es_chispa else 0.25
-	proceso.initial_velocity_max = 2.6 if es_chispa else 0.55
-	proceso.gravity = Vector3(0.0, -4.0, 0.0) if es_chispa else Vector3(0.0, 0.5, 0.0)
-	proceso.scale_min = 0.6
-	proceso.scale_max = 1.5
+	proceso.initial_velocity_min = 2.0 if es_chispa else 0.4
+	proceso.initial_velocity_max = 4.5 if es_chispa else 0.9
+	proceso.gravity = Vector3(0.0, -6.0, 0.0) if es_chispa else Vector3(0.0, 0.5, 0.0)
+	proceso.scale_min = 0.8
+	proceso.scale_max = 2.0
 	proceso.color = color
 	particulas.process_material = proceso
 
 	return particulas
+
+
+## Luz parpadeante para la falla eléctrica: una partícula de 0.5m a 50m de
+## distancia se pierde fácil, una luz prendida/apagada no.
+func _crear_luz_chispa(color: Color) -> OmniLight3D:
+	var luz: OmniLight3D = OmniLight3D.new()
+	luz.light_color = color
+	luz.light_energy = 6.0
+	luz.omni_range = 8.0
+	# `self` (IndicadorEventos) ya está en el árbol; `luz` todavía no en el
+	# momento en que se llama esta función, así que create_tween() tiene
+	# que pedirse desde acá, no desde `luz`.
+	var tween: Tween = create_tween()
+	tween.set_loops()
+	tween.tween_property(luz, "light_energy", 1.0, 0.08)
+	tween.tween_property(luz, "light_energy", 6.0, 0.08)
+	return luz
