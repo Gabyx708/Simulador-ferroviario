@@ -26,6 +26,10 @@
 [ext_resource type="Script" uid="uid://cjd3dm8ngg8nv" path="res://scenes/services/servicio_ferroviario.gd" id="19_servicio"]
 [ext_resource type="PackedScene" uid="uid://dalrdkn60wkut" path="res://assets/models/constitucion/constitucion_terminal.tscn" id="24_8kx6l"]
 [ext_resource type="Script" path="res://scenes/simulation/simulacion_controller.gd" id="25_simulacion_controller"]
+[ext_resource type="Script" path="res://scenes/simulation/reloj_simulacion.gd" id="26_reloj_simulacion"]
+[ext_resource type="Script" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
+[ext_resource type="Script" path="res://scenes/simulation/gestor_eventos.gd" id="28_gestor_eventos"]
+[ext_resource type="Script" path="res://scenes/simulation/indicador_eventos.gd" id="29_indicador_eventos"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -4642,6 +4646,18 @@ formacion_principal = NodePath("Formaciones/TrenCSR")
 
 [node name="SimulacionController" type="Node" parent="."]
 script = ExtResource("25_simulacion_controller")
+
+[node name="RelojSimulacion" type="Node" parent="."]
+script = ExtResource("26_reloj_simulacion")
+
+[node name="EstadisticasRetraso" type="Node" parent="."]
+script = ExtResource("27_estadisticas_retraso")
+
+[node name="GestorEventos" type="Node" parent="."]
+script = ExtResource("28_gestor_eventos")
+
+[node name="IndicadorEventos" type="Node" parent="."]
+script = ExtResource("29_indicador_eventos")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
 

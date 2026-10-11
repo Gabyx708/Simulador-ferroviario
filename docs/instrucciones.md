@@ -68,5 +68,7 @@ internos del HUD; no constituyen una API para otros sistemas.
 - [API de simulación](api_simulacion.md): contrato técnico de integración.
 - [Plan de Diego](plan_diego.md): núcleo ferroviario y fases cerradas.
 - [Plan pendiente](plan_para_lo_pendiente.md): tareas por integrante.
+- [Reloj, retraso y eventos](eventos_ferroviarios.md): reloj de simulación,
+  cálculo de `retraso_s` y los 3 eventos de dominio (Persona 5).
 - [Integración de switches y vías](integracion_switches_vias.md): diagnóstico
   especializado de infraestructura.

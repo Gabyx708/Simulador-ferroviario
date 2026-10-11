@@ -25,6 +25,13 @@ Un tren publica `id`, `nombre`, `estado`, `estado_nombre`, `servicio`,
 `capacidad`, `retraso_s`, `resultado`, motivos de resultado/evento,
 `tiempo_evento_restante_s` y `velocidad_media_marcha_kmh`.
 
+`retraso_s` lee `Tren.retraso_externo_s`, una variable pública que el propio
+`Tren` no calcula: la mantiene `EstadisticasRetraso` (Persona 5,
+`scenes/simulation/estadisticas_retraso.gd`), que la recalcula por tramo
+usando `RelojSimulacion` y las señales `llego_a_estacion`/`salio_de_estacion`.
+Es la única línea que Persona 5 toca en `tren.gd`; Diego dejó el proyecto y
+delegó el mantenimiento de ese campo.
+
 Una estación publica `id`, `nombre`, `activa`, pasajeros esperando/saliendo y
 totales subidos/bajados. El resumen global publica pasajeros esperando, en
 viaje y transportados; trenes activos, finalizados e incompletos; demora
@@ -82,10 +89,12 @@ usar exclusivamente los tres comandos por tren.
 
 ## Límites actuales
 
-`demora_promedio_s` permanece neutra hasta que exista el módulo de horarios y
-estadísticas. Reloj/fecha, horarios previstos, demanda por hora y eventos de
-dominio siguen pendientes. El factor global ya está disponible; el slider del
-HUD permite `0.0×–10.0×` y muestra **Pausada** en cero.
+`demora_promedio_s` permanece neutra en `SimulacionController` hasta que
+Persona 3 arme el agregador de `EstadisticasSimulacion`; `retraso_s` por tren
+ya es real (ver arriba). Demanda por hora y eventos de dominio siguen
+pendientes de Persona 4 y Persona 5 respectivamente. El factor global ya está
+disponible; el slider del HUD permite `0.0×–10.0×` y muestra **Pausada** en
+cero.
 
 Los sliders individuales de velocidad, aceleración y frenado son controles
 internos del HUD. La velocidad nominal de cada CSR es `50 km/h` y puede
