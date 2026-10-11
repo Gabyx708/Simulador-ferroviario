@@ -1,7 +1,253 @@
-[gd_scene format=3 uid="uid://w3ge5g3k2vgds"]
+[gd_scene load_steps=3 format=3 uid="uid://w3ge5g3k2vgds"]
 
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
+[ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
+bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
+border_width_left = 3
+border_color = Color(1, 0.756863, 0.278431, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="HUD" type="CanvasLayer"]
+script = ExtResource("2_hud")
 
 [node name="Velocimetro" parent="." instance=ExtResource("1_veloc")]
+
+[node name="Paneles" type="VBoxContainer" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 720.0
+theme_override_constants/separation = 4
+
+[node name="SelectorTrenes" type="PanelContainer" parent="Paneles"]
+custom_minimum_size = Vector2(190, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+
+[node name="Margen" type="MarginContainer" parent="Paneles/SelectorTrenes"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="Contenido" type="VBoxContainer" parent="Paneles/SelectorTrenes/Margen"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Titulo" type="Button" parent="Paneles/SelectorTrenes/Margen/Contenido"]
+layout_mode = 2
+flat = true
+alignment = 0
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "▶ TRENES"
+
+[node name="ListaTrenes" type="ScrollContainer" parent="Paneles/SelectorTrenes/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 62)
+size_flags_vertical = 3
+
+[node name="ContenidoListaTrenes" type="VBoxContainer" parent="Paneles/SelectorTrenes/Margen/Contenido/ListaTrenes"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AgregarTren" type="Button" parent="Paneles/SelectorTrenes/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ Agregar tren en Constitución"
+theme_override_font_sizes/font_size = 10
+
+[node name="PanelPruebas" type="PanelContainer" parent="Paneles"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+
+[node name="Margen" type="MarginContainer" parent="Paneles/PanelPruebas"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="Contenido" type="VBoxContainer" parent="Paneles/PanelPruebas/Margen"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Titulo" type="Button" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+flat = true
+alignment = 0
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "▶ PRUEBAS DE MARCHA"
+
+[node name="TrenPruebas" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Sin tren seleccionado"
+
+[node name="EtiquetaVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Velocidad de simulación"
+theme_override_font_sizes/font_size = 10
+
+[node name="VelocidadSimulacion" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="ValorVelocidadSimulacion" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
+text = "×1.0"
+
+[node name="SeparadorVelocidadSimulacion" type="HSeparator" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+
+[node name="EtiquetaVelocidadPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Velocidad máxima"
+theme_override_font_sizes/font_size = 10
+
+[node name="VelocidadPrueba" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 3.0
+step = 0.1
+value = 1.0
+
+[node name="ValorVelocidadPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
+text = "×1.0"
+
+[node name="EtiquetaAceleracionPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Aceleración"
+theme_override_font_sizes/font_size = 10
+
+[node name="AceleracionPrueba" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="ValorAceleracionPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
+text = "×1.0"
+
+[node name="EtiquetaFrenadoPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Frenado"
+theme_override_font_sizes/font_size = 10
+
+[node name="FrenadoPrueba" type="HSlider" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+step = 0.1
+value = 1.0
+
+[node name="ValorFrenadoPrueba" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 0.88, 1)
+text = "×1.0"
+
+[node name="RestablecerPruebas" type="Button" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Restablecer ×1"
+theme_override_font_sizes/font_size = 10
+
+[node name="SeparadorTiempos" type="HSeparator" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+
+[node name="EtiquetaDemoraSalida" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Demora de salida · s"
+theme_override_font_sizes/font_size = 10
+
+[node name="DemoraSalida" type="SpinBox" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 600.0
+step = 0.5
+
+[node name="EtiquetaEsperaEstaciones" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]
+layout_mode = 2
+text = "Espera por estación · s"
+theme_override_font_sizes/font_size = 8
+
+[node name="EsperaEstaciones" type="SpinBox" parent="Paneles/PanelPruebas/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 180.0
+step = 0.5
+value = 3.0
+
+[node name="PanelSwitches" type="PanelContainer" parent="Paneles"]
+custom_minimum_size = Vector2(280, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+
+[node name="Margen" type="MarginContainer" parent="Paneles/PanelSwitches"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="Contenido" type="VBoxContainer" parent="Paneles/PanelSwitches/Margen"]
+layout_mode = 2
+
+[node name="Titulo" type="Button" parent="Paneles/PanelSwitches/Margen/Contenido"]
+layout_mode = 2
+flat = true
+alignment = 0
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "▶ SWITCHES PRÓXIMOS"
+
+[node name="EstadoSwitches" type="Label" parent="Paneles/PanelSwitches/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+text = "Seleccioná un tren para ver sus próximos desvíos."
+theme_override_font_sizes/font_size = 10
+
+[node name="ScrollSwitches" type="ScrollContainer" parent="Paneles/PanelSwitches/Margen/Contenido"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListaSwitches" type="VBoxContainer" parent="Paneles/PanelSwitches/Margen/Contenido/ScrollSwitches"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MostrarMasSwitches" type="Button" parent="Paneles/PanelSwitches/Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Mostrar 2 switches más"
+visible = false

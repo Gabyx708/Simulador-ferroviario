@@ -26,16 +26,16 @@ func _ready() -> void:
 	if traza == null:
 		traza = find_child("Traza", true, false) as Path3D
 
-	if camara != null and "formacion" in camara and camara.get("formacion") == null:
-		camara.set("formacion", formacion_principal)
-
 	if formacion_principal != null and "traza" in formacion_principal and formacion_principal.get("traza") == null:
 		formacion_principal.set("traza", traza)
 
-	# Autoconexión del HUD (velocímetro) con la formación principal
+	# El tablero permanece vacío hasta una selección explícita. La cámara y el
+	# HUD se vinculan juntos desde _on_tren_seleccionado().
+	if camara != null and "formacion" in camara:
+		camara.set("formacion", null)
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
-	if velocimetro != null and velocimetro.tren == null and formacion_principal is Tren:
-		velocimetro.tren = formacion_principal
+	if velocimetro != null:
+		velocimetro.soltar_tren()
 
 	# Selección de tren por clic: con más de una formación en la escena, el
 	# HUD y el seguimiento de cámara pueden apuntar a un tren distinto del
@@ -51,7 +51,9 @@ func _ready() -> void:
 
 ## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
 func _on_tren_seleccionado(tren: Tren) -> void:
-	if camara != null and "formacion" in camara:
+	if camara is CamaraLibre:
+		(camara as CamaraLibre).seguir_tren_cenital(tren)
+	elif camara != null and "formacion" in camara:
 		camara.set("formacion", tren)
 
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro

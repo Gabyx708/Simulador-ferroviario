@@ -18,6 +18,10 @@ signal posicion_cambiada(poste: PosteParada)
 		_actualizar_cartel()
 
 var _ignorar_notificacion: bool = false
+## Cada instancia necesita su propio material. El `BoxMesh` del .tscn es un
+## subrecurso compartido entre PosteParadaIda y PosteParadaVuelta; modificar
+## ese material hacía que el último poste actualizado impusiera su color a ambos.
+var _material_cartel: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -46,7 +50,16 @@ func fijar_posicion_x(nuevo_x: float) -> void:
 
 func _actualizar_cartel() -> void:
 	var cartel: MeshInstance3D = get_node_or_null("CartelVisual") as MeshInstance3D
-	if cartel != null and cartel.mesh != null and cartel.mesh.material != null:
-		var mat: StandardMaterial3D = cartel.mesh.material as StandardMaterial3D
-		if mat != null:
-			mat.albedo_color = color_cartel
+	if cartel == null:
+		return
+	if _material_cartel == null:
+		_material_cartel = StandardMaterial3D.new()
+		_material_cartel.resource_local_to_scene = true
+		_material_cartel.roughness = 0.4
+		cartel.material_override = _material_cartel
+	_material_cartel.albedo_color = color_cartel
+	# La emisión tenue preserva el código de color bajo la iluminación del
+	# editor y durante la simulación, sin convertir el cartel en una fuente de luz.
+	_material_cartel.emission_enabled = true
+	_material_cartel.emission = color_cartel
+	_material_cartel.emission_energy_multiplier = 0.12

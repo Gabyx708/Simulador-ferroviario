@@ -29,11 +29,6 @@ res://
 │   ├── shaders/             # Shaders globales (.gdshader)
 │   └── utils/               # Constantes matemáticas y helpers puros
 │
-├── docs/                    # Documentación técnica, guías y licencias
-│   ├── integracion_switches_vias.md  # Ramal Roca: vías, switches, diagnóstico y pruebas
-│   ├── LEEME_OSM.md         # Guía de extracción y conversión OpenStreetMap
-│   └── audio_leeme.txt      # Licencias y autorías del pack de sonido
-│
 ├── levels/                  # Escenas de ensamblado de mundo y circuitos
 │   ├── ramal_roca_main/     # Escena de inicio del Ramal Roca
 │   ├── ramal_roca/          # Variante del nivel Ramal Roca
@@ -89,28 +84,50 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 
 - Abrí `project.godot` con **Godot 4.7** (la integración se verificó con Godot 4.7.2) y esperá a que termine la importación inicial de recursos.
 - La escena de inicio es `levels/ramal_roca_main/ramal_roca_main.tscn`. Usá **F5** para ejecutar el proyecto; con **F6** podés ejecutar la escena abierta en el editor.
-- El nivel principal reúne la red ferroviaria y sus aparatos de vía, el tren CSR, la terminal de Constitución y el HUD. `BaseLevel` conecta el velocímetro con la formación principal al iniciar.
+- El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio actual opera exclusivamente Constitución → Bosques y finaliza en Bosques.
 - Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
+
+### Configurar el recorrido por estaciones
+
+En `ramal_roca_main.tscn`, el nodo `ServicioConstitucionBosques` guarda la secuencia operacional, no el orden visual de las vías. Después de crear cada andén `Estacion`, asignalo a su `Path3D`, ajustá `progreso_en_via` y arrastralo a `paradas` en el Inspector del servicio, en orden Constitución → Bosques. El `TrenCSR` ya está vinculado al servicio.
+
+Al hacer clic sobre una formación, la cámara cambia a una vista cenital y la sigue. `WASD` desplaza el encuadre relativo al tren, `Q/E` acerca o aleja la cámara, `Shift` acelera ese desplazamiento y `C` alterna entre seguimiento cenital y cámara libre; el seguimiento no se pierde al mover el encuadre.
+
+Cada andén es una parada independiente: para vías distintas de ida y vuelta agregá dos estaciones con el mismo `nombre_estacion`. El planificador resuelve el camino por el grafo de `TrackNetwork` y mueve las agujas necesarias. Si un par de paradas debe tomar un itinerario no mínimo, agregá en `overrides_json` una entrada como `{"0>1": ["seg_470", "seg_471"]}`.
+
+Una `Estacion` puede cubrir varias vías paralelas sin duplicar el nodo: ajustá `ancho_cobertura_vias` en el Inspector. El tren proyecta el poste de parada sobre cada vía que atraviesa ese corredor y, si ya circula por una de ellas, frena allí sin buscar el `Path3D` usado como ancla visual de la estación.
 
 ### Pruebas headless
 
-Con `godot` disponible en el `PATH`, ejecutá desde la raíz del repositorio:
+Al pedirle pruebas a un agente, incluí siempre la ruta exacta del ejecutable de
+Godot; no asumas que está disponible en el `PATH`. En este equipo:
 
-```bash
-# Carga rápida de la escena de inicio
-godot --headless --path . --quit-after 150
-
-# Vías editables, persistencia e integridad de aparatos
-godot --headless --path . -s res://tools/test_editable_tracks.gd
-godot --headless --path . -s res://tools/test_persistencia_edicion.gd
-godot --headless --path . -s res://tools/test_integridad_aparatos.gd
-
-# Auditorías de switches y empalmes con las vías
-godot --headless --path . -s res://tools/audit_switches.gd
-godot --headless --path . -s res://tools/audit_integracion_switches.gd
+```text
+C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe
 ```
 
-Las pruebas de persistencia usan journals temporales dentro de `tools/`; no reemplazan el archivo de ediciones del ramal. Para el detalle de métricas y resolución de problemas de la integración, consultá [docs/integracion_switches_vias.md](docs/integracion_switches_vias.md).
+Ejecutá desde la raíz del repositorio:
+
+```powershell
+# Carga rápida de la escena de inicio
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . --quit-after 150
+
+# Servicio, estados y terminal
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_recorrido_completo.gd
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_finalizacion_bosques.gd
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_ruta_invalida_ida.gd
+
+# Controlador, comandos, HUD y velocidad operativa
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_simulacion_controller.gd
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_comandos_simulacion.gd
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_hud_velocidad_simulacion.gd
+& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_velocidad_operativa.gd
+
+```
+
+`test_servicio_ferroviario.gd` conserva una limitación geométrica conocida:
+Plaza Constitución no resuelve un candidato para `PosteParadaIda`. No usarlo
+como criterio de aceptación hasta revisar esa geometría.
 
 ---
 
@@ -207,4 +224,5 @@ Para importar trazas reales de OpenStreetMap:
    ```bash
    python tools/osm/osm_a_godot.py mapa.osm --salida ./salida --ferrocarril Roca
    ```
-3. Consultar la guía completa en [docs/LEEME_OSM.md](docs/LEEME_OSM.md).
+3. Conservar el extracto OSM original junto con la salida generada para poder
+   repetir la conversión.

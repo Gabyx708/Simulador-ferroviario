@@ -12,14 +12,14 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="Velocimetro" type="PanelContainer"]
-custom_minimum_size = Vector2(170, 198)
+custom_minimum_size = Vector2(260, 320)
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -190.0
-offset_top = -218.0
+offset_left = -280.0
+offset_top = -340.0
 offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 0
@@ -29,14 +29,14 @@ script = ExtResource("1_veloc")
 
 [node name="Margen" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
 
 [node name="Contenido" type="VBoxContainer" parent="Margen"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
 [node name="FilaSuperior" type="HBoxContainer" parent="Margen/Contenido"]
 layout_mode = 2
@@ -45,7 +45,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "—"
 
@@ -53,7 +53,7 @@ text = "—"
 unique_name_in_owner = true
 layout_mode = 2
 horizontal_alignment = 2
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 0.756863, 0.278431, 1)
 text = "▶"
 
@@ -62,14 +62,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 10
 text = "0"
 
 [node name="UnidadVelocidad" type="Label" parent="Margen/Contenido"]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "km/h"
 
@@ -78,7 +78,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
 text = "EN MARCHA"
 
@@ -88,8 +88,59 @@ layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
 autowrap_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = ""
+
+[node name="SeparadorRuta" type="HSeparator" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="ItinerarioTitulo" type="Label" parent="Margen/Contenido"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "ITINERARIO ACTIVO"
+
+[node name="ItinerarioScroll" type="ScrollContainer" parent="Margen/Contenido"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Itinerario" type="Label" parent="Margen/Contenido/ItinerarioScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.9, 0.92, 0.97, 1)
+autowrap_mode = 2
+text = "Sin itinerario"
+
+[node name="SeparadorPasajeros" type="HSeparator" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="OcupacionTitulo" type="Label" parent="Margen/Contenido"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+text = "PASAJEROS"
+
+[node name="Ocupacion" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Ocupación —"
+
+[node name="BarraOcupacion" type="ProgressBar" parent="Margen/Contenido"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+show_percentage = false
+
+[node name="FlujoPasajeros" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
+theme_override_font_sizes/font_size = 8
 text = ""
 
 [node name="BotonEliminar" type="Button" parent="Margen/Contenido"]
@@ -97,5 +148,5 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.32, 0.32, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 8
 text = "✕ Eliminar tren"

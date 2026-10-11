@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://c0chi55dc61kp"]
 
-[ext_resource type="Material" path="res://common/materials/mat_cemento.tres" id="1_cem"]
+[ext_resource type="Material" uid="uid://d2cul6ns026pu" path="res://common/materials/mat_cemento.tres" id="1_cem"]
 [ext_resource type="Script" uid="uid://dt4tmfv6cchi8" path="res://scenes/infrastructure/estacion.gd" id="1_est"]
-[ext_resource type="Material" path="res://common/materials/mat_chapa.tres" id="2_cha"]
-[ext_resource type="Material" path="res://common/materials/mat_metal.tres" id="3_met"]
+[ext_resource type="Material" uid="uid://bgyhe2vihtt0g" path="res://common/materials/mat_chapa.tres" id="2_cha"]
+[ext_resource type="Material" uid="uid://clr120ny5eiuj" path="res://common/materials/mat_metal.tres" id="3_met"]
 [ext_resource type="PackedScene" uid="uid://dpx87s24n6w5q" path="res://scenes/infrastructure/poste_parada.tscn" id="4_poste"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_i68jh"]
@@ -93,18 +93,16 @@ mesh = SubResource("BoxMesh_columna")
 [node name="PosteParadaIda" parent="." unique_id=1480635226 instance=ExtResource("4_poste")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99.5, 0, -2)
 texto_cartel = "PARADA IDA"
-color_cartel = Color(0.15, 0.6, 0.9, 1)
+color_cartel = Color(0.15490723, 0.56749547, 0.84375, 1)
 
 [node name="PosteParadaVuelta" parent="." unique_id=1819216710 instance=ExtResource("4_poste")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -97.2, 0, 2)
 texto_cartel = "PARADA VUELTA"
 color_cartel = Color(0.95, 0.4, 0.1, 1)
 
-[node name="AreaSeleccion" type="Area3D" parent="."]
-input_ray_pickable = true
-collision_layer = 1
+[node name="AreaSeleccion" type="Area3D" parent="." unique_id=967753422]
 collision_mask = 0
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AreaSeleccion"]
-position = Vector3(0, 4, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AreaSeleccion" unique_id=975535821]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
 shape = SubResource("BoxShape3D_seleccion")

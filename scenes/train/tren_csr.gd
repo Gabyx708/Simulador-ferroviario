@@ -6,7 +6,8 @@ class_name TrenCSR
 
 func _init() -> void:
 	cantidad_coches = 7
-	velocidad_max_kmh = 90.0
+	# Valor nominal editable por instancia desde el Inspector.
+	velocidad_max_kmh = 50.0
 	aceleracion = 0.8
 	desaceleracion = 1.0
 	tiempo_parada = 20.0
