@@ -247,6 +247,8 @@ var _procesando_pasajeros: bool = false
 ## Será asignado por SimulacionController en la fase 3. Cero identifica una
 ## formación aún no registrada, sin exponer get_instance_id() como contrato.
 var _id_operativo: int = 0
+## Seteado externamente por EstadisticasRetraso (Persona 5); Tren no lo calcula.
+var retraso_externo_s: float = 0.0
 var _estado_operacion: EstadoOperacion = EstadoOperacion.EN_TERMINAL_INICIAL
 var _resultado_recorrido: String = "en_curso"
 var _motivo_resultado: String = ""
@@ -603,7 +605,7 @@ func obtener_resumen_operativo() -> Dictionary:
 		"velocidad_kmh": velocidad_actual(),
 		"pasajeros": pasajeros_actuales,
 		"capacidad": capacidad_pasajeros,
-		"retraso_s": 0.0,
+		"retraso_s": retraso_externo_s,
 		"resultado": _resultado_recorrido,
 		"motivo_resultado": _motivo_resultado,
 		"motivo_evento": _motivo_evento,

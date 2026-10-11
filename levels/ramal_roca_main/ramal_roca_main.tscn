@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://dalrdkn60wkut" path="res://assets/models/constitucion/constitucion_terminal.tscn" id="24_8kx6l"]
 [ext_resource type="Script" path="res://scenes/simulation/simulacion_controller.gd" id="25_simulacion_controller"]
 [ext_resource type="Script" path="res://scenes/simulation/reloj_simulacion.gd" id="26_reloj_simulacion"]
+[ext_resource type="Script" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -4646,6 +4647,9 @@ script = ExtResource("25_simulacion_controller")
 
 [node name="RelojSimulacion" type="Node" parent="."]
 script = ExtResource("26_reloj_simulacion")
+
+[node name="EstadisticasRetraso" type="Node" parent="."]
+script = ExtResource("27_estadisticas_retraso")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
 
