@@ -410,6 +410,10 @@ var _reservas_por_tren: Dictionary = {}
 var _cola_solicitudes_reserva: Array[Dictionary] = []
 ## Diccionario de aparatos de vía instanciados: node_id (int) -> BaseTurnout
 var aparatos_de_via: Dictionary = {}
+## Marcador efímero de la aguja que el usuario está inspeccionando desde el HUD.
+## No participa de la topología, reservas ni colisiones.
+var _indicador_switch_hud: Node3D = null
+var _indicador_switch_hud_id: int = 0
 ## Rango métrico útil de vía plena por segmento [d_inicio, d_fin] libre de solapes con switches
 var _recortes_segmentos: Dictionary = {}
 ## Intervalos EXCLUIDOS por segmento (uno por cada unión): permite que un tramo
@@ -4209,6 +4213,89 @@ func nombre_opcion_switch(nodo_id: int, segmento: String) -> String:
 			if segmento == aparato.via_desviada_id:
 				return "Desviada · %s" % segmento
 	return segmento
+
+
+## Muestra un marcador de inspección liviano sobre una aguja. El HUD sólo pasa
+## IDs de topología: la red mantiene la relación con la geometría física.
+func mostrar_indicador_switch_hud(nodo_id: int, segmento_activo: String = "") -> void:
+	_ocultar_indicador_switch_hud()
+	var aparato: BaseTurnout = aparatos_de_via.get(nodo_id) as BaseTurnout
+	if aparato == null or not is_instance_valid(aparato):
+		return
+	var indicador := Node3D.new()
+	indicador.name = "IndicadorSwitchHUD"
+	indicador.global_position = aparato.global_position + Vector3.UP * 0.18
+	add_child(indicador)
+	_indicador_switch_hud = indicador
+	_indicador_switch_hud_id = nodo_id
+
+	var aro := MeshInstance3D.new()
+	var aro_mesh := TorusMesh.new()
+	aro_mesh.inner_radius = 2.4
+	aro_mesh.outer_radius = 2.55
+	aro.mesh = aro_mesh
+	aro.material_override = _material_indicador_switch(Color(1.0, 0.756863, 0.278431, 0.82), false)
+	aro.rotation_degrees.x = 90.0
+	indicador.add_child(aro)
+
+	var texto := Label3D.new()
+	texto.text = "AGUJA %d" % nodo_id
+	texto.font_size = 32
+	texto.outline_size = 4
+	texto.modulate = Color(0.65, 0.68, 0.75, 0.96)
+	texto.position = Vector3(0, 1.4, 0)
+	texto.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	indicador.add_child(texto)
+
+	var directa: String = aparato.via_directa_id
+	var desviada: String = aparato.via_desviada_id
+	_agregar_guia_indicador_switch(indicador, directa, directa == segmento_activo, Color(1.0, 0.756863, 0.278431, 0.92))
+	_agregar_guia_indicador_switch(indicador, desviada, desviada == segmento_activo, Color(0.65, 0.68, 0.75, 0.60))
+
+
+func ocultar_indicador_switch_hud() -> void:
+	_ocultar_indicador_switch_hud()
+
+
+func _ocultar_indicador_switch_hud() -> void:
+	if _indicador_switch_hud != null and is_instance_valid(_indicador_switch_hud):
+		_indicador_switch_hud.queue_free()
+	_indicador_switch_hud = null
+	_indicador_switch_hud_id = 0
+
+
+func _material_indicador_switch(color: Color, transparente: bool) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.no_depth_test = false
+	if transparente:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return material
+
+
+func _agregar_guia_indicador_switch(indicador: Node3D, segmento: String, activa: bool, color: Color) -> void:
+	if segmento.is_empty():
+		return
+	var path: Path3D = get_segment_path(segmento)
+	if path == null or path.curve == null or path.curve.get_baked_length() < 0.1:
+		return
+	var largo: float = path.curve.get_baked_length()
+	var inicio: bool = path.to_global(path.curve.sample_baked(0.0)).distance_squared_to(indicador.global_position) <= path.to_global(path.curve.sample_baked(largo)).distance_squared_to(indicador.global_position)
+	var pasos := 10
+	var alcance: float = minf(28.0, largo)
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+	mesh.surface_set_color(color if activa else Color(color.r, color.g, color.b, color.a * 0.65))
+	for indice: int in range(pasos + 1):
+		var distancia: float = alcance * float(indice) / float(pasos)
+		var offset: float = distancia if inicio else largo - distancia
+		mesh.surface_add_vertex(path.to_global(path.curve.sample_baked(offset)) - indicador.global_position)
+	mesh.surface_end()
+	var guia := MeshInstance3D.new()
+	guia.mesh = mesh
+	guia.material_override = _material_indicador_switch(color if activa else Color(color.r, color.g, color.b, color.a * 0.65), true)
+	indicador.add_child(guia)
 
 
 ## Obtiene la opción seleccionada para un switch. Si no está definida, devuelve la primera disponible.

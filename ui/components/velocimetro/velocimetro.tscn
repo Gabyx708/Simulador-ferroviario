@@ -45,7 +45,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "—"
 
@@ -53,7 +53,7 @@ text = "—"
 unique_name_in_owner = true
 layout_mode = 2
 horizontal_alignment = 2
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 0.756863, 0.278431, 1)
 text = "▶"
 
@@ -62,14 +62,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 text = "0"
 
 [node name="UnidadVelocidad" type="Label" parent="Margen/Contenido"]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "km/h"
 
@@ -78,7 +78,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
 text = "EN MARCHA"
 
@@ -88,7 +88,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 1
 autowrap_mode = 2
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = ""
 
@@ -97,7 +97,7 @@ layout_mode = 2
 
 [node name="ItinerarioTitulo" type="Label" parent="Margen/Contenido"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "ITINERARIO ACTIVO"
 
@@ -110,7 +110,7 @@ horizontal_scroll_mode = 0
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.9, 0.92, 0.97, 1)
 autowrap_mode = 2
 text = "Sin itinerario"
@@ -120,14 +120,14 @@ layout_mode = 2
 
 [node name="OcupacionTitulo" type="Label" parent="Margen/Contenido"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
 text = "PASAJEROS"
 
 [node name="Ocupacion" type="Label" parent="Margen/Contenido"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
+theme_override_font_sizes/font_size = 10
 text = "Ocupación —"
 
 [node name="BarraOcupacion" type="ProgressBar" parent="Margen/Contenido"]

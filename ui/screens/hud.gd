@@ -32,6 +32,7 @@ var _tren_seleccionado: Tren
 var _botones_switch: Dictionary = {}
 var _titulos_switch: Dictionary = {}
 var _firma_switches: String = ""
+var _switch_seleccionado: int = 0
 var _paneles_abiertos: Dictionary = {"trenes": false, "pruebas": false, "switches": false}
 const ALTURA_PANEL_CERRADO := 28.0
 const SEPARACION_PANELES := 6.0
@@ -39,6 +40,7 @@ const ALTURAS_PANELES := {"trenes": 145.0, "pruebas": 245.0, "switches": 230.0}
 
 
 func _ready() -> void:
+	_aplicar_estilo_minimalista(self)
 	_velocidad_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_aceleracion_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_frenado_prueba.value_changed.connect(_cambiar_parametros_prueba)
@@ -57,6 +59,42 @@ func _ready() -> void:
 	call_deferred("_construir_lista")
 
 
+func _aplicar_estilo_minimalista(nodo: Node) -> void:
+	for hijo: Node in nodo.get_children():
+		if hijo is Label:
+			var etiqueta := hijo as Label
+			etiqueta.add_theme_font_size_override("font_size", 10)
+			etiqueta.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75, 1.0))
+		elif hijo is Button:
+			var boton := hijo as Button
+			boton.add_theme_font_size_override("font_size", 10)
+			if not boton.flat:
+				boton.add_theme_stylebox_override("normal", _estilo_boton_minimalista(false))
+				boton.add_theme_stylebox_override("hover", _estilo_boton_minimalista(true))
+				boton.add_theme_stylebox_override("pressed", _estilo_boton_minimalista(true, true))
+				boton.add_theme_stylebox_override("disabled", _estilo_boton_minimalista(false, false, true))
+		_aplicar_estilo_minimalista(hijo)
+
+
+func _estilo_boton_minimalista(hover: bool, presionado: bool = false, deshabilitado: bool = false) -> StyleBoxFlat:
+	var estilo := StyleBoxFlat.new()
+	estilo.bg_color = Color(0.07, 0.075, 0.1, 0.62) if deshabilitado else (Color(0.16, 0.165, 0.21, 0.98) if hover else Color(0.102, 0.11, 0.149, 0.95))
+	if presionado:
+		estilo.bg_color = Color(0.18, 0.16, 0.12, 1.0)
+	estilo.border_width_left = 1
+	estilo.border_width_top = 1
+	estilo.border_width_right = 1
+	estilo.border_width_bottom = 1
+	estilo.border_color = Color(0.36, 0.35, 0.36, 0.42 if deshabilitado else 0.9)
+	estilo.corner_radius_top_left = 2
+	estilo.corner_radius_top_right = 2
+	estilo.corner_radius_bottom_left = 2
+	estilo.corner_radius_bottom_right = 2
+	estilo.content_margin_left = 4
+	estilo.content_margin_right = 4
+	return estilo
+
+
 func _construir_lista() -> void:
 	for hijo: Node in _lista.get_children():
 		hijo.queue_free()
@@ -67,7 +105,10 @@ func _construir_lista() -> void:
 			var boton := Button.new()
 			boton.text = tren.name
 			boton.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			boton.add_theme_font_size_override("font_size", 8)
+			boton.add_theme_font_size_override("font_size", 10)
+			boton.add_theme_stylebox_override("normal", _estilo_boton_minimalista(false))
+			boton.add_theme_stylebox_override("hover", _estilo_boton_minimalista(true))
+			boton.add_theme_stylebox_override("pressed", _estilo_boton_minimalista(true, true))
 			boton.tooltip_text = "Seleccionar %s" % tren.name
 			boton.pressed.connect(_seleccionar_tren.bind(tren))
 			_lista.add_child(boton)
@@ -88,6 +129,8 @@ func _seleccionar_tren(tren: Tren) -> void:
 func _marcar_seleccion(tren: Tren) -> void:
 	if _tren_seleccionado != null and is_instance_valid(_tren_seleccionado) and _tren_seleccionado != tren:
 		_tren_seleccionado.activar_opciones_switch(false)
+		_ocultar_indicador_switch()
+		_switch_seleccionado = 0
 	_tren_seleccionado = tren
 	if tren != null and is_instance_valid(tren):
 		tren.activar_opciones_switch(bool(_paneles_abiertos.get("switches", false)))
@@ -140,6 +183,8 @@ func _actualizar_panel_switches() -> void:
 	var secciones: Array[Dictionary] = _tren_seleccionado.opciones_switch_proximos()
 	if secciones.is_empty():
 		_limpiar_panel_switches()
+		_ocultar_indicador_switch()
+		_switch_seleccionado = 0
 		_estado_switches.text = "Sin switches antes de la próxima estación."
 		_mostrar_mas_switches.visible = false
 		return
@@ -148,6 +193,12 @@ func _actualizar_panel_switches() -> void:
 		for opcion_firma: Variant in seccion_firma.get("opciones", []):
 			firma_partes.append("%d:%s" % [int(seccion_firma.get("nodo_id", 0)), str((opcion_firma as Dictionary).get("segmento", ""))])
 	var firma: String = "|".join(firma_partes)
+	var mantiene_seleccion := false
+	for seccion_seleccion: Dictionary in secciones:
+		mantiene_seleccion = mantiene_seleccion or int(seccion_seleccion.get("nodo_id", 0)) == _switch_seleccionado
+	if _switch_seleccionado != 0 and not mantiene_seleccion:
+		_switch_seleccionado = 0
+		_ocultar_indicador_switch()
 	if firma != _firma_switches:
 		_limpiar_panel_switches()
 		_firma_switches = firma
@@ -172,35 +223,54 @@ func _limpiar_panel_switches() -> void:
 
 func _construir_controles_switches(secciones: Array[Dictionary]) -> void:
 	for seccion: Dictionary in secciones:
-		var titulo := Label.new()
-		titulo.add_theme_font_size_override("font_size", 8)
-		titulo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_lista_switches.add_child(titulo)
-		_titulos_switch[int(seccion.get("nodo_id", 0))] = titulo
+		var nodo_id: int = int(seccion.get("nodo_id", 0))
+		var tarjeta := PanelContainer.new()
+		tarjeta.add_theme_stylebox_override("panel", _estilo_tarjeta_switch())
+		_lista_switches.add_child(tarjeta)
+		var contenido := VBoxContainer.new()
+		contenido.add_theme_constant_override("separation", 1)
+		tarjeta.add_child(contenido)
+		var titulo := Button.new()
+		titulo.flat = true
+		titulo.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		titulo.add_theme_font_size_override("font_size", 10)
+		titulo.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75, 1.0))
+		titulo.pressed.connect(_seleccionar_tarjeta_switch.bind(nodo_id))
+		contenido.add_child(titulo)
+		_titulos_switch[nodo_id] = titulo
+		var grupo := ButtonGroup.new()
+		grupo.allow_unpress = false
 		for opcion: Dictionary in seccion.get("opciones", []):
-			var boton := Button.new()
+			var boton := CheckButton.new()
 			boton.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			boton.add_theme_font_size_override("font_size", 8)
-			boton.pressed.connect(_seleccionar_opcion_switch.bind(int(seccion.get("nodo_id", 0)), str(opcion.get("segmento", ""))))
-			_lista_switches.add_child(boton)
-			_botones_switch["%d:%s" % [int(seccion.get("nodo_id", 0)), str(opcion.get("segmento", ""))]] = boton
+			boton.add_theme_font_size_override("font_size", 10)
+			boton.button_group = grupo
+			boton.pressed.connect(_seleccionar_opcion_switch.bind(nodo_id, str(opcion.get("segmento", ""))))
+			contenido.add_child(boton)
+			_botones_switch["%d:%s" % [nodo_id, str(opcion.get("segmento", ""))]] = boton
 
 
 func _actualizar_controles_switches(secciones: Array[Dictionary]) -> void:
 	for seccion: Dictionary in secciones:
 		var nodo_id: int = int(seccion.get("nodo_id", 0))
-		var titulo: Label = _titulos_switch.get(nodo_id) as Label
+		var titulo: Button = _titulos_switch.get(nodo_id) as Button
 		if titulo != null:
-			titulo.text = "Aguja %d · %.0f m · vía actual %s" % [nodo_id, float(seccion.get("distancia_m", 0.0)), str(seccion.get("segmento_elegido", ""))]
+			var activa: String = _nombre_corto_switch(str(seccion.get("segmento_elegido", "")))
+			titulo.text = ("▸ " if nodo_id == _switch_seleccionado else "") + "AGUJA %d  ·  %.0f m  ·  %s" % [nodo_id, float(seccion.get("distancia_m", 0.0)), activa]
 		for opcion: Dictionary in seccion.get("opciones", []):
-			var boton: Button = _botones_switch.get("%d:%s" % [nodo_id, str(opcion.get("segmento", ""))]) as Button
+			var boton: CheckButton = _botones_switch.get("%d:%s" % [nodo_id, str(opcion.get("segmento", ""))]) as CheckButton
 			if boton == null:
 				continue
 			var estado: String = str(opcion.get("estado", "pendiente"))
 			var reservada: bool = _tren_seleccionado.opcion_switch_reservada_por_otro(nodo_id, str(opcion.get("segmento", "")))
-			var sufijo: String = " · calculando" if estado == "pendiente" else (" · reservada" if reservada else "")
-			boton.text = ("✓ " if bool(opcion.get("seleccionada", false)) else "") + str(opcion.get("nombre", opcion.get("segmento", ""))) + sufijo
+			var seleccionada: bool = bool(opcion.get("seleccionada", false))
+			var sufijo: String = " · Calculando" if estado == "pendiente" else (" · Reservada" if reservada else (" · Sin continuidad" if not bool(opcion.get("valida", false)) else ""))
+			boton.text = _nombre_corto_switch(str(opcion.get("nombre", opcion.get("segmento", "")))) + sufijo
+			boton.set_pressed_no_signal(seleccionada)
 			boton.disabled = not bool(opcion.get("valida", false)) or reservada
+			boton.add_theme_stylebox_override("normal", _estilo_opcion_switch(seleccionada, false))
+			boton.add_theme_stylebox_override("hover", _estilo_opcion_switch(seleccionada, true))
+			boton.add_theme_stylebox_override("disabled", _estilo_opcion_switch(false, false, true))
 			boton.tooltip_text = "Calculando la continuidad a Bosques" if estado == "pendiente" else ("Reservada por otra formación" if reservada else ("No permite completar el itinerario hasta Bosques" if boton.disabled else "Aplicar esta ruta al tren seleccionado"))
 
 
@@ -210,7 +280,78 @@ func _seleccionar_opcion_switch(nodo_id: int, segmento: String) -> void:
 	if not _tren_seleccionado.seleccionar_switch(nodo_id, segmento):
 		_estado_switches.text = "No se aplicó: el desvío ya no conserva la ruta o la sección está ocupada."
 		return
+	_switch_seleccionado = nodo_id
+	_mostrar_indicador_switch(nodo_id, segmento)
 	_actualizar_panel_switches()
+
+
+func _seleccionar_tarjeta_switch(nodo_id: int) -> void:
+	_switch_seleccionado = nodo_id
+	for seccion: Dictionary in _tren_seleccionado.opciones_switch_proximos():
+		if int(seccion.get("nodo_id", 0)) == nodo_id:
+			_mostrar_indicador_switch(nodo_id, str(seccion.get("segmento_elegido", "")))
+			break
+	_actualizar_panel_switches()
+
+
+func _nombre_corto_switch(nombre: String) -> String:
+	var partes: PackedStringArray = nombre.split(" · ")
+	return partes[0] if not partes.is_empty() else nombre
+
+
+func _estilo_tarjeta_switch() -> StyleBoxFlat:
+	var estilo := StyleBoxFlat.new()
+	estilo.bg_color = Color(0.101961, 0.109804, 0.14902, 0.96)
+	estilo.border_width_left = 1
+	estilo.border_width_top = 1
+	estilo.border_width_right = 1
+	estilo.border_width_bottom = 1
+	estilo.border_color = Color(0.38, 0.36, 0.32, 0.88)
+	estilo.corner_radius_top_left = 3
+	estilo.corner_radius_top_right = 3
+	estilo.corner_radius_bottom_left = 3
+	estilo.corner_radius_bottom_right = 3
+	estilo.content_margin_left = 4
+	estilo.content_margin_top = 3
+	estilo.content_margin_right = 4
+	estilo.content_margin_bottom = 3
+	return estilo
+
+
+func _estilo_opcion_switch(seleccionada: bool, hover: bool, deshabilitada: bool = false) -> StyleBoxFlat:
+	var estilo := StyleBoxFlat.new()
+	estilo.bg_color = Color(0.18, 0.18, 0.22, 0.88) if hover else Color(0.11, 0.12, 0.16, 0.82)
+	if seleccionada:
+		estilo.bg_color = Color(0.19, 0.17, 0.13, 0.95)
+		estilo.border_width_left = 2
+		estilo.border_color = Color(1.0, 0.756863, 0.278431, 0.82)
+	elif deshabilitada:
+		estilo.bg_color = Color(0.07, 0.075, 0.1, 0.66)
+		estilo.border_width_left = 1
+		estilo.border_color = Color(0.25, 0.25, 0.25, 0.55)
+	estilo.corner_radius_top_left = 2
+	estilo.corner_radius_top_right = 2
+	estilo.corner_radius_bottom_left = 2
+	estilo.corner_radius_bottom_right = 2
+	estilo.content_margin_left = 3
+	estilo.content_margin_right = 3
+	return estilo
+
+
+func _obtener_red() -> Node:
+	return get_tree().get_first_node_in_group("track_network")
+
+
+func _mostrar_indicador_switch(nodo_id: int, segmento: String) -> void:
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("mostrar_indicador_switch_hud"):
+		red.call("mostrar_indicador_switch_hud", nodo_id, segmento)
+
+
+func _ocultar_indicador_switch() -> void:
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("ocultar_indicador_switch_hud"):
+		red.call("ocultar_indicador_switch_hud")
 
 
 func _mostrar_siguiente_bloque_switches() -> void:
@@ -260,6 +401,9 @@ func _alternar_panel(id_panel: String) -> void:
 		_tren_seleccionado.activar_opciones_switch(bool(_paneles_abiertos[id_panel]))
 		if bool(_paneles_abiertos[id_panel]):
 			_actualizar_panel_switches()
+		else:
+			_ocultar_indicador_switch()
+			_switch_seleccionado = 0
 	elif id_panel == "pruebas" and bool(_paneles_abiertos[id_panel]):
 		_actualizar_panel_pruebas()
 
