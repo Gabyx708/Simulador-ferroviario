@@ -14,6 +14,15 @@ func _run() -> void:
 	assert(nav != null, "NavegacionPaneles debe existir en el HUD del nivel")
 	assert(nav.panel_abierto() == "", "Ningún panel debe estar abierto al arrancar")
 
+	# set_anchors_preset no resetea los offsets por sí solo (conserva el
+	# tamaño "aparente" previo del control) -- si se vuelve a olvidar forzarlos
+	# a 0, NavegacionPaneles queda más chico que el viewport real y los
+	# botones (anclados "abajo-centro" relativo a ESE rect) aparecen
+	# desplazados hacia arriba-izquierda en vez de abajo-centro de verdad.
+	var root_size: Vector2 = Vector2(root.size)
+	assert(nav.get_global_rect().size.is_equal_approx(root_size),
+		"NavegacionPaneles debe ocupar el viewport completo (%s), no %s" % [str(root_size), str(nav.get_global_rect().size)])
+
 	var boton_control: Button = nav.find_child("BotonControl", true, false) as Button
 	var boton_metricas: Button = nav.find_child("BotonMetricas", true, false) as Button
 	var boton_reservado: Button = nav.find_child("BotonReservado", true, false) as Button

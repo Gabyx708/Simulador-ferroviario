@@ -33,7 +33,16 @@ var _tween_actual: Tween
 
 
 func _ready() -> void:
+	# set_anchors_preset conserva el tamaño "aparente" que el control ya
+	# tuviera antes de la llamada (no lo resetea a ocupar todo el padre), así
+	# que hay que forzar los offsets a 0 a mano -- si no, el nodo queda más
+	# chico que el viewport real y todo lo anclado adentro (los botones,
+	# "abajo-centro") termina desplazado hacia arriba-izquierda.
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	offset_left = 0.0
+	offset_top = 0.0
+	offset_right = 0.0
+	offset_bottom = 0.0
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_contenedor_panel = Control.new()
