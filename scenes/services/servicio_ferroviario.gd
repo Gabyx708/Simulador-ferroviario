@@ -21,6 +21,7 @@ class_name ServicioFerroviario
 ## Una rama sólo calcula la llegada inmediata; desde la próxima estación este
 ## caché evita repetir quince búsquedas iguales hasta Bosques por cada opción.
 var _continuidad_cache: Dictionary = {}
+var _validacion_ida_cache: Dictionary = {}
 
 
 func obtener_continuidad(clave: String) -> Dictionary:
@@ -47,6 +48,50 @@ func cancelar_continuidad_pendiente(clave: String, propietario: int) -> void:
 
 func limpiar_continuidad() -> void:
 	_continuidad_cache.clear()
+
+
+## Comprueba la configuración física de un servicio de ida antes de poner una
+## formación en marcha. Los Path3D pueden estar desordenados: la validación usa
+## el poste de Ida y la topología de TrackNetwork, nunca el orden del árbol.
+func validar_configuracion_ida(red: Node) -> Dictionary:
+	if not _validacion_ida_cache.is_empty():
+		return _validacion_ida_cache.duplicate(true)
+	var errores: Array[String] = []
+	if red == null or not red.has_method("planificar_ruta"):
+		errores.append("TrackNetwork no disponible")
+	elif paradas.size() < 2:
+		errores.append("El servicio requiere al menos dos paradas")
+	else:
+		for indice: int in paradas.size():
+			var estacion: Node = obtener_parada(indice)
+			if estacion == null or not ("traza" in estacion) or not (estacion.get("traza") is Path3D):
+				errores.append("Parada %d sin traza" % indice)
+				continue
+			if not estacion.has_method("obtener_puntos_parada_multivia"):
+				errores.append("Parada %d sin puntos de parada" % indice)
+				continue
+			var candidatos: Array = estacion.call("obtener_puntos_parada_multivia", red, true) as Array
+			if candidatos.is_empty():
+				errores.append("%s no tiene candidato para PosteParadaIda" % str(estacion.get("nombre_estacion")))
+		for indice: int in range(paradas.size() - 1):
+			var origen: Node = obtener_parada(indice)
+			var destino: Node = obtener_parada(indice + 1)
+			if origen == null or destino == null or not (origen.get("traza") is Path3D) or not (destino.get("traza") is Path3D):
+				continue
+			var traza_origen: Path3D = origen.get("traza") as Path3D
+			var traza_destino: Path3D = destino.get("traza") as Path3D
+			var offset_origen: float = float(origen.call("obtener_offset_parada", true))
+			var offset_destino: float = float(destino.call("obtener_offset_parada", true))
+			var directa: Dictionary = red.call("planificar_ruta", traza_origen.name, offset_origen, false, traza_destino.name, offset_destino) as Dictionary
+			var invertida: Dictionary = red.call("planificar_ruta", traza_origen.name, offset_origen, true, traza_destino.name, offset_destino) as Dictionary
+			if not bool(directa.get("ok", false)) and not bool(invertida.get("ok", false)):
+				errores.append("Sin enlace de ida: %s → %s" % [str(origen.get("nombre_estacion")), str(destino.get("nombre_estacion"))])
+	_validacion_ida_cache = {"ok": errores.is_empty(), "errores": errores}
+	return _validacion_ida_cache.duplicate(true)
+
+
+func invalidar_validacion_ida() -> void:
+	_validacion_ida_cache.clear()
 
 
 func cantidad_paradas() -> int:

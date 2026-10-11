@@ -3958,6 +3958,41 @@ func _excluir_desviada_actual() -> void:
 				tramos_excluidos = arr
 
 
+## Devuelve a qué extremo topológico corresponde un extremo local de la curva.
+## Al editar un Path3D en el Inspector se pueden invertir sus puntos sin cambiar
+## `node_start`/`node_end` en la red. Se resuelve por cercanía para que el grafo
+## siga siendo válido sin deshacer la geometría del diseñador.
+func _extremo_topologico_de_local(segment_id: String, extremo_local: String) -> String:
+	if not segments_data.has(segment_id):
+		return extremo_local
+	var path: Path3D = get_segment_path(segment_id)
+	if path == null or path.curve == null or path.curve.point_count < 2:
+		return extremo_local
+	var segmento: Dictionary = segments_data[segment_id] as Dictionary
+	var node_start: int = int(segmento.get("node_start", 0))
+	var node_end: int = int(segmento.get("node_end", 0))
+	var datos_start: Dictionary = junctions.get(str(node_start), {}) as Dictionary
+	var datos_end: Dictionary = junctions.get(str(node_end), {}) as Dictionary
+	if not datos_start.has("position") or not datos_end.has("position"):
+		return extremo_local
+	var pos_start: Dictionary = datos_start.get("position", {}) as Dictionary
+	var pos_end: Dictionary = datos_end.get("position", {}) as Dictionary
+	var punto_local: Vector3 = path.curve.get_point_position(0 if extremo_local == "start" else path.curve.point_count - 1)
+	var punto_global: Vector3 = path.to_global(punto_local)
+	var topo_start := Vector3(float(pos_start.get("x", 0.0)), float(pos_start.get("y", 0.0)), float(pos_start.get("z", 0.0)))
+	var topo_end := Vector3(float(pos_end.get("x", 0.0)), float(pos_end.get("y", 0.0)), float(pos_end.get("z", 0.0)))
+	var directo: float = punto_global.distance_to(topo_start if extremo_local == "start" else topo_end)
+	var invertido: float = punto_global.distance_to(topo_end if extremo_local == "start" else topo_start)
+	if invertido + 0.05 < directo:
+		return "end" if extremo_local == "start" else "start"
+	return extremo_local
+
+
+## Dirección local que aleja la formación de un extremo topológico concreto.
+func _direccion_local_desde_extremo_topologico(segment_id: String, extremo_topologico: String) -> String:
+	return "forward" if _extremo_topologico_de_local(segment_id, "start") == extremo_topologico else "reversed"
+
+
 ## Devuelve las opciones disponibles al llegar al extremo ("start" o "end") del segmento actual.
 ## Excluye el propio segmento. Cada opción indica el próximo segmento_id y si hay
 ## que recorrerlo "forward" o "reversed" según cómo esté orientado.
@@ -3966,7 +4001,8 @@ func get_opciones_siguientes(segment_id: String, extremo_actual: String) -> Arra
 		return []
 
 	var seg: Dictionary = segments_data[segment_id] as Dictionary
-	var node_id: int = int(seg.get("node_end", 0)) if extremo_actual == "end" else int(seg.get("node_start", 0))
+	var extremo_topologico: String = _extremo_topologico_de_local(segment_id, extremo_actual)
+	var node_id: int = int(seg.get("node_end", 0)) if extremo_topologico == "end" else int(seg.get("node_start", 0))
 
 	var junction_raw: Variant = junctions.get(str(node_id))
 	if junction_raw == null or not (junction_raw is Dictionary):
@@ -3989,7 +4025,7 @@ func get_opciones_siguientes(segment_id: String, extremo_actual: String) -> Arra
 			continue
 
 		var otro_extremo: String = str(con.get("end", "start"))
-		var direccion: String = "forward" if otro_extremo == "start" else "reversed"
+		var direccion: String = _direccion_local_desde_extremo_topologico(otro_id, otro_extremo)
 		opciones.append({
 			"segment_id": otro_id,
 			"direccion": direccion,
@@ -4405,15 +4441,7 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 	if not paths.has(segmento_origen) or not paths.has(segmento_destino):
 		return {"ok": false, "motivo": "segmento inexistente", "segmentos": []}
 	if not override_segmentos.is_empty():
-		var forzada: Array[String] = override_segmentos.duplicate()
-		if forzada.front() != segmento_origen:
-			forzada.push_front(segmento_origen)
-		if forzada.back() != segmento_destino:
-			forzada.append(segmento_destino)
-		var pasos_forzados: Array[Dictionary] = []
-		for sid: String in forzada:
-			pasos_forzados.append({"segmento": sid, "direccion": ""})
-		return {"ok": true, "segmentos": forzada, "pasos": pasos_forzados, "distancia_m": -1.0, "cambios_aguja": 0, "forzada": true, "sentido_invertido": sentido_invertido}
+		return _planificar_override_dirigido(segmento_origen, offset_origen, sentido_invertido, segmento_destino, offset_destino, override_segmentos)
 
 	var dir_inicial: String = "reversed" if sentido_invertido else "forward"
 	var cola: Array[Dictionary] = [{"seg": segmento_origen, "dir": dir_inicial, "entrada": offset_origen, "costo": 0.0}]
@@ -4488,6 +4516,71 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 		if es_switch(str(paso_actual.get("segmento", "")), extremo):
 			cambios_aguja += 1
 	return {"ok": true, "segmentos": segmentos, "pasos": pasos_inversos, "distancia_m": distancia_final, "cambios_aguja": cambios_aguja, "forzada": false, "sentido_invertido": sentido_invertido}
+
+
+## Valida un override como una secuencia física dirigida. Antes se aceptaba la
+## lista por nombre y el tren podía llegar a una aguja sin continuidad ni
+## distancia métrica; ahora cada tramo debe suceder al anterior en el extremo
+## que realmente alcanza la cabecera.
+func _planificar_override_dirigido(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String]) -> Dictionary:
+	var forzada: Array[String] = override_segmentos.duplicate()
+	if forzada.is_empty():
+		return {"ok": false, "motivo": "override vacío", "segmentos": [], "pasos": []}
+	if forzada.front() != segmento_origen:
+		forzada.push_front(segmento_origen)
+	if forzada.back() != segmento_destino:
+		forzada.append(segmento_destino)
+
+	var usados: Dictionary = {}
+	for sid: String in forzada:
+		if not paths.has(sid):
+			return {"ok": false, "motivo": "override contiene segmento inexistente: %s" % sid, "segmentos": [], "pasos": []}
+		if usados.has(sid):
+			return {"ok": false, "motivo": "override repite el segmento: %s" % sid, "segmentos": [], "pasos": []}
+		usados[sid] = true
+
+	var direccion: String = "reversed" if sentido_invertido else "forward"
+	var entrada: float = offset_origen
+	var distancia: float = 0.0
+	var cambios_aguja: int = 0
+	var pasos: Array[Dictionary] = [{"segmento": segmento_origen, "direccion": direccion}]
+
+	for indice: int in range(forzada.size() - 1):
+		var actual_id: String = forzada[indice]
+		var siguiente_id: String = forzada[indice + 1]
+		var actual: Path3D = get_segment_path(actual_id)
+		if actual == null or actual.curve == null:
+			return {"ok": false, "motivo": "override sin geometría: %s" % actual_id, "segmentos": [], "pasos": []}
+		var largo_actual: float = actual.curve.get_baked_length()
+		entrada = clampf(entrada, 0.0, largo_actual)
+		var extremo: String = "start" if direccion == "reversed" else "end"
+		var opcion_valida: Dictionary = {}
+		for opcion: Dictionary in get_opciones_siguientes(actual_id, extremo):
+			if str(opcion.get("segment_id", "")) == siguiente_id:
+				opcion_valida = opcion
+				break
+		if opcion_valida.is_empty():
+			return {"ok": false, "motivo": "override sin continuidad: %s (%s) -> %s" % [actual_id, extremo, siguiente_id], "segmentos": [], "pasos": []}
+		distancia += (largo_actual - entrada) if direccion == "forward" else entrada
+		if es_switch(actual_id, extremo):
+			cambios_aguja += 1
+		direccion = str(opcion_valida.get("direccion", "forward"))
+		var siguiente: Path3D = get_segment_path(siguiente_id)
+		if siguiente == null or siguiente.curve == null:
+			return {"ok": false, "motivo": "override sin geometría: %s" % siguiente_id, "segmentos": [], "pasos": []}
+		entrada = siguiente.curve.get_baked_length() if direccion == "reversed" else 0.0
+		pasos.append({"segmento": siguiente_id, "direccion": direccion})
+
+	var destino: Path3D = get_segment_path(segmento_destino)
+	if destino == null or destino.curve == null:
+		return {"ok": false, "motivo": "destino sin geometría", "segmentos": [], "pasos": []}
+	var largo_destino: float = destino.curve.get_baked_length()
+	offset_destino = clampf(offset_destino, 0.0, largo_destino)
+	var destino_adelante: bool = offset_destino >= entrada if direccion == "forward" else offset_destino <= entrada
+	if not destino_adelante:
+		return {"ok": false, "motivo": "el destino queda detrás del sentido del override", "segmentos": [], "pasos": []}
+	distancia += absf(offset_destino - entrada)
+	return {"ok": true, "segmentos": forzada, "pasos": pasos, "distancia_m": distancia, "cambios_aguja": cambios_aguja, "forzada": true, "sentido_invertido": sentido_invertido}
 
 
 ## Obtiene los datos de una unión por su ID de nodo OSM.

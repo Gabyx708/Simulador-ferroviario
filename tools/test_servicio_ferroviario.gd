@@ -20,7 +20,9 @@ func _run() -> void:
 	assert(escena != null, "No se pudo cargar ramal_roca_main.tscn")
 	var raiz: Node = escena.instantiate()
 	root.add_child(raiz)
-	await create_timer(1.0).timeout
+	# La escena editada puede usar una espera inicial de un segundo. Inspeccionar
+	# el origen antes de ese límite evita depender del orden exacto de frames.
+	await create_timer(0.2).timeout
 
 	var servicio: ServicioFerroviario = raiz.find_child("ServicioConstitucionBosques", true, false) as ServicioFerroviario
 	assert(servicio != null, "No existe ServicioConstitucionBosques")
@@ -36,14 +38,23 @@ func _run() -> void:
 
 	var red: TrackNetwork = raiz.find_child("TrackNetwork", true, false) as TrackNetwork
 	assert(red != null, "No existe TrackNetwork")
+	var validacion_servicio: Dictionary = servicio.validar_configuracion_ida(red)
+	assert(bool(validacion_servicio.get("ok", false)), "La geometría editada debe conservar las 16 paradas de ida: %s" % str(validacion_servicio.get("errores", [])))
 	var tren: Tren = raiz.find_child("TrenCSR", true, false) as Tren
 	assert(tren != null, "No existe TrenCSR")
 	assert(tren.esta_detenido(), "El tren debe iniciar detenido en Plaza Constitución")
 	assert(tren.proxima_estacion_nombre() == "Plaza Constitución", "La parada inicial debe ser Plaza Constitución")
-	assert(bool(tren.get("invertir_sentido")), "seg_470 debe salir hacia Yrigoyen con su sentido local inverso")
+	assert(tren.traza != null, "El tren inicial debe conservar una vía de salida configurada")
 	assert(tren.itinerario_estaciones() == ITINERARIO, "El HUD debe recibir el itinerario completo al inicio")
+	assert(tren.capacidad_pasajeros > 0, "Las formaciones de Constitución deben admitir pasajeros")
+	assert(tren.cantidad_pasajeros_por_tanda > 0, "Las formaciones deben tener intercambio de pasajeros habilitado")
 	var estacion_prueba: Estacion = servicio.obtener_parada(0) as Estacion
 	assert(estacion_prueba != null, "La estación de prueba debe ser una Estacion")
+	# El intercambio también debe ocurrir en la parada de origen, no recién en
+	# Yrigoyen. Se inyecta demanda sólo en memoria para no alterar la escena.
+	estacion_prueba.pasajeros_esperando = 20
+	await create_timer(0.35).timeout
+	assert(tren.pasajeros_actuales > 0, "El tren debe embarcar pasajeros durante la espera en Constitución")
 	var candidatos: Array[Dictionary] = estacion_prueba.obtener_puntos_parada_multivia(red, true)
 	assert(not candidatos.is_empty(), "La estación debe resolver al menos una vía de parada")
 	for candidato: Dictionary in candidatos:
@@ -67,6 +78,10 @@ func _run() -> void:
 				var sid: String = str(paso.get("segmento", ""))
 				assert(not usados.has(sid), "Lomas → Temperley no puede repetir %s" % sid)
 				usados[sid] = true
+		var override_invalido: Array[String] = [traza_origen.name, "segmento_inexistente_prueba"]
+		var ruta_invalida: Dictionary = red.planificar_ruta(traza_origen.name, offset_origen, false, traza_destino.name, offset_destino, override_invalido)
+		assert(not bool(ruta_invalida.get("ok", false)), "Un override con un segmento inexistente debe rechazarse")
+		assert(str(ruta_invalida.get("motivo", "")).contains("inexistente"), "El override inválido debe informar el motivo")
 
 	# Regresión de marcha directa: desde ambos sentidos locales, un poste de
 	# Lomas que está delante de la cabecera debe resolverse dentro del corredor

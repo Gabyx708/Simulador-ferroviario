@@ -74,6 +74,11 @@ static var _cache_bounds_mallas_pasajeros: Array[AABB] = []
 				_snap_a_posicion_actual()
 
 ## Invierte el sentido longitudinal de la estación (giro 180°).
+##
+## También se actualiza automáticamente si se gira la estación con el
+## manipulador del editor: el eje X local define hacia qué extremo queda la
+## Parada Ida. La estación continúa alineada a la vía, por lo que no conserva
+## inclinaciones o giros laterales accidentales.
 @export var invertir_sentido: bool = false:
 	set(v):
 		invertir_sentido = v
@@ -109,6 +114,52 @@ static var _cache_bounds_mallas_pasajeros: Array[AABB] = []
 @export_range(2.0, 30.0, 0.1, "or_greater") var separacion_vias: float = 7.5:
 	set(v):
 		separacion_vias = maxf(2.0, v)
+		if is_inside_tree():
+			_actualizar_disposicion_transversal()
+			_notificar_trenes()
+
+@export_group("Ajuste fino de andenes")
+## Corrección lateral adicional del andén de Ida, sus columnas, marquesina y poste.
+## Sirve para adaptar el modelo visual a la distancia real entre vías sin alterar
+## el anclaje de la estación (`traza` + `progreso_en_via`).
+@export_range(-20.0, 20.0, 0.05, "suffix:m") var ajuste_lateral_anden_ida: float = 0.0:
+	set(v):
+		ajuste_lateral_anden_ida = v
+		if is_inside_tree():
+			_actualizar_disposicion_transversal()
+			_notificar_trenes()
+
+## Corrección lateral adicional del andén de Vuelta, sus columnas, marquesina y poste.
+@export_range(-20.0, 20.0, 0.05, "suffix:m") var ajuste_lateral_anden_vuelta: float = 0.0:
+	set(v):
+		ajuste_lateral_anden_vuelta = v
+		if is_inside_tree():
+			_actualizar_disposicion_transversal()
+			_notificar_trenes()
+
+@export_group("Andenes centrales")
+## Cantidad de andenes isla visuales entre los andenes de Ida y Vuelta.
+## Cada uno se genera a partir del mismo modelo y se ajusta con su posición
+## lateral; no crea una parada ferroviaria adicional.
+@export_range(0, 2, 1) var cantidad_andenes_centrales: int = 0:
+	set(v):
+		cantidad_andenes_centrales = clampi(v, 0, 2)
+		if is_inside_tree():
+			_actualizar_disposicion_transversal()
+
+## Posición local lateral del primer andén central. Cero representa el centro
+## geométrico de la estación.
+@export_range(-50.0, 50.0, 0.05, "suffix:m") var posicion_lateral_anden_central_1: float = 0.0:
+	set(v):
+		posicion_lateral_anden_central_1 = v
+		if is_inside_tree():
+			_actualizar_disposicion_transversal()
+
+## Posición local lateral del segundo andén central, disponible al configurar
+## `cantidad_andenes_centrales` en 2.
+@export_range(-50.0, 50.0, 0.05, "suffix:m") var posicion_lateral_anden_central_2: float = 10.0:
+	set(v):
+		posicion_lateral_anden_central_2 = v
 		if is_inside_tree():
 			_actualizar_disposicion_transversal()
 
@@ -244,6 +295,7 @@ var _transform_reciente: Transform3D = Transform3D.IDENTITY
 var _ignorar_transform_reciente: bool = false
 var _pendiente_snap: bool = false
 var _tiempo_ultimo_movimiento: int = 0
+var _aviso_trenes_pendiente: bool = false
 var _poste_ida: Node3D
 var _poste_vuelta: Node3D
 var _area_icono_informacion: Area3D
@@ -726,7 +778,8 @@ func _actualizar_disposicion_transversal() -> void:
 	var mitad_separacion: float = separacion_vias * 0.5
 	for sufijo: String in ["A", "B"]:
 		var lado: float = -1.0 if sufijo == "A" else 1.0
-		var z_anden: float = lado * mitad_separacion
+		var ajuste_lateral: float = ajuste_lateral_anden_ida if sufijo == "A" else ajuste_lateral_anden_vuelta
+		var z_anden: float = lado * mitad_separacion + ajuste_lateral
 		for prefijo: String in ["Anden", "Marquesina"]:
 			var pieza: Node3D = get_node_or_null(prefijo + sufijo) as Node3D
 			if pieza != null:
@@ -738,12 +791,111 @@ func _actualizar_disposicion_transversal() -> void:
 
 	# Los postes quedan a la misma distancia del borde interior que en el diseño original.
 	if _poste_ida != null:
-		_poste_ida.position.z = -mitad_separacion + 1.75
+		_poste_ida.position.z = -mitad_separacion + 1.75 + ajuste_lateral_anden_ida
 	if _poste_vuelta != null:
-		_poste_vuelta.position.z = mitad_separacion - 1.75
+		_poste_vuelta.position.z = mitad_separacion - 1.75 + ajuste_lateral_anden_vuelta
 	for multimesh: MultiMesh in _multimeshes_pasajeros:
 		multimesh.custom_aabb = _aabb_multimesh_pasajeros()
+	_sincronizar_andenes_centrales()
+	_actualizar_area_seleccion()
 	_reubicar_pasajeros_visuales()
+
+
+## Construye hasta dos andenes isla visuales. Son nodos generados por la
+## configuración, por lo que no se guardan como hijos permanentes de la escena:
+## al abrirla se reconstruyen desde las propiedades exportadas del Inspector.
+func _sincronizar_andenes_centrales() -> void:
+	var contenedor: Node3D = get_node_or_null("AndenesCentrales") as Node3D
+	if cantidad_andenes_centrales <= 0:
+		if contenedor != null:
+			contenedor.queue_free()
+		return
+
+	if contenedor == null:
+		contenedor = Node3D.new()
+		contenedor.name = "AndenesCentrales"
+		add_child(contenedor)
+
+	for indice: int in range(cantidad_andenes_centrales):
+		var nombre_central: String = "Central%d" % (indice + 1)
+		var central: Node3D = contenedor.get_node_or_null(nombre_central) as Node3D
+		if central == null:
+			central = Node3D.new()
+			central.name = nombre_central
+			contenedor.add_child(central)
+			_crear_modelo_anden_central(central)
+		central.position.z = _posicion_lateral_anden_central(indice)
+		_actualizar_dimensiones_anden_central(central)
+
+	for hijo: Node in contenedor.get_children():
+		var nombre_hijo: String = String(hijo.name)
+		if hijo is Node3D and nombre_hijo.begins_with("Central"):
+			var indice_texto: String = nombre_hijo.trim_prefix("Central")
+			if indice_texto.is_valid_int() and indice_texto.to_int() > cantidad_andenes_centrales:
+				hijo.queue_free()
+
+
+func _posicion_lateral_anden_central(indice: int) -> float:
+	return posicion_lateral_anden_central_1 if indice == 0 else posicion_lateral_anden_central_2
+
+
+func _crear_modelo_anden_central(central: Node3D) -> void:
+	var fuentes: Array[String] = ["AndenA", "MarquesinaA", "ColumnaA0", "ColumnaA1", "ColumnaA2", "ColumnaA3", "ColumnaA4"]
+	var destinos: Array[String] = ["Anden", "Marquesina", "Columna0", "Columna1", "Columna2", "Columna3", "Columna4"]
+	for indice: int in range(fuentes.size()):
+		var fuente: Node3D = get_node_or_null(fuentes[indice]) as Node3D
+		if fuente == null:
+			continue
+		var copia: Node3D = fuente.duplicate() as Node3D
+		if copia == null:
+			continue
+		copia.name = destinos[indice]
+		copia.position.z = 0.0
+		central.add_child(copia)
+
+
+func _actualizar_dimensiones_anden_central(central: Node3D) -> void:
+	for nombre_malla: String in ["Anden", "Marquesina"]:
+		var pieza: MeshInstance3D = central.get_node_or_null(nombre_malla) as MeshInstance3D
+		if pieza != null and pieza.mesh is BoxMesh:
+			var caja: BoxMesh = pieza.mesh.duplicate() as BoxMesh
+			caja.size = Vector3(longitud_anden, caja.size.y, caja.size.z)
+			pieza.mesh = caja
+	for indice: int in range(5):
+		var columna: Node3D = central.get_node_or_null("Columna%d" % indice) as Node3D
+		if columna != null:
+			columna.position.x = longitud_anden * (float(indice) - 2.0) * 0.2
+
+
+## Amplía el volumen de clic según los andenes laterales y centrales visibles.
+## De esta forma una estación sigue siendo seleccionable aunque sus modelos se
+## alejen del ancho inicial de la escena.
+func _actualizar_area_seleccion() -> void:
+	var colision: CollisionShape3D = get_node_or_null("AreaSeleccion/CollisionShape3D") as CollisionShape3D
+	if colision == null:
+		return
+	var caja: BoxShape3D = colision.shape as BoxShape3D
+	if caja == null:
+		return
+	var mitad: float = separacion_vias * 0.5
+	var posiciones: Array[float] = [
+		-mitad + ajuste_lateral_anden_ida,
+		mitad + ajuste_lateral_anden_vuelta,
+	]
+	if cantidad_andenes_centrales >= 1:
+		posiciones.append(posicion_lateral_anden_central_1)
+	if cantidad_andenes_centrales >= 2:
+		posiciones.append(posicion_lateral_anden_central_2)
+	var minimo: float = posiciones[0]
+	var maximo: float = posiciones[0]
+	for posicion: float in posiciones:
+		minimo = minf(minimo, posicion)
+		maximo = maxf(maximo, posicion)
+	var margen_lateral: float = 2.75
+	var caja_local: BoxShape3D = caja.duplicate() as BoxShape3D
+	caja_local.size = Vector3(maxf(longitud_anden, 1.0), 8.0, maxf(5.0, maximo - minimo + margen_lateral * 2.0))
+	colision.shape = caja_local
+	colision.position.z = (minimo + maximo) * 0.5
 
 
 ## Calcula y devuelve el offset exacto a lo largo de la curva de la vía donde debe detenerse
@@ -907,12 +1059,40 @@ func _snap_a_posicion_actual() -> void:
 	var pos_local: Vector3 = vía_destino.to_local(objetivo_global)
 	var nuevo_progreso: float = snappedf(vía_destino.curve.get_closest_offset(pos_local), 0.1)
 
+	# La estación siempre termina tangente a la vía, pero el giro manual de
+	# 180° sí tiene significado operativo: define qué extremo visual es Ida.
+	# Leerlo antes de reemplazar el transform evita que el autoalineado lo
+	# descarte al soltar el manipulador.
 	# Asignar con bloqueo para que los setters no reposicionen a mitad de camino.
 	_ajustando_transform = true
+	_actualizar_sentido_desde_orientacion(vía_destino, nuevo_progreso)
 	traza = vía_destino
 	progreso_en_via = nuevo_progreso
 	_ajustando_transform = false
 	_aplicar_posicion_en_via()
+
+
+## Interpreta el eje longitudinal que dejó el usuario en el editor. Sólo se
+## conserva la elección de sentido (normal o invertido); la orientación final
+## vuelve a calcularse desde la curva para que andén, cobertura y postes sigan
+## correctamente anclados a la vía.
+func _actualizar_sentido_desde_orientacion(vía: Path3D, offset: float) -> void:
+	if not Engine.is_editor_hint() or vía == null or vía.curve == null:
+		return
+
+	var muestra: Transform3D = vía.curve.sample_baked_with_rotation(offset, true, true)
+	var tangente_local: Vector3 = -muestra.basis.z.normalized()
+	var tangente_global: Vector3 = (vía.global_transform.basis * tangente_local).normalized()
+	var eje_longitudinal: Vector3 = global_transform.basis.x.normalized()
+	if tangente_global.length_squared() <= 0.0001 or eje_longitudinal.length_squared() <= 0.0001:
+		return
+
+	# Con un giro de 180° el producto escalar pasa a ser negativo. Para giros
+	# intermedios se conserva el último sentido, evitando que una edición leve
+	# cerca de 90° altere de manera inesperada el poste operativo.
+	var alineacion: float = eje_longitudinal.dot(tangente_global)
+	if absf(alineacion) >= 0.5:
+		invertir_sentido = alineacion < 0.0
 
 
 ## Posiciona y orienta tangencialmente la estación según el progreso_en_via en la traza.
@@ -949,12 +1129,25 @@ func _aplicar_posicion_en_via() -> void:
 
 
 func _notificar_trenes() -> void:
+	# Editar una estación no debe ejecutar búsquedas topológicas para cada tren.
+	# El editor sólo modifica la escena; las rutas se resolverán al iniciar el juego.
+	if Engine.is_editor_hint() or not is_inside_tree() or _aviso_trenes_pendiente:
+		return
+	_aviso_trenes_pendiente = true
+	call_deferred("_notificar_trenes_diferido")
+
+
+## Agrupa cambios consecutivos de una estación en una única actualización de
+## itinerario por tren. Por ejemplo, modificar separación y ambos ajustes en el
+## Inspector no genera tres recálculos de ruta en el mismo frame.
+func _notificar_trenes_diferido() -> void:
+	_aviso_trenes_pendiente = false
 	if not is_inside_tree():
 		return
 	var trenes: Array[Node] = get_tree().get_nodes_in_group("trenes")
 	for t: Node in trenes:
 		if is_instance_valid(t) and t.has_method("_recalcular_paradas_dinamicas"):
-			t.call_deferred("_recalcular_paradas_dinamicas")
+			t.call("_recalcular_paradas_dinamicas")
 
 
 # ==============================================================================
@@ -978,6 +1171,11 @@ func serializar_datos() -> Dictionary:
 		"desfasaje_lateral": desfasaje_lateral,
 		"longitud_anden": longitud_anden,
 		"separacion_vias": separacion_vias,
+		"ajuste_lateral_anden_ida": ajuste_lateral_anden_ida,
+		"ajuste_lateral_anden_vuelta": ajuste_lateral_anden_vuelta,
+		"cantidad_andenes_centrales": cantidad_andenes_centrales,
+		"posicion_lateral_anden_central_1": posicion_lateral_anden_central_1,
+		"posicion_lateral_anden_central_2": posicion_lateral_anden_central_2,
 		"ancho_cobertura_vias": ancho_cobertura_vias,
 		"desfasaje_parada_ida": desfasaje_parada_ida,
 		"desfasaje_parada_vuelta": desfasaje_parada_vuelta,
@@ -1001,6 +1199,11 @@ func deserializar_datos(data: Dictionary) -> void:
 	desfasaje_lateral = float(data.get("desfasaje_lateral", desfasaje_lateral))
 	longitud_anden = maxf(30.0, float(data.get("longitud_anden", longitud_anden)))
 	separacion_vias = maxf(2.0, float(data.get("separacion_vias", separacion_vias)))
+	ajuste_lateral_anden_ida = float(data.get("ajuste_lateral_anden_ida", ajuste_lateral_anden_ida))
+	ajuste_lateral_anden_vuelta = float(data.get("ajuste_lateral_anden_vuelta", ajuste_lateral_anden_vuelta))
+	cantidad_andenes_centrales = int(data.get("cantidad_andenes_centrales", cantidad_andenes_centrales))
+	posicion_lateral_anden_central_1 = float(data.get("posicion_lateral_anden_central_1", posicion_lateral_anden_central_1))
+	posicion_lateral_anden_central_2 = float(data.get("posicion_lateral_anden_central_2", posicion_lateral_anden_central_2))
 	ancho_cobertura_vias = maxf(5.0, float(data.get("ancho_cobertura_vias", ancho_cobertura_vias)))
 	desfasaje_parada_ida = float(data.get("desfasaje_parada_ida", desfasaje_parada_ida))
 	desfasaje_parada_vuelta = float(data.get("desfasaje_parada_vuelta", desfasaje_parada_vuelta))

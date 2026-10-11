@@ -368,6 +368,11 @@ func _cambiar_tiempos_servicio(_valor: float) -> void:
 
 
 func _agregar_formacion() -> void:
+	# El HUD puede entrar al árbol antes de que Godot asigne `current_scene`.
+	# Resolverlo al pulsar evita que el botón quede silencioso en esa carrera de
+	# inicialización.
+	if _nivel == null or not is_instance_valid(_nivel) or not _nivel.has_method("agregar_tren"):
+		_nivel = get_tree().current_scene
 	if _nivel == null or not _nivel.has_method("agregar_tren"):
 		return
 	var tren: Variant = _nivel.call("agregar_tren")

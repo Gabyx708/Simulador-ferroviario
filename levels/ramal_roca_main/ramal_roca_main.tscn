@@ -55,7 +55,7 @@ shader_parameter/moon_texture_flip_u = false
 shader_parameter/moon_texture_flip_v = false
 shader_parameter/moon_size = 0.07
 shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
-shader_parameter/atm_moon_mie_intensity = 0.029151484966278066
+shader_parameter/atm_moon_mie_intensity = 0.029151505827903736
 shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
 shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
 shader_parameter/starmap_texture = ExtResource("8_6r5d0")
@@ -79,8 +79,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.86745924, 0.86745924)
-shader_parameter/cirrus_position2 = Vector2(0.86745924, 0.86745924)
+shader_parameter/cirrus_position1 = Vector2(0.0025552392, 0.0025552392)
+shader_parameter/cirrus_position2 = Vector2(0.0025552392, 0.0025552392)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -90,7 +90,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(4.3379264, 4.3379264)
+shader_parameter/cumulus_position = Vector2(15.040961, 15.040961)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -499,7 +499,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_m2pri"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.15065347, 0, -4.981627, 0, 0, 0, 193.863, 0, 423.086, 0, 0, 0, 0, 0, 0, 190.63907, 0, 92.11269),
+"points": PackedVector3Array(-0.15065347, 0, -4.981627, 0, 0, 0, 190.3624, 0, 91.599335, 0, 0, 0, 0, 0, 0, 193.69542, 0, 423.32513),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -635,7 +635,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_fd1kp"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.1419018, 0, -4.984248, 0, 0, 0, 106.736, 0, 424.831, 0, 0, 0, 0, 0, 0, 103.59085, 0, 93.05764),
+"points": PackedVector3Array(-0.1419018, 0, -4.984248, 0, 0, 0, 103.53985, 0, 92.71934, 0, 0, 0, 0, 0, 0, 106.69891, 0, 424.70828),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1371,7 +1371,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_wcdpn"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -1.6377466, 0, -34.45767, 115.63, 0, 562.691, 1.2583286, 0, 34.47361, 0, 0, 0, 110.3921, 0, 424.831),
+"points": PackedVector3Array(-0.003692627, -0.27890778, -11.361053, 0.003692627, 0.27890778, 11.361053, 110.415474, -0.0019903183, 425.2184, -0.20143127, 0.0009994507, -8.938721, 0.20143127, -0.0009994507, 8.938721, 115.63, 0, 562.691),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1379,7 +1379,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_let51"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.13672805, 0, -4.9864345, 0, 0, 0, 124.258, 0, 424.609, 0, 0, 0, 0, 0, 0, 121.18794, 0, 92.638565),
+"points": PackedVector3Array(-0.13672805, 0, -4.9864345, 0, 0, 0, 121.50066, 0, 92.745346, 0, 0, 0, 0, 0, 0, 124.282486, 0, 424.78595),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1387,7 +1387,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_q5ale"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.9808019, 0, -34.45459, 133.289, 0, 562.346, 1.1558642, 0, 34.449165, 0, 0, 0, 127.60875, 0, 424.609),
+"points": PackedVector3Array(0, 0, 0, -0.9808019, 0, -34.45459, 133.289, 0, 562.346, 1.1558642, 0, 34.449165, 0, 0, 0, 127.737076, 0, 424.609),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1395,7 +1395,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_r620u"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.102878, 0, -4.9951544, 0, 0, 0, 142.631, 0, 424.509, 0, 0, 0, 0, 0, 0, 138.6401, 0, 92.63634),
+"points": PackedVector3Array(-0.102878, 0, -4.9951544, 0, 0, 0, 138.62859, 0, 92.93459, 0, 0, 0, 0, 0, 0, 142.70605, 0, 424.66998),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1427,7 +1427,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_v48cf"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.08995978, 0, -4.9864416, 0, 0, 0, 159.303, 0, 424.186, 0, 0, 0, 0, 0, 0, 155.9932, 0, 92.364174),
+"points": PackedVector3Array(-0.08995978, 0, -4.9864416, 0, 0, 0, 155.11194, 0, 92.51275, 0, 0, 0, 0, 0, 0, 159.28812, 0, 424.26703),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1443,7 +1443,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_uyyxx"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(-0.14950423, 0, -4.9943705, 0, 0, 0, 177.1, 0, 423.586, 0, 0, 0, 0, 0, 0, 173.29088, 0, 91.88328),
+"points": PackedVector3Array(-0.14950423, 0, -4.9943705, 0, 0, 0, 172.73938, 0, 91.52814, 0, 0, 0, 0, 0, 0, 177.04395, 0, 423.8864),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -1643,10 +1643,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_hm3hh"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.1828921, 0, -4.9875274, 180.998, 0, 423.719, 0.19675064, 0, 4.9869995, 0, 0, 0, 180.211, 0, 403.771, 0, 0, 0, 0, 0, 0, 177.33575, 0, 91.98861),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.1828921, 0, -4.9875274, 177.0188, 0, 91.50335, 0, 0, 0, 0, 0, 0, 180.97939, 0, 423.72937),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_x32t4"]
 bake_interval = 2.0
@@ -1659,10 +1659,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_s6yy8"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.09433109, 0, -4.986317, 162.396, 0, 424.186, 0.045749664, 0, 4.9869995, 0, 0, 0, 162.213, 0, 404.238, 0, 0, 0, 0, 0, 0, 159.89603, 0, 91.99378),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.09433109, 0, -4.986317, 159.76724, 0, 91.68881, 0, 0, 0, 0, 0, 0, 162.33401, 0, 424.58496),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_upv0i"]
 bake_interval = 2.0
@@ -1675,10 +1675,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_mbvys"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.12292571, 0, -4.994952, 145.843, 0, 424.509, 0.09825134, 0, 4.9954987, 0, 0, 0, 145.45, 0, 404.527, 0, 0, 0, 0, 0, 0, 142.84018, 0, 92.383354),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.12292571, 0, -4.994952, 142.51967, 0, 91.66359, 0, 0, 0, 0, 0, 0, 145.96129, 0, 424.63373),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_h0th5"]
 bake_interval = 2.0
@@ -1691,10 +1691,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_f0a1p"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.16718355, 0, -4.9827075, 127.563705, 0, 424.609, 0.11199951, 0, 4.984253, 0, 0, 0, 127.39815, 0, 404.672, 0, 0, 0, 0, 0, 0, 125.53924, 0, 92.873024),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.16718355, 0, -4.9827075, 125.28943, 0, 92.755035, 0, 0, 0, 0, 0, 0, 127.73485, 0, 424.72327),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_k73ot"]
 bake_interval = 2.0
@@ -1707,10 +1707,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_esjlq"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.1825042, 0, -4.999949, 110.434135, 0, 424.831, 0.15099907, 0, 5.0009995, 0, 0, 0, 110.44094, 0, 404.827, 0, 0, 0, 0, 0, 0, 107.61533, 0, 92.92636),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.1825042, 0, -4.999949, 107.802986, 0, 92.220894, 0, 0, 0, 0, 0, 0, 110.43351, 0, 425.19763),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_62vu8"]
 bake_interval = 2.0
@@ -1747,10 +1747,10 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_5hpr1"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -0.12951203, 0, -4.9817114, 197.184, 0, 423.086, 0.12800217, 0, 4.9817505, 0, 0, 0, 196.672, 0, 403.159, 0, 0, 0, 0, 0, 0, 194.75772, 0, 91.66154),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, -0.12951203, 0, -4.9817114, 194.3908, 0, 91.572784, 0, 0, 0, 0, 0, 0, 197.30228, 0, 424.63876),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_oqrwd"]
 bake_interval = 2.0
@@ -1883,7 +1883,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_fvstk"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, -5.6525335, 0, 24.666126, 555.63, 0, 4715.543, 7.1156135, 0, -24.2845, -75.052795, 0, 256.1437, 531.428, 0, 4813.829, 75.58172, 0, -255.98816, -10.277133, 0, 34.807682, 226.986, 0, 5837.155, 10.498633, 0, -34.741516, -97.582565, 0, 322.915, 187.998, 0, 5976.994, 97.637405, 0, -322.89844, -121.22626, 0, 400.90955, -205.328, 0, 7267.745, 120.63067, 0, -401.08917, -6.1324058, 0, 20.389853, -687.455, 0, 8872.221, 6.7133417, 0, -20.206028, -12.502326, 0, 37.629894, -712.38, 0, 8953.66, 11.7499, 0, -37.87159, -11.892588, 0, 38.331493, -764.306, 0, 9103.529, 10.122651, 0, -38.836433, -8.284905, 0, 31.78576, -806.9, 0, 9258.312, 7.2697744, 0, -32.033184, -9.320718, 0, 41.070362, -837.928, 0, 9385.986, 7.725317, 0, -41.400116, -7.9793925, 0, 42.76171, -873.256, 0, 9550.699, 5.9379096, 0, -43.092644, -4.1649528, 0, 30.22593, -900.725, 0, 9722.517, 2.4289646, 0, -30.414696, -2.4222386, 0, 30.330473, -913.654, 0, 9843.876, 2.854897, 0, -30.292812, -6.6852493, 0, 70.93601, -920.123, 0, 9965.412, 7.0394397, 0, -70.90174, -9.774743, 0, 98.45191, -951.801, 0, 10248.647, 8.997431, 0, -98.52599, 0, 0, 0, -987.376, 0, 10642.789),
+"points": PackedVector3Array(0, 0, 0, -5.6525335, 0, 24.666126, 555.63, 0, 4715.543, 7.1156135, 0, -24.2845, -75.052795, 0, 256.1437, 531.428, 0, 4813.829, 75.58172, 0, -255.98816, -10.277133, 0, 34.807682, 226.986, 0, 5837.155, 10.498633, 0, -34.741516, -97.582565, 0, 322.915, 187.998, 0, 5976.994, 97.637405, 0, -322.89844, -97.637405, 0, 322.89844, -205.328, 0, 7267.745, 120.63067, 0, -401.08917, -6.1324058, 0, 20.389853, -687.455, 0, 8872.221, 6.7133417, 0, -20.206028, -12.502326, 0, 37.629894, -712.38, 0, 8953.66, 11.7499, 0, -37.87159, -11.892588, 0, 38.331493, -764.306, 0, 9103.529, 10.122651, 0, -38.836433, -8.284905, 0, 31.78576, -806.9, 0, 9258.312, 7.2697744, 0, -32.033184, -9.320718, 0, 41.070362, -837.928, 0, 9385.986, 7.725317, 0, -41.400116, -7.9793925, 0, 42.76171, -873.256, 0, 9550.699, 5.9379096, 0, -43.092644, -4.1649528, 0, 30.22593, -900.725, 0, 9722.517, 2.4289646, 0, -30.414696, -2.4222386, 0, 30.330473, -913.654, 0, 9843.876, 2.854897, 0, -30.292812, -6.6852493, 0, 70.93601, -920.123, 0, 9965.412, 7.0394397, 0, -70.90174, -9.774743, 0, 98.45191, -951.801, 0, 10248.647, 8.997431, 0, -98.52599, 0, 0, 0, -987.376, 0, 10642.789),
 "tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 point_count = 16
@@ -1971,7 +1971,7 @@ point_count = 2
 [sub_resource type="Curve3D" id="Curve3D_sqdjh"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 16.845034, 0, -59.548344, -88.591, 0, 6840.034, -19.743221, 0, 58.65122, 10.145924, 0, -30.140512, -13.368, 0, 6604.2, -9.361627, 0, 30.39326, 59.475925, 0, -193.09329, 30.936, 0, 6484.955, -57.601063, 0, 193.66084, 0, 0, 0, 261.912, 0, 5710.482),
+"points": PackedVector3Array(0, 0, 0, 16.845034, 0, -59.548344, -82.129364, 0, 6840.034, -19.743221, 0, 58.65122, 10.145924, 0, -30.140512, -9.883423, 0, 6604.2, -9.361627, 0, 30.39326, 59.475925, 0, -193.09329, 30.936, 0, 6484.955, -57.601063, 0, 193.66084, 0, 0, 0, 261.912, 0, 5710.482),
 "tilts": PackedFloat32Array(0, 0, 0, 0)
 }
 point_count = 4
@@ -2307,7 +2307,7 @@ point_count = 3
 [sub_resource type="Curve3D" id="Curve3D_tv0kc"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 9.579371, 0, -29.922419, -339.779, 0, 7693.065, -9.134167, 0, 30.061312, 44.848907, 0, -147.60153, -300.91, 0, 7573.553, -43.06482, 0, 148.13191, 8.694352, 0, -29.906338, -123.855, 0, 6982.441, -7.48423, 0, 30.231888, 0, 0, 0, -93.907, 0, 6861.516),
+"points": PackedVector3Array(0, 0, 0, 9.579371, 0, -29.922419, -339.779, 0, 7693.065, -9.134167, 0, 30.061312, 44.848907, 0, -147.60153, -300.91, 0, 7573.553, -43.06482, 0, 148.13191, 8.694352, 0, -29.906338, -123.855, 0, 6982.441, -7.48423, 0, 30.231888, 0, 0, 0, -87.80707, 0, 6862.0264),
 "tilts": PackedFloat32Array(0, 0, 0, 0)
 }
 point_count = 4
@@ -2315,7 +2315,7 @@ point_count = 4
 [sub_resource type="Curve3D" id="Curve3D_g2xgn"]
 bake_interval = 2.0
 _data = {
-"points": PackedVector3Array(0, 0, 0, 1.329491, 0, -5.370362, -93.907, 0, 6861.516, -1.5059339, 0, 5.3235793, 0, 0, 0, -88.591, 0, 6840.034),
+"points": PackedVector3Array(0, 0, 0, 1.329491, 0, -5.370362, -87.57247, 0, 6861.516, -1.5059339, 0, 5.3235793, 0, 0, 0, -82.1942, 0, 6840.034),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -5103,7 +5103,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 330.989
+longitud_metros = 331.7424
 
 [node name="seg_162" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1682065974]
 curve = SubResource("Curve3D_yfhie")
@@ -5241,7 +5241,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.7883
+longitud_metros = 332.00406
 
 [node name="seg_187" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1694737639]
 curve = SubResource("Curve3D_slnpo")
@@ -5981,7 +5981,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 137.96002
+longitud_metros = 137.57333
 
 [node name="seg_466" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2117293038]
 curve = SubResource("Curve3D_let51")
@@ -5991,7 +5991,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.98438
+longitud_metros = 332.05194
 
 [node name="seg_467" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2029353717]
 curve = SubResource("Curve3D_q5ale")
@@ -6001,7 +6001,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 137.85503
+longitud_metros = 137.84969
 
 [node name="seg_468" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2111249417]
 curve = SubResource("Curve3D_r620u")
@@ -6011,7 +6011,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.89645
+longitud_metros = 331.76062
 
 [node name="seg_469" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=578720793]
 curve = SubResource("Curve3D_2ri3n")
@@ -6045,7 +6045,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.83807
+longitud_metros = 331.78064
 
 [node name="seg_473" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1726587216]
 curve = SubResource("Curve3D_v466v")
@@ -6063,7 +6063,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.72443
+longitud_metros = 332.38623
 
 [node name="seg_475" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2033220547]
 curve = SubResource("Curve3D_mamgl")
@@ -6273,7 +6273,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.75922
+longitud_metros = 332.24963
 
 [node name="seg_584" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1162326172]
 curve = SubResource("Curve3D_x32t4")
@@ -6291,7 +6291,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 332.20157
+longitud_metros = 332.9062
 
 [node name="seg_586" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1847065946]
 curve = SubResource("Curve3D_upv0i")
@@ -6309,7 +6309,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 332.1404
+longitud_metros = 332.98807
 
 [node name="seg_588" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1080920913]
 curve = SubResource("Curve3D_h0th5")
@@ -6327,7 +6327,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.74274
+longitud_metros = 331.97754
 
 [node name="seg_590" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=975578333]
 curve = SubResource("Curve3D_k73ot")
@@ -6345,7 +6345,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.91888
+longitud_metros = 332.98724
 
 [node name="seg_592" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2117193137]
 curve = SubResource("Curve3D_62vu8")
@@ -6389,7 +6389,7 @@ sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
 esta_modificada = true
 estado_edicion = "Modificado"
-longitud_metros = 331.43655
+longitud_metros = 333.07883
 
 [node name="seg_661" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1251155738]
 curve = SubResource("Curve3D_oqrwd")
@@ -6533,7 +6533,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_4"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "05_Gerli_Lanus"
-longitud_metros = 6141.488
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 6141.484
 
 [node name="seg_10" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=1180759271]
 curve = SubResource("Curve3D_v47p1")
@@ -6623,7 +6625,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_8"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "04_Avellaneda_Gerli"
-longitud_metros = 1182.9694
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 1180.8962
 
 [node name="seg_9" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=473190835]
 curve = SubResource("Curve3D_prsdm")
@@ -6959,7 +6963,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_765"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "04_Avellaneda_Gerli"
-longitud_metros = 867.3235
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 868.44324
 
 [node name="seg_766" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1133208565]
 curve = SubResource("Curve3D_g2xgn")
@@ -6967,7 +6973,9 @@ script = ExtResource("4_7yiem")
 segment_id = "seg_766"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "04_Avellaneda_Gerli"
-longitud_metros = 22.130917
+esta_modificada = true
+estado_edicion = "Modificado"
+longitud_metros = 22.145847
 
 [node name="seg_767" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=535979636]
 curve = SubResource("Curve3D_n7psh")
@@ -9799,39 +9807,51 @@ script = ExtResource("3_trackgeo")
 [node name="Formaciones" type="Node3D" parent="." unique_id=40777106]
 
 [node name="TrenCSR" parent="Formaciones" unique_id=1268589130 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 437.60522, 0, 3701.201)
-traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_470")
+transform = Transform3D(-0.99911886, 0, 0.041969452, 0, 1, 0, -0.041969452, 0, -0.99911886, 160.33153, 0, 168.08672)
+traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_585")
+avance_inicial = 76.4
 cantidad_coches = 3
+tiempo_parada_servicio = 0.0
+sentido_local_inicio_invertido = false
 servicio = NodePath("../../ServicioConstitucionBosques")
+autodetectar_estaciones = false
+distancia_maxima_via = 1.0
 
 [node name="TrenCSR_02" parent="Formaciones" unique_id=1933757396 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105.37286, 0, 281.0375)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104.2963, 0, 172.21573)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_186")
-avance_inicial = 143.8
+avance_inicial = 79.5
 cantidad_coches = 3
 demora_salida_inicial = 6.0
 tiempo_parada_servicio = 4.0
 sentido_local_inicio_invertido = false
 servicio = NodePath("../../ServicioConstitucionBosques")
+autodetectar_estaciones = false
+distancia_maxima_via = 1.0
 
 [node name="TrenCSR_03" parent="Formaciones" unique_id=1337099888 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 179.15665, 0, 289.4394)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 177.89026, 0, 169.19832)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_583")
-avance_inicial = 134.3
+avance_inicial = 77.7
 cantidad_coches = 3
 demora_salida_inicial = 12.0
 tiempo_parada_servicio = 5.0
+sentido_local_inicio_invertido = false
 servicio = NodePath("../../ServicioConstitucionBosques")
+autodetectar_estaciones = false
+distancia_maxima_via = 1.0
 
 [node name="TrenCSR_04" parent="Formaciones" unique_id=171155855 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 140.93434, 0, 283.4192)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139.63885, 0, 175.12839)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_468")
-avance_inicial = 141.1
+avance_inicial = 82.2
 cantidad_coches = 3
 demora_salida_inicial = 18.0
 tiempo_parada_servicio = 6.0
 sentido_local_inicio_invertido = false
 servicio = NodePath("../../ServicioConstitucionBosques")
+autodetectar_estaciones = false
+distancia_maxima_via = 1.0
 
 [node name="ServicioConstitucionBosques" type="Node" parent="." unique_id=406195018]
 script = ExtResource("19_servicio")
@@ -9846,38 +9866,58 @@ formacion = NodePath("../../Formaciones/TrenCSR")
 seguir_al_inicio = false
 
 [node name="EstacionPlazaConstitucion" parent="." unique_id=141049132 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
-transform = Transform3D(0.015417227, 0, 0.99988115, 0, 1, 0, -0.99988115, 0, 0.015417227, 152.26268, 0, 706.2836)
+transform = Transform3D(0.01258717, 0, -0.99992085, 0, 1, 0, 0.99992085, 0, 0.01258717, 155.96533, 0, 160.30585)
 visible = false
-traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_470")
-progreso_en_via = 35.0
+traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_472")
+progreso_en_via = 67.8
+separacion_vias = 30.0
+ajuste_lateral_anden_ida = -20.0
+ajuste_lateral_anden_vuelta = 20.0
 nombre_estacion = "Plaza Constitución"
 tiempo_espera = 3.0
+esta_editada = true
 
 [node name="EstacionYrigoyen" parent="." unique_id=141049133 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
-transform = Transform3D(-0.20308046, 0, 0.9791621, 0, 1, 0, -0.9791621, 0, -0.20308046, 306.17667, 0, 3161.9985)
-traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen/seg_531")
-progreso_en_via = 321.5
+transform = Transform3D(0.19795483, 0, -0.98021114, 0, 1, 0, 0.98021114, 0, 0.19795483, 269.10388, 0, 2960.4004)
+traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen/seg_441")
+progreso_en_via = 751.3000000000001
+ajuste_lateral_anden_ida = -0.1999999999999993
+ajuste_lateral_anden_vuelta = 12.75
 nombre_estacion = "Hipólito Yrigoyen"
 tiempo_espera = 3.0
+esta_editada = true
 
 [node name="EstacionDarioSantillanKosteki" parent="." unique_id=141049134 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.20181464, 0, -0.97942376, 0, 1, 0, 0.97942376, 0, 0.20181464, 512.24677, 0, 4063.9001)
 traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda/seg_490")
 progreso_en_via = 433.0
+ajuste_lateral_anden_ida = -0.8500000000000014
+ajuste_lateral_anden_vuelta = 20.0
+cantidad_andenes_centrales = 1
+posicion_lateral_anden_central_1 = 9.9
 nombre_estacion = "Darío Santillán y Maximiliano Kosteki"
 tiempo_espera = 3.0
 
 [node name="EstacionGerli" parent="." unique_id=141049135 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
-transform = Transform3D(-0.2921716, 0, -0.95636594, 0, 1, 0, 0.95636594, 0, -0.2921716, -41.505997, 0, 6729.932)
-traza = NodePath("../TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus/seg_4")
-progreso_en_via = 2101.2
+transform = Transform3D(-0.29173926, 0, -0.9564979, 0, 1, 0, 0.9564979, 0, -0.29173926, -35.95728, 0, 6730.204)
+traza = NodePath("../TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli/seg_482")
+progreso_en_via = 853.9000000000001
+invertir_sentido = true
+ajuste_lateral_anden_ida = -5.949999999999999
+ajuste_lateral_anden_vuelta = 13.65
+posicion_lateral_anden_central_1 = 5.5
 nombre_estacion = "Gerli"
 tiempo_espera = 3.0
+esta_editada = true
 
 [node name="EstacionLanus" parent="." unique_id=141049136 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.24094369, 0, -0.9705391, 0, 1, 0, 0.9705391, 0, -0.24094369, -823.7555, 0, 9380.521)
 traza = NodePath("../TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus/seg_142")
 progreso_en_via = 1933.9
+ajuste_lateral_anden_ida = -2.3999999999999986
+ajuste_lateral_anden_vuelta = 17.15
+cantidad_andenes_centrales = 1
+posicion_lateral_anden_central_1 = 8.25
 nombre_estacion = "Lanús"
 tiempo_espera = 3.0
 
@@ -9885,6 +9925,10 @@ tiempo_espera = 3.0
 transform = Transform3D(-0.086932786, 0, -0.9962143, 0, 1, 0, 0.9962143, 0, -0.086932786, -1050.8507, 0, 11329.662)
 traza = NodePath("../TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield/seg_5")
 progreso_en_via = 689.8
+ajuste_lateral_anden_ida = -11.0
+ajuste_lateral_anden_vuelta = 4.199999999999999
+cantidad_andenes_centrales = 1
+posicion_lateral_anden_central_1 = -3.8500000000000014
 nombre_estacion = "Remedios de Escalada"
 tiempo_espera = 3.0
 
@@ -9892,6 +9936,12 @@ tiempo_espera = 3.0
 transform = Transform3D(-0.085664846, 0, -0.99632406, 0, 1, 0, 0.99632406, 0, -0.085664846, -1198.9132, 0, 13160.227)
 traza = NodePath("../TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield/seg_143")
 progreso_en_via = 2506.2
+separacion_vias = 15.3
+ajuste_lateral_anden_ida = 0.6499999999999986
+ajuste_lateral_anden_vuelta = 20.0
+cantidad_andenes_centrales = 2
+posicion_lateral_anden_central_1 = 8.25
+posicion_lateral_anden_central_2 = 13.200000000000005
 nombre_estacion = "Banfield"
 tiempo_espera = 3.0
 
@@ -9899,20 +9949,32 @@ tiempo_espera = 3.0
 transform = Transform3D(-0.09273667, 0, -0.9956907, 0, 1, 0, 0.9956907, 0, -0.09273667, -1372.205, 0, 15118.288)
 traza = NodePath("../TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley/seg_541")
 progreso_en_via = 270.0
+separacion_vias = 17.3
+ajuste_lateral_anden_ida = 3.75
+ajuste_lateral_anden_vuelta = 20.0
+cantidad_andenes_centrales = 2
+posicion_lateral_anden_central_1 = 9.35
+posicion_lateral_anden_central_2 = 15.400000000000006
 nombre_estacion = "Lomas de Zamora"
 tiempo_espera = 3.0
 
 [node name="EstacionTemperley" parent="." unique_id=141049140 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
-transform = Transform3D(-0.09448796, 0, 0.995526, 0, 1, 0, -0.995526, 0, -0.09448796, -1256.1913, 0, 16782.89)
-traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol/seg_392")
-progreso_en_via = 306.1
+transform = Transform3D(0.079758175, 0, -0.99681425, 0, 1, 0, 0.99681425, 0, 0.079758175, -1256.5645, 0, 17223.063)
+traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol/seg_698")
+progreso_en_via = 160.4
+invertir_sentido = true
+ajuste_lateral_anden_ida = -5.5
+ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "Temperley"
 tiempo_espera = 3.0
+esta_editada = true
 
 [node name="EstacionJoseMarmol" parent="." unique_id=141049141 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.96714026, 0, -0.2542435, 0, 1, 0, 0.2542435, 0, 0.96714026, 123.7016, 0, 18546.912)
 traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol/seg_210")
 progreso_en_via = 156.6
+ajuste_lateral_anden_ida = -0.6499999999999986
+ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "José Mármol"
 tiempo_espera = 3.0
 
@@ -9920,6 +9982,7 @@ tiempo_espera = 3.0
 transform = Transform3D(0.967579, 0, -0.25256872, 0, 1, 0, 0.25256872, 0, 0.967579, 2117.1892, 0, 19067.7)
 traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol/seg_694")
 progreso_en_via = 1584.8
+ajuste_lateral_anden_vuelta = 7.449999999999999
 nombre_estacion = "Rafael Calzada"
 tiempo_espera = 3.0
 
@@ -9927,6 +9990,8 @@ tiempo_espera = 3.0
 transform = Transform3D(0.9672259, 0, -0.25391734, 0, 1, 0, 0.25391734, 0, 0.9672259, 4032.8892, 0, 19569.795)
 traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada/seg_75")
 progreso_en_via = 235.0
+ajuste_lateral_anden_ida = -1.3000000000000007
+ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Claypole"
 tiempo_espera = 3.0
 
@@ -9934,6 +9999,8 @@ tiempo_espera = 3.0
 transform = Transform3D(0.9678435, 0, -0.25155342, 0, 1, 0, 0.25155342, 0, 0.9678435, 7447.2227, 0, 20465.414)
 traza = NodePath("../TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo/seg_69")
 progreso_en_via = 872.9
+ajuste_lateral_anden_ida = -0.6499999999999986
+ajuste_lateral_anden_vuelta = 3.1000000000000014
 nombre_estacion = "Ing. Dante Ardigó"
 tiempo_espera = 3.0
 
@@ -9941,20 +10008,27 @@ tiempo_espera = 3.0
 transform = Transform3D(0.99908644, 0, 0.04273528, 0, 1, 0, -0.04273528, 0, 0.99908644, 9895.215, 0, 20673.33)
 traza = NodePath("../TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo/seg_686")
 progreso_en_via = 342.0
+ajuste_lateral_anden_ida = -0.4499999999999993
+ajuste_lateral_anden_vuelta = 5.050000000000001
 nombre_estacion = "Florencio Varela"
 tiempo_espera = 3.0
 
 [node name="EstacionZeballos" parent="." unique_id=141049146 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
-transform = Transform3D(0.95734227, 0, -0.28895652, 0, 1, 0, 0.28895652, 0, 0.95734227, 11485.554, 0, 20659.244)
+transform = Transform3D(0.9317583, 0, -0.3630793, 0, 1, 0, 0.3630793, 0, 0.9317583, 11661.457, 0, 20724.262)
 traza = NodePath("../TrackNetwork/Vias/Sector_05_Claypole_Bosques/14_Ardigo_Varela/seg_164")
-progreso_en_via = 1274.5
+progreso_en_via = 1462.1
+ajuste_lateral_anden_ida = -1.1000000000000014
+ajuste_lateral_anden_vuelta = 5.25
 nombre_estacion = "Estanislao S. Zeballos"
 tiempo_espera = 3.0
+esta_editada = true
 
 [node name="EstacionBosques" parent="." unique_id=141049147 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.93009657, 0, -0.36731514, 0, 1, 0, 0.36731514, 0, 0.93009657, 13912.615, 0, 21611.266)
 traza = NodePath("../TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques/seg_16")
 progreso_en_via = 221.0
+ajuste_lateral_anden_ida = -1.3000000000000007
+ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Bosques"
 tiempo_espera = 3.0
 

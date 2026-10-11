@@ -83,11 +83,6 @@ func _inicializar_flotilla() -> void:
 		var tren_inicial: Tren = formaciones_iniciales[indice]
 		if tren_inicial.servicio == null:
 			tren_inicial.servicio = _servicio
-		var via_inicial: Dictionary = _buscar_via_por_traza(tren_inicial.traza)
-		if not via_inicial.is_empty():
-			# La orientación del Path3D es local: este valor sólo indica si el
-			# offset aumenta o disminuye al salir hacia Yrigoyen.
-			tren_inicial.sentido_local_inicio_invertido = bool(via_inicial.get("invertido", true))
 		tren_inicial.set_meta("via_salida_constitucion", tren_inicial.traza.name if tren_inicial.traza != null else "")
 		_vincular_tren(tren_inicial)
 	_flotilla_inicializada = true
@@ -108,10 +103,11 @@ func _vias_salida_de_formaciones(formaciones_iniciales: Array[Tren]) -> Array[Di
 		if duplicada:
 			push_warning("Dos trenes iniciales comparten %s; el segundo no será una salida de despacho." % tren.traza.name)
 			continue
-		var via_calculada: Dictionary = _buscar_via_por_traza(tren.traza)
-		if via_calculada.is_empty():
-			via_calculada = {"traza": tren.traza, "invertido": tren.sentido_local_inicio_invertido}
-		resultado.append(via_calculada)
+		# Las cuatro formaciones de escena son el plano de salida autoritativo:
+		# su sentido local fue ajustado junto con su posición en el editor. No se
+		# reemplaza por un camino topológicamente más corto que pueda volver por
+		# la terminal antes de salir hacia Yrigoyen.
+		resultado.append({"traza": tren.traza, "invertido": tren.sentido_local_inicio_invertido})
 	return resultado
 
 

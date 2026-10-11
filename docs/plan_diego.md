@@ -31,24 +31,28 @@ La prueba `tools/test_servicio_ferroviario.gd` ya valida las 16 estaciones, los 
 
 ## Fase 1 — Consolidar el servicio de ida
 
-- Conservar `solo_ida = true` en `ServicioConstitucionBosques`.
-- Mantener `PosteParadaIda` como único poste operativo del servicio.
-- Verificar que ningún fallback de ruteo convierta una conexión faltante en una reversa operacional o una búsqueda hacia `PosteParadaVuelta`.
-- Al atender Bosques:
-  - Terminar intercambio de pasajeros.
-  - Detener la cabecera en el poste de ida.
-  - Mantener velocidad cero.
-  - Conservar `Bosques` como próxima/última estación publicada.
-  - No cambiar `_direccion_servicio`, ruta ni sentido local.
-  - No liberar ni reasignar el tren como nueva salida.
-- Si una conexión de ida no existe, detener el tren y emitir diagnóstico de ruta inválida; nunca intentar regresar para encontrar otra vía.
+**Estado de implementación: completada.** La red además traduce los extremos
+topológicos cuando una edición manual invierte los puntos de un `Path3D`; así el
+tren conserva su sentido físico de marcha hacia Yrigoyen/Bosques.
+
+- [x] Se conserva `solo_ida = true` en `ServicioConstitucionBosques`.
+- [x] `PosteParadaIda` es el único poste operativo del servicio.
+- [x] Ningún fallback convierte una conexión faltante en reversa operacional ni busca `PosteParadaVuelta`.
+- [x] Al atender Bosques:
+  - finaliza el intercambio de pasajeros;
+  - la cabecera queda detenida en el poste de ida, con velocidad cero;
+  - `Bosques` continúa como última estación publicada;
+  - no se cambian `_direccion_servicio`, ruta ni sentido local;
+  - el tren no se libera ni se reasigna como salida.
+- [x] Ante una conexión de ida inexistente, el tren se detiene, conserva el diagnóstico y emite una única señal de ruta inválida.
 
 ### Validación
 
-- Ejecutar `test_servicio_ferroviario.gd` sin modificar su invariante `solo_ida`.
-- Ejecutar recorrido completo y comprobar la secuencia `Plaza Constitución → … → Bosques`.
-- Comprobar que Bosques es la última y única terminal operativa.
-- Repetir con cuatro trenes y verificar que ninguno inicia una vuelta.
+- [x] `test_servicio_ferroviario.gd` conserva el invariante `solo_ida`.
+- [x] `test_recorrido_completo.gd` cubre la secuencia `Plaza Constitución → … → Bosques`.
+- [x] `test_finalizacion_bosques.gd` cubre la terminal única y la no reanudación.
+- [x] `test_ruta_invalida_ida.gd` cubre que una ruta faltante no invierte el sentido operativo.
+- [ ] Ejecutar la batería headless final en un entorno con Godot disponible antes de dar por aceptada la fase.
 
 ## Fase 2 — Estados ferroviarios públicos
 

@@ -266,6 +266,10 @@ var _factor_aceleracion_prueba: float = 1.0
 var _factor_frenado_prueba: float = 1.0
 var _parada_servicio_activa: bool = false
 var _ruta_invalida: bool = false
+## Cierre terminal de un servicio sólo ida. No equivale a eliminar el nodo:
+## queda disponible para métricas, pero no vuelve a planificar ni reservar vías.
+var _servicio_finalizado: bool = false
+var _error_ruta_emitido: bool = false
 var _ultimo_suben: int = 0
 var _ultimo_bajan: int = 0
 ## Punto concreto elegido dentro del área multi-vía de la próxima estación.
@@ -305,7 +309,12 @@ func _ready() -> void:
 		if not traza.curve.changed.is_connected(_on_curva_cambiada):
 			traza.curve.changed.connect(_on_curva_cambiada)
 
-	_avance = avance_inicial
+	# Una formación puesta a mano en la terminal no debe saltar al poste de la
+	# estación al iniciar. Cuando no está alineada automáticamente, su transform
+	# de escena es la fuente de verdad y se proyecta una sola vez sobre *su propia*
+	# traza. Así conserva la vía elegida por el editor y luego sólo avanza por la
+	# red física.
+	_resolver_avance_inicial_runtime()
 	_reiniciar_historial_recorrido()
 	_reconstruir()
 	_resolver_servicio()
@@ -319,6 +328,20 @@ func _ready() -> void:
 	# que la formación aparezca sobre la vía sin asignarla a mano.
 	if traza == null and Engine.is_editor_hint():
 		call_deferred("_autodetectar_y_reconstruir")
+
+
+## Resuelve el punto ferroviario inicial sin escribir propiedades exportadas.
+## `avance_inicial` sigue siendo autoritativo para formaciones alineadas a la
+## vía; las colocadas manualmente conservan la posición que tienen en la escena.
+func _resolver_avance_inicial_runtime() -> void:
+	_avance = avance_inicial
+	if Engine.is_editor_hint() or alinear_a_via or traza == null or traza.curve == null:
+		return
+	var largo: float = traza.curve.get_baked_length()
+	if largo <= 0.0:
+		return
+	var punto_local: Vector3 = traza.to_local(global_position)
+	_avance = clampf(traza.curve.get_closest_offset(punto_local), 0.0, largo)
 
 
 ## Ajustes temporales de pruebas. Nunca modifican las propiedades exportadas,
@@ -395,6 +418,62 @@ func _registrar_inicio_tramo() -> void:
 func _actualizar_distancia_ruta() -> void:
 	if _odometro_destino_ruta >= 0.0:
 		_distancia_ruta = maxf(0.0, _odometro_destino_ruta - _odometro_ferroviario)
+
+
+## Inmoviliza una formación de servicio ante un itinerario inconsistente. El
+## objetivo lógico no se borra: HUD y diagnóstico conservan la estación que no
+## pudo alcanzarse. La señal se emite una única vez por incidente.
+func _detener_por_ruta_invalida(motivo: String) -> void:
+	if _servicio_finalizado:
+		return
+	_ruta_invalida = true
+	_detenido = true
+	_parada_servicio_activa = false
+	_espera = 0.0
+	_vel = 0.0
+	_aceleracion_actual = 0.0
+	_desaceleracion_actual = 0.0
+	_frenando_estacion = false
+	_esperando_reserva = false
+	_distancia_ruta = -1.0
+	_odometro_destino_ruta = -1.0
+	activar_opciones_switch(false)
+	velocidad_cambiada.emit(0.0)
+	if not _error_ruta_emitido:
+		_error_ruta_emitido = true
+		ruta_error.emit(motivo)
+
+
+## Termina el servicio en su terminal de ida sin eliminar la formación. Liberar
+## reservas antes de ocultarla permite que el siguiente tren alcance Bosques.
+func _finalizar_servicio_en_terminal() -> void:
+	if _servicio_finalizado:
+		return
+	_servicio_finalizado = true
+	_detenido = true
+	_parada_servicio_activa = true
+	_espera = 0.0
+	_vel = 0.0
+	_aceleracion_actual = 0.0
+	_desaceleracion_actual = 0.0
+	_frenando_estacion = false
+	_esperando_reserva = false
+	_distancia_ruta = 0.0
+	_odometro_destino_ruta = _odometro_ferroviario
+	activar_opciones_switch(false)
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("liberar_reservas_tren"):
+		red.call("liberar_reservas_tren", get_instance_id())
+	for cuerpo: Node3D in _cuerpos:
+		if not is_instance_valid(cuerpo):
+			continue
+		var selector: Area3D = cuerpo.get_node_or_null("SelectorClic") as Area3D
+		if selector != null:
+			selector.input_ray_pickable = false
+	visible = false
+	velocidad_cambiada.emit(0.0)
+	ruta_actualizada.emit(proxima_estacion_nombre(), 0.0)
+	set_process(false)
 
 
 ## Reintenta detectar una vía (p. ej. desde la red topológica) y reconstruye la formación.
@@ -565,8 +644,12 @@ func _inicializar_origen_servicio() -> bool:
 			break
 	if candidato_origen.is_empty():
 		# El área multi-vía puede no incluir la traza configurada de la terminal
-		# por un margen geométrico mínimo. El ancla es válida para el origen.
-		var offset_origen: float = origen.call("obtener_offset_parada", true) if origen.has_method("obtener_offset_parada") else float(origen.get("progreso_en_via"))
+		# por un margen geométrico mínimo. Se proyecta el poste sobre la vía de
+		# esta formación; nunca se copia el offset de una traza paralela.
+		var offset_origen: float = _avance
+		var poste_origen: Node3D = origen.get_node_or_null("PosteParadaIda") as Node3D
+		if poste_origen != null and traza.curve != null:
+			offset_origen = traza.curve.get_closest_offset(traza.to_local(poste_origen.global_position))
 		candidato_origen = {"segmento": traza.name, "traza": traza, "offset": offset_origen, "offset_ida": offset_origen, "offset_vuelta": offset_origen}
 
 	var siguiente: Node = _servicio_ferroviario.obtener_parada(1)
@@ -574,24 +657,23 @@ func _inicializar_origen_servicio() -> bool:
 	var ruta_inicial: Dictionary = {}
 	var sentido_local_invertido := false
 	var sin_override: Array[String] = []
-	# En seg_470 la salida hacia Yrigoyen es el offset decreciente. Priorizarlo
-	# deja explícito que se trata de sentido local, no de una reversa operativa.
-	for invertir_local: bool in [sentido_local_inicio_invertido, not sentido_local_inicio_invertido]:
-		var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(
-			red, candidatos_siguiente, traza.name, float(candidato_origen.get("offset", 0.0)), invertir_local, sin_override
-		)
-		if not eleccion.is_empty():
-			ruta_inicial = eleccion.get("ruta", {}) as Dictionary
-			sentido_local_invertido = invertir_local
-			break
+	# El sentido configurado en el Inspector representa la salida física de la
+	# formación. TrackNetwork traduce internamente ese extremo si la curva fue
+	# invertida durante una edición, pero el tren no debe partir al lado opuesto.
+	var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(
+		red, candidatos_siguiente, traza.name, _avance, sentido_local_inicio_invertido, sin_override
+	)
+	if not eleccion.is_empty():
+		ruta_inicial = eleccion.get("ruta", {}) as Dictionary
+		sentido_local_invertido = sentido_local_inicio_invertido
 	if ruta_inicial.is_empty():
-		ruta_error.emit("No se puede salir de %s hacia %s." % [str(origen.get("nombre_estacion")), str(siguiente.get("nombre_estacion"))])
-		_ruta_invalida = true
+		_detener_por_ruta_invalida("No se puede salir de %s hacia %s." % [str(origen.get("nombre_estacion")), str(siguiente.get("nombre_estacion"))])
 		return false
 
 	invertir_sentido = sentido_local_invertido
 	var objetivo_origen: Dictionary = _objetivo_desde_candidato(origen, candidato_origen)
-	_avance = _calcular_avance_objetivo(objetivo_origen, -1.0 if invertir_sentido else 1.0)
+	# El origen es una parada lógica ya atendida: se conserva exactamente el
+	# avance con el que el diseñador dejó al tren, sin reanclarlo al poste.
 	_reiniciar_historial_recorrido()
 	_objetivo_servicio_resuelto = objetivo_origen
 	_indice_objetivo_resuelto = _indice_servicio
@@ -609,7 +691,10 @@ func _inicializar_origen_servicio() -> bool:
 	var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
 	_reserva_inicial_lista = bool(red.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, largo_formacion)) if red.has_method("reservar_tramo_inicial") else true
 	_registrar_diagnostico_ruta(origen, candidato_origen, [traza.name], ruta_inicial, "origen")
-	_ubicar(0.0)
+	# Constitución también es una parada real: habilita el intercambio inicial
+	# de pasajeros antes de que cada formación salga a Yrigoyen.
+	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0, _espera)
+	parada_alcanzada.emit(_idx_parada)
 	return true
 
 
@@ -1081,7 +1166,14 @@ func _aplicar_ruta_actualizada(ruta: Dictionary, objetivo: Dictionary) -> void:
 
 ## Refresca el objetivo de frenado local y el itinerario global al siguiente andén.
 func _actualizar_ruta_servicio() -> void:
-	if not _usa_servicio() or traza == null:
+	# El Inspector puede invocar esta ruta desde setters exportados mientras el
+	# nodo y la red todavía se están reconfigurando. En el editor sólo hace falta
+	# proyectar la formación sobre la curva; recalcular el itinerario del servicio
+	# aquí deja cachés de switches a medio construir y dispara "Bad address index".
+	# La planificación se resuelve normalmente al ejecutar la escena.
+	if Engine.is_editor_hint():
+		return
+	if _servicio_finalizado or _ruta_invalida or not _usa_servicio() or traza == null:
 		return
 	var red: Node = _obtener_red()
 	if red == null or not red.has_method("planificar_ruta"):
@@ -1125,13 +1217,7 @@ func _actualizar_ruta_servicio() -> void:
 			var inversos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, _direccion_servicio < 0)
 			eleccion = _mejor_ruta_a_candidatos_desde(red, inversos, traza.name, _avance, not invertir_sentido, override, _desvios_switch)
 		if eleccion.is_empty():
-			_ruta_segmentos.clear()
-			_ruta_pasos.clear()
-			_indice_paso_ruta = 0
-			_distancia_ruta = -1.0
-			_odometro_destino_ruta = -1.0
-			_ruta_invalida = true
-			ruta_error.emit("No existe vía de parada transitable para %s." % str(estacion.get("nombre_estacion")))
+			_detener_por_ruta_invalida("No existe vía de parada transitable para %s." % str(estacion.get("nombre_estacion")))
 			return
 		ruta = eleccion["ruta"] as Dictionary
 		var candidato_elegido: Dictionary = eleccion["candidato"] as Dictionary
@@ -1452,7 +1538,7 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 
 
 func _process(delta: float) -> void:
-	if _eliminado:
+	if _eliminado or _servicio_finalizado:
 		return
 	if not Engine.is_editor_hint() and _opciones_switch_activas:
 		_procesar_validacion_switch()
@@ -1493,9 +1579,8 @@ func _process(delta: float) -> void:
 						return
 					_reserva_inicial_lista = true
 				if _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio):
-					# El servicio unidireccional concluye en su andén final.
-					_espera = 0.0
-					_vel = 0.0
+					# El servicio unidireccional concluye definitivamente en Bosques.
+					_finalizar_servicio_en_terminal()
 					return
 				_detenido = false
 				marcha_reanudada.emit()
@@ -1573,35 +1658,7 @@ func _process(delta: float) -> void:
 				parada_completada = true
 
 			if parada_completada:
-				_vel = 0.0
-				# El frenado puede agotar la velocidad unos centímetros antes. Corregir
-				# el último tramo evita que la formación quede detenida en medio del andén.
-				_avance = objetivo_avance
-				_detenido = true
-				_frenando_estacion = false
-				_desaceleracion_actual = 0.0
-				_aceleracion_actual = 0.0
-
-				if _datos_paradas.is_empty() or _datos_paradas.size() != paradas.size():
-					_recalcular_paradas_dinamicas()
-					info_parada = _datos_paradas[_idx_parada] if _idx_parada < _datos_paradas.size() else {}
-
-				# En un servicio el terminal también se define por su sentido
-				# semántico, no por el aumento/disminución local del offset.
-				var sentido_ida_parada: bool = _direccion_servicio > 0 if _usa_servicio() else direccion > 0.0
-				var clave_terminal: String = "es_terminal_ida" if sentido_ida_parada else "es_terminal_vuelta"
-				var es_term: bool = bool(info_parada.get(clave_terminal, info_parada.get("es_terminal", false)))
-				var tiempo_est: float = float(info_parada.get("tiempo_espera", tiempo_parada))
-				_id_parada_atendida = int(info_parada.get("id", 0))
-
-				_espera = maxf(tiempo_est, 1.0)
-				_debe_invertir_en_salida = es_term
-				_parada_servicio_activa = _usa_servicio()
-
-				_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
-
-				parada_alcanzada.emit(_idx_parada)
-				_ubicar(0.0)
+				_completar_parada_actual(info_parada, direccion, objetivo_avance)
 				return
 		else:
 			_aplicar_aceleracion(delta, v_max)
@@ -1611,12 +1668,56 @@ func _process(delta: float) -> void:
 	velocidad_cambiada.emit(velocidad_actual())
 
 	var paso_avance: float = _vel * delta
+	# Ningún frame puede consumir más metros que los que separan a la cabecera
+	# del poste objetivo. Esto evita saltar una parada si el frame cruza varios
+	# Path3D con velocidad de prueba alta.
+	if _tiene_proxima_parada and _distancia_ruta >= 0.0:
+		paso_avance = minf(paso_avance, _distancia_ruta)
+	# Cuando el objetivo ya está sobre el tramo actual, la referencia exacta es
+	# la cabina, no el poste crudo. Esto es importante si el poste queda cerca
+	# de una unión: la cabecera nunca debe atravesarla antes de terminar de
+	# frenar, aun con una velocidad de prueba elevada.
+	if paradas.size() > 0 and _tiene_proxima_parada and _idx_parada < _datos_paradas.size():
+		var objetivo_local: float = _calcular_avance_objetivo(_datos_paradas[_idx_parada], direccion)
+		var distancia_local: float = fposmod((objetivo_local - _avance) * direccion + largo * 0.5, largo) - largo * 0.5
+		if distancia_local >= 0.0:
+			paso_avance = minf(paso_avance, distancia_local)
 	var net: Node = _obtener_red()
 	var recorrido_real: float = _avanzar_por_red(paso_avance, net)
 	if net != null and net.has_method("actualizar_reservas_tren"):
 		net.call("actualizar_reservas_tren", get_instance_id(), _odometro_ferroviario)
 	_actualizar_distancia_ruta()
+	if _tiene_proxima_parada and _distancia_ruta >= 0.0 and _distancia_ruta <= 0.01 and _idx_parada < _datos_paradas.size():
+		_completar_parada_actual(_datos_paradas[_idx_parada], direccion, _avance)
+		return
 	_ubicar(recorrido_real)
+
+
+## Cierra una detención tanto para el frenado normal como para el caso en que
+## el avance de un frame llega exactamente al poste tras cruzar varios tramos.
+func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetivo_avance: float) -> void:
+	_vel = 0.0
+	_avance = objetivo_avance
+	_detenido = true
+	_frenando_estacion = false
+	_desaceleracion_actual = 0.0
+	_aceleracion_actual = 0.0
+
+	if _datos_paradas.is_empty() or _datos_paradas.size() != paradas.size():
+		_recalcular_paradas_dinamicas()
+		info_parada = _datos_paradas[_idx_parada] if _idx_parada < _datos_paradas.size() else {}
+
+	var sentido_ida_parada: bool = _direccion_servicio > 0 if _usa_servicio() else direccion > 0.0
+	var clave_terminal: String = "es_terminal_ida" if sentido_ida_parada else "es_terminal_vuelta"
+	var es_term: bool = bool(info_parada.get(clave_terminal, info_parada.get("es_terminal", false)))
+	var tiempo_est: float = float(info_parada.get("tiempo_espera", tiempo_parada))
+	_id_parada_atendida = int(info_parada.get("id", 0))
+	_espera = maxf(tiempo_est, 1.0)
+	_debe_invertir_en_salida = es_term
+	_parada_servicio_activa = _usa_servicio()
+	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
+	parada_alcanzada.emit(_idx_parada)
+	_ubicar(0.0)
 
 
 ## Consume toda la distancia disponible, incluso si con una velocidad de prueba
@@ -1645,13 +1746,24 @@ func _avanzar_por_red(distancia: float, net: Node) -> float:
 		_odometro_ferroviario += consumido
 		recorrido += consumido
 		restante -= consumido
+		# Si el movimiento se agotó exactamente en un extremo, no atravesar una
+		# unión por inercia. El llamador actualizará la distancia y podrá cerrar
+		# una parada cuyo poste coincida con ese extremo.
+		if restante <= 0.0001:
+			break
 		if net == null:
-			_vel = 0.0
+			if _usa_servicio():
+				_detener_por_ruta_invalida("El itinerario dirigido perdió su red ferroviaria.")
+			else:
+				_vel = 0.0
 			break
 		var extremo: String = "end" if direccion_actual > 0.0 else "start"
 		var opciones: Array = net.call("get_opciones_siguientes", traza.name, extremo) as Array
 		if opciones.is_empty():
-			_vel = 0.0
+			if _usa_servicio():
+				_detener_por_ruta_invalida("El itinerario no continúa desde %s." % traza.name)
+			else:
+				_vel = 0.0
 			break
 		var node_id: int = int((opciones[0] as Dictionary).get("node_id", 0))
 		var proxima: Dictionary = {}
@@ -1664,23 +1776,24 @@ func _avanzar_por_red(distancia: float, net: Node) -> float:
 					esperado = str(paso_siguiente.get("segmento", ""))
 					direccion_esperada = str(paso_siguiente.get("direccion", ""))
 			else:
-				_vel = 0.0
-				ruta_error.emit("El tren abandonó el itinerario dirigido en %s." % traza.name)
+				_detener_por_ruta_invalida("El tren abandonó el itinerario dirigido en %s." % traza.name)
 				break
 			for opcion: Dictionary in opciones:
 				if str(opcion.get("segment_id", "")) == esperado and (direccion_esperada.is_empty() or str(opcion.get("direccion", "")) == direccion_esperada):
 					proxima = opcion
 					break
 			if proxima.is_empty() and not esperado.is_empty():
-				_vel = 0.0
-				ruta_error.emit("El itinerario no continúa desde %s hacia %s." % [traza.name, esperado])
+				_detener_por_ruta_invalida("El itinerario no continúa desde %s hacia %s." % [traza.name, esperado])
 				break
 		if proxima.is_empty():
 			proxima = net.call("get_switch_target", node_id, opciones, traza.name) as Dictionary
 		var siguiente_id: String = str(proxima.get("segment_id", ""))
 		var siguiente: Path3D = net.call("get_segment_path", siguiente_id) as Path3D
 		if siguiente == null or siguiente.curve == null:
-			_vel = 0.0
+			if _usa_servicio():
+				_detener_por_ruta_invalida("La continuación %s no existe en la red." % siguiente_id)
+			else:
+				_vel = 0.0
 			break
 		if net.has_method("solicitar_reserva_seccion"):
 			var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
@@ -1887,6 +2000,18 @@ func esta_detenido() -> bool:
 	return _detenido or _frenando_estacion
 
 
+## Indica que el servicio de ida terminó y la formación quedó retirada en
+## Bosques. El nodo sigue existiendo para futuros módulos de estadísticas.
+func servicio_finalizado() -> bool:
+	return _servicio_finalizado
+
+
+## Expone si una formación quedó detenida por una ruta inválida sin convertir
+## este detalle interno en un estado público completo (eso pertenece a Fase 2).
+func ruta_invalida() -> bool:
+	return _ruta_invalida
+
+
 ## Nombre de la próxima parada a la que se dirige el tren, o cadena vacía
 ## si no hay paradas configuradas.
 func proxima_estacion_nombre() -> String:
@@ -1997,6 +2122,12 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 		await bajar_pasajeros_escalonado(bajan, estacion, intervalo)
 
 	if _eliminado or not is_instance_valid(self):
+		return
+	if es_terminal_actual:
+		# En Bosques todos descienden y el tren no vuelve a captar pasajeros
+		# durante los segundos restantes de la parada terminal.
+		_procesando_pasajeros = false
+		pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
 		return
 
 	await _embarcar_mientras_en_parada(estacion, intervalo)
