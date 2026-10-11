@@ -12,6 +12,8 @@ const ESPERADAS := [
 
 var _detenciones: Array[String] = []
 var _reanudaciones: int = 0
+var _llegadas_publicas: Array[String] = []
+var _salidas_publicas: Array[String] = []
 
 
 func _init() -> void:
@@ -48,15 +50,21 @@ func _run() -> void:
 			(estacion_raw as Estacion).tiempo_espera = 0.1
 	tren.parada_alcanzada.connect(_al_detenerse.bind(tren))
 	tren.marcha_reanudada.connect(func() -> void: _reanudaciones += 1)
+	tren.llego_a_estacion.connect(func(_datos_tren: Dictionary, datos_estacion: Dictionary) -> void: _llegadas_publicas.append(str(datos_estacion.get("nombre", ""))))
+	tren.salio_de_estacion.connect(func(_datos_tren: Dictionary, datos_estacion: Dictionary) -> void: _salidas_publicas.append(str(datos_estacion.get("nombre", ""))))
 
 	var limite := Time.get_ticks_msec() + 120000
 	while Time.get_ticks_msec() < limite and not tren.servicio_finalizado():
 		await process_frame
 
 	Engine.time_scale = 1.0
+	var esperadas_durante_marcha: Array = ESPERADAS.slice(1)
+	var salidas_esperadas: Array = ESPERADAS.slice(0, ESPERADAS.size() - 1)
 	print("DIAG detenciones: %s" % str(_detenciones))
 	print("DIAG destino=%s detenido=%s finalizado=%s" % [tren.proxima_estacion_nombre(), tren.esta_detenido(), tren.servicio_finalizado()])
-	assert(_detenciones == ESPERADAS, "Detenciones inesperadas: %s" % str(_detenciones))
+	assert(_detenciones == esperadas_durante_marcha, "Detenciones inesperadas: %s" % str(_detenciones))
+	assert(_llegadas_publicas == esperadas_durante_marcha, "Las llegadas públicas deben seguir las detenciones: %s" % str(_llegadas_publicas))
+	assert(_salidas_publicas == salidas_esperadas, "Las salidas públicas no deben incluir Bosques: %s" % str(_salidas_publicas))
 	assert(tren.esta_detenido(), "El tren debe quedar detenido en Bosques")
 	assert(tren.proxima_estacion_nombre() == "Bosques", "El último destino debe ser Bosques")
 	assert(tren.servicio_finalizado(), "Bosques debe cerrar el servicio de ida")

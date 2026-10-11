@@ -28,8 +28,16 @@ func _run() -> void:
 	tren.set("_ruta_invalida", false)
 	tren.set("_error_ruta_emitido", false)
 	tren.set("_detenido", false)
+	tren.call("_establecer_estado", Tren.EstadoOperacion.EN_MARCHA)
 	var errores: Array[String] = []
+	var incompletos: Array[String] = []
+	var cambios_incompleto: Array[int] = []
 	tren.ruta_error.connect(func(motivo: String) -> void: errores.append(motivo))
+	tren.recorrido_incompleto.connect(func(_datos: Dictionary, motivo: String) -> void: incompletos.append(motivo))
+	tren.estado_operacion_cambiado.connect(func(datos: Dictionary) -> void:
+		if int(datos.get("estado", -1)) == Tren.EstadoOperacion.INCOMPLETO:
+			cambios_incompleto.append(1)
+	)
 	tren.call("_actualizar_ruta_servicio")
 
 	assert(tren.ruta_invalida(), "Un override imposible debe marcar ruta inválida")
@@ -37,7 +45,12 @@ func _run() -> void:
 	assert(tren.proxima_estacion_nombre() == "Hipólito Yrigoyen", "El diagnóstico debe conservar la estación pendiente")
 	assert(tren.invertir_sentido == sentido_inicial, "Un servicio sólo ida no puede invertir el sentido operativo")
 	assert(errores.size() == 1, "El incidente debe emitir ruta_error una sola vez")
+	assert(tren.obtener_estado_operacion() == Tren.EstadoOperacion.INCOMPLETO, "Una ruta inválida debe publicar estado INCOMPLETO")
+	assert(incompletos.size() == 1, "El recorrido incompleto debe emitirse una sola vez")
+	assert(cambios_incompleto.size() == 1, "La transición a INCOMPLETO debe emitirse una sola vez")
 	tren.call("_actualizar_ruta_servicio")
 	assert(errores.size() == 1, "La replanificación bloqueada no debe duplicar ruta_error")
+	assert(incompletos.size() == 1, "La replanificación bloqueada no debe duplicar recorrido_incompleto")
+	assert(cambios_incompleto.size() == 1, "La replanificación bloqueada no debe duplicar el cambio de estado")
 	print("OK: override inválido detenido sin reversa operativa")
 	quit()

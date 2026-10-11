@@ -42,6 +42,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if Engine.time_scale == 0.0:
+		return
 	if _vagones_en_cola <= 0 or not _flotilla_inicializada:
 		return
 	var libre: Dictionary = _primer_puesto_libre()

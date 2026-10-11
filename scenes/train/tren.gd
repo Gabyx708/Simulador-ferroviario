@@ -14,6 +14,19 @@ class_name Tren
 ## a la vía al soltar el mouse, tal como las estaciones.
 ## Compatible con Godot 4.x / 4.7
 
+## Estado operativo publicado para UI, estadísticas y futuros controladores.
+## La dirección local de un Path3D no forma parte de este estado: el servicio
+## actual siempre representa la ida Constitución → Bosques.
+enum EstadoOperacion {
+	EN_TERMINAL_INICIAL,
+	EN_MARCHA,
+	DETENIDO_EN_ESTACION,
+	ESPERANDO_RESERVA,
+	DETENIDO_POR_EVENTO,
+	FINALIZADO_EN_BOSQUES,
+	INCOMPLETO,
+}
+
 signal velocidad_cambiada(kmh: float)
 signal parada_alcanzada(indice_parada: int)
 signal marcha_reanudada()
@@ -24,6 +37,14 @@ signal ruta_error(motivo: String)
 signal pasajeros_cambiados(actuales: int, capacidad: int, suben: int, bajan: int, intercambio_activo: bool)
 signal parametros_prueba_cambiados(velocidad_factor: float, aceleracion_factor: float, frenado_factor: float)
 signal opciones_switch_cambiadas()
+## Señales de integración. Entregan instantáneas, nunca nodos ni detalles de
+## ruteo/reservas, para que los consumidores no dependan del núcleo ferroviario.
+signal estado_operacion_cambiado(datos_tren: Dictionary)
+signal llego_a_estacion(datos_tren: Dictionary, datos_estacion: Dictionary)
+signal salio_de_estacion(datos_tren: Dictionary, datos_estacion: Dictionary)
+signal recorrido_finalizado(datos_tren: Dictionary)
+signal recorrido_incompleto(datos_tren: Dictionary, motivo: String)
+signal evento_temporal_finalizado(datos_tren: Dictionary)
 
 @export_group("Previsualización en Editor")
 ## Si está activo, el tren se desplaza y simula su marcha dentro del visor del editor 3D.
@@ -118,7 +139,9 @@ signal opciones_switch_cambiadas()
 		if is_inside_tree() and not _transicion_de_ruta:
 			_buscar_proxima_parada(true)
 
-@export var velocidad_max_kmh: float = 90.0
+## Valor inicial operativo. Es intencionalmente editable desde el Inspector:
+## cada formación puede usar un límite específico sin alterar su itinerario.
+@export var velocidad_max_kmh: float = 50.0
 @export var aceleracion: float = 0.8          ## m/s²
 @export var desaceleracion: float = 1.0        ## m/s²
 @export var tiempo_parada: float = 20.0        ## segundos en estación
@@ -221,6 +244,15 @@ var _ruedas: Array[Array] = []
 
 var _eliminado: bool = false
 var _procesando_pasajeros: bool = false
+## Será asignado por SimulacionController en la fase 3. Cero identifica una
+## formación aún no registrada, sin exponer get_instance_id() como contrato.
+var _id_operativo: int = 0
+var _estado_operacion: EstadoOperacion = EstadoOperacion.EN_TERMINAL_INICIAL
+var _resultado_recorrido: String = "en_curso"
+var _motivo_resultado: String = ""
+var _estado_previo_evento: EstadoOperacion = EstadoOperacion.EN_TERMINAL_INICIAL
+var _tiempo_evento_restante: float = 0.0
+var _motivo_evento: String = ""
 
 var _avance: float = 0.0
 var _vel: float = 0.0
@@ -258,6 +290,10 @@ var _distancia_ruta: float = -1.0
 ## se expresan en el mismo odómetro ferroviario.
 var _odometro_ferroviario: float = 0.0
 var _odometro_destino_ruta: float = -1.0
+## Sólo registra movimiento real de servicio. No contiene permanencias en
+## estación, esperas por reserva, eventos ni pausa global.
+var _metros_marcha: float = 0.0
+var _segundos_marcha: float = 0.0
 ## Estados de tramo ya recorridos. Los coches que quedan detrás de la cabecera
 ## consultan esta historia, no el estado actual de una aguja.
 var _historial_recorrido: Array[Dictionary] = []
@@ -422,6 +458,10 @@ func desaceleracion_efectiva() -> float:
 	return desaceleracion * _factor_frenado_prueba
 
 
+func velocidad_media_marcha_kmh() -> float:
+	return (_metros_marcha / _segundos_marcha) * 3.6 if _segundos_marcha > 0.0 else 0.0
+
+
 func obtener_coche_principal() -> Node3D:
 	return _cuerpos[0] if not _cuerpos.is_empty() and is_instance_valid(_cuerpos[0]) else null
 
@@ -447,6 +487,131 @@ func _actualizar_distancia_ruta() -> void:
 		_distancia_ruta = maxf(0.0, _odometro_destino_ruta - _odometro_ferroviario)
 
 
+## Cambia el estado público una sola vez por transición. El motivo se incluye
+## sólo en la instantánea de esa transición; no se persiste como detalle de ruta.
+func _establecer_estado(nuevo_estado: EstadoOperacion, motivo: String = "") -> bool:
+	if _estado_operacion == nuevo_estado:
+		return false
+	_estado_operacion = nuevo_estado
+	var datos: Dictionary = obtener_resumen_operativo()
+	datos["motivo"] = motivo
+	estado_operacion_cambiado.emit(datos)
+	return true
+
+
+func _nombre_estado_operacion() -> String:
+	match _estado_operacion:
+		EstadoOperacion.EN_TERMINAL_INICIAL:
+			return "EN_TERMINAL_INICIAL"
+		EstadoOperacion.EN_MARCHA:
+			return "EN_MARCHA"
+		EstadoOperacion.DETENIDO_EN_ESTACION:
+			return "DETENIDO_EN_ESTACION"
+		EstadoOperacion.ESPERANDO_RESERVA:
+			return "ESPERANDO_RESERVA"
+		EstadoOperacion.DETENIDO_POR_EVENTO:
+			return "DETENIDO_POR_EVENTO"
+		EstadoOperacion.FINALIZADO_EN_BOSQUES:
+			return "FINALIZADO_EN_BOSQUES"
+		EstadoOperacion.INCOMPLETO:
+			return "INCOMPLETO"
+	return "DESCONOCIDO"
+
+
+## Convierte una estación o un objetivo de parada en datos seguros para UI.
+func _resumen_estacion(estacion: Variant) -> Dictionary:
+	var nodo: Node
+	if estacion is Dictionary:
+		nodo = (estacion as Dictionary).get("nodo") as Node
+	elif estacion is Node:
+		nodo = estacion as Node
+	var nombre: String = ""
+	var id: String = ""
+	if nodo != null and is_instance_valid(nodo):
+		nombre = str(nodo.get("nombre_estacion")) if "nombre_estacion" in nodo else nodo.name
+		id = str(nodo.call("obtener_id_edicion")) if nodo.has_method("obtener_id_edicion") else nodo.name
+	elif estacion is Dictionary:
+		nombre = str((estacion as Dictionary).get("nombre", ""))
+		id = str((estacion as Dictionary).get("id", ""))
+	return {"id": id, "nombre": nombre}
+
+
+## Punto de entrada de la futura fase 3. No se valida contra instance_id para
+## que el controlador pueda usar una secuencia propia por nivel.
+func asignar_id_operativo(id_operativo: int) -> void:
+	_id_operativo = maxi(0, id_operativo)
+
+
+func obtener_id_operativo() -> int:
+	return _id_operativo
+
+
+func obtener_estado_operacion() -> int:
+	return _estado_operacion
+
+
+func detener_por_evento(motivo: String, duracion_s: float) -> bool:
+	if Engine.is_editor_hint() or _eliminado or _servicio_finalizado or _ruta_invalida:
+		return false
+	if _estado_operacion in [EstadoOperacion.DETENIDO_POR_EVENTO, EstadoOperacion.INCOMPLETO, EstadoOperacion.FINALIZADO_EN_BOSQUES]:
+		return false
+	if motivo.strip_edges().is_empty() or not is_finite(duracion_s) or duracion_s <= 0.0:
+		return false
+	_estado_previo_evento = _estado_operacion
+	_tiempo_evento_restante = duracion_s
+	_motivo_evento = motivo.strip_edges()
+	_vel = 0.0
+	# Al reanudar se vuelve a evaluar la distancia de frenado desde velocidad
+	# cero; conservar el frenado anterior podría completar una parada lejana.
+	_frenando_estacion = false
+	_aceleracion_actual = 0.0
+	_desaceleracion_actual = 0.0
+	velocidad_cambiada.emit(0.0)
+	_establecer_estado(EstadoOperacion.DETENIDO_POR_EVENTO, _motivo_evento)
+	return true
+
+
+func reanudar_por_evento() -> bool:
+	if _eliminado or _ruta_invalida or _servicio_finalizado or _estado_operacion != EstadoOperacion.DETENIDO_POR_EVENTO:
+		return false
+	_tiempo_evento_restante = 0.0
+	_motivo_evento = ""
+	_establecer_estado(_estado_previo_evento)
+	evento_temporal_finalizado.emit(obtener_resumen_operativo())
+	return true
+
+
+func finalizar_incompleto(motivo: String) -> bool:
+	if Engine.is_editor_hint() or _eliminado or _servicio_finalizado or _ruta_invalida or motivo.strip_edges().is_empty():
+		return false
+	_tiempo_evento_restante = 0.0
+	_motivo_evento = ""
+	_detener_por_ruta_invalida(motivo.strip_edges())
+	return true
+
+
+func obtener_resumen_operativo() -> Dictionary:
+	return {
+		"id": _id_operativo,
+		"nombre": name,
+		"estado": _estado_operacion,
+		"estado_nombre": _nombre_estado_operacion(),
+		"servicio": _servicio_ferroviario.name if _servicio_ferroviario != null else "",
+		"sentido": "ida",
+		"estacion_proxima": proxima_estacion_nombre(),
+		"distancia_m": distancia_a_proxima_estacion(),
+		"velocidad_kmh": velocidad_actual(),
+		"pasajeros": pasajeros_actuales,
+		"capacidad": capacidad_pasajeros,
+		"retraso_s": 0.0,
+		"resultado": _resultado_recorrido,
+		"motivo_resultado": _motivo_resultado,
+		"motivo_evento": _motivo_evento,
+		"tiempo_evento_restante_s": _tiempo_evento_restante,
+		"velocidad_media_marcha_kmh": velocidad_media_marcha_kmh(),
+	}
+
+
 ## Inmoviliza una formación de servicio ante un itinerario inconsistente. El
 ## objetivo lógico no se borra: HUD y diagnóstico conservan la estación que no
 ## pudo alcanzarse. La señal se emite una única vez por incidente.
@@ -454,6 +619,7 @@ func _detener_por_ruta_invalida(motivo: String) -> void:
 	if _servicio_finalizado:
 		return
 	_ruta_invalida = true
+	_procesando_pasajeros = false
 	_detenido = true
 	_parada_servicio_activa = false
 	_espera = 0.0
@@ -465,7 +631,16 @@ func _detener_por_ruta_invalida(motivo: String) -> void:
 	_distancia_ruta = -1.0
 	_odometro_destino_ruta = -1.0
 	activar_opciones_switch(false)
+	_tiempo_evento_restante = 0.0
+	_motivo_evento = ""
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("liberar_reservas_tren"):
+		red.call("liberar_reservas_tren", get_instance_id())
 	velocidad_cambiada.emit(0.0)
+	_resultado_recorrido = "incompleto"
+	_motivo_resultado = motivo
+	if _establecer_estado(EstadoOperacion.INCOMPLETO, motivo):
+		recorrido_incompleto.emit(obtener_resumen_operativo(), motivo)
 	if not _error_ruta_emitido:
 		_error_ruta_emitido = true
 		ruta_error.emit(motivo)
@@ -500,6 +675,9 @@ func _finalizar_servicio_en_terminal() -> void:
 	visible = false
 	velocidad_cambiada.emit(0.0)
 	ruta_actualizada.emit(proxima_estacion_nombre(), 0.0)
+	_resultado_recorrido = "finalizado_en_bosques"
+	if _establecer_estado(EstadoOperacion.FINALIZADO_EN_BOSQUES, "Terminal Bosques alcanzada."):
+		recorrido_finalizado.emit(obtener_resumen_operativo())
 	set_process(false)
 
 
@@ -722,6 +900,7 @@ func _inicializar_origen_servicio() -> bool:
 	# de pasajeros antes de que cada formación salga a Yrigoyen.
 	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0, _espera)
 	parada_alcanzada.emit(_idx_parada)
+	llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(origen))
 	return true
 
 
@@ -1567,6 +1746,13 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 func _process(delta: float) -> void:
 	if _eliminado or _servicio_finalizado:
 		return
+	if not Engine.is_editor_hint() and delta <= 0.0:
+		return
+	if _estado_operacion == EstadoOperacion.DETENIDO_POR_EVENTO and not Engine.is_editor_hint():
+		_tiempo_evento_restante = maxf(0.0, _tiempo_evento_restante - delta)
+		if _tiempo_evento_restante <= 0.0:
+			reanudar_por_evento()
+		return
 	if not Engine.is_editor_hint() and _opciones_switch_activas:
 		_procesar_validacion_switch()
 
@@ -1602,6 +1788,8 @@ func _process(delta: float) -> void:
 					var red_origen: Node = _obtener_red()
 					var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
 					if red_origen == null or not red_origen.has_method("reservar_tramo_inicial") or not bool(red_origen.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, largo_formacion)):
+						_esperando_reserva = true
+						_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Esperando reserva de salida.")
 						_espera = 0.5
 						return
 					_reserva_inicial_lista = true
@@ -1610,6 +1798,10 @@ func _process(delta: float) -> void:
 					_finalizar_servicio_en_terminal()
 					return
 				_detenido = false
+				_esperando_reserva = false
+				var estacion_salida: Dictionary = _resumen_estacion(_parada_objetivo_servicio())
+				_establecer_estado(EstadoOperacion.EN_MARCHA)
+				salio_de_estacion.emit(obtener_resumen_operativo(), estacion_salida)
 				marcha_reanudada.emit()
 				_parada_servicio_activa = false
 				if _servicio_ferroviario.es_terminal(_indice_servicio):
@@ -1621,6 +1813,7 @@ func _process(delta: float) -> void:
 				_actualizar_ruta_servicio()
 			else:
 				_detenido = false
+				_establecer_estado(EstadoOperacion.EN_MARCHA)
 				marcha_reanudada.emit()
 				if _debe_invertir_en_salida:
 					_debe_invertir_en_salida = false
@@ -1710,7 +1903,14 @@ func _process(delta: float) -> void:
 		if distancia_local >= 0.0:
 			paso_avance = minf(paso_avance, distancia_local)
 	var net: Node = _obtener_red()
+	var estaba_en_marcha: bool = _estado_operacion == EstadoOperacion.EN_MARCHA
 	var recorrido_real: float = _avanzar_por_red(paso_avance, net)
+	# La red informa cuántos metros se consumieron realmente. Acumular sólo si
+	# el tren entró a este paso en marcha y hubo movimiento. La proporción evita
+	# atribuir un frame entero al instante final de una aproximación corta.
+	if estaba_en_marcha and recorrido_real > 0.0001 and paso_avance > 0.0001:
+		_metros_marcha += recorrido_real
+		_segundos_marcha += delta * clampf(recorrido_real / paso_avance, 0.0, 1.0)
 	if net != null and net.has_method("actualizar_reservas_tren"):
 		net.call("actualizar_reservas_tren", get_instance_id(), _odometro_ferroviario)
 	_actualizar_distancia_ruta()
@@ -1743,7 +1943,9 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 	_debe_invertir_en_salida = es_term
 	_parada_servicio_activa = _usa_servicio()
 	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
+	_establecer_estado(EstadoOperacion.DETENIDO_EN_ESTACION)
 	parada_alcanzada.emit(_idx_parada)
+	llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(info_parada))
 	_ubicar(0.0)
 
 
@@ -1827,8 +2029,11 @@ func _avanzar_por_red(distancia: float, net: Node) -> float:
 			if not bool(net.call("solicitar_reserva_seccion", get_instance_id(), siguiente_id, node_id, _odometro_ferroviario, largo_formacion)):
 				_esperando_reserva = true
 				_vel = 0.0
+				_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Esperando reserva de sección.")
 				break
 		_esperando_reserva = false
+		if _estado_operacion == EstadoOperacion.ESPERANDO_RESERVA:
+			_establecer_estado(EstadoOperacion.EN_MARCHA)
 		if node_id > 0 and net.has_method("set_switch_target"):
 			net.call("set_switch_target", node_id, siguiente_id, get_instance_id())
 		var sentido_inverso: bool = str(proxima.get("direccion", "forward")) != "forward"
@@ -2129,6 +2334,12 @@ const MARGEN_TIEMPO_PASAJEROS: float = 0.85
 ## clase Estacion esté disponible en esta rama, solo de que tenga los
 ## métodos `embarcar_pasajeros`/`desembarcar_pasajeros` (acordado con el
 ## equipo, ver Trello).
+func _intercambio_habilitado() -> bool:
+	while _estado_operacion == EstadoOperacion.DETENIDO_POR_EVENTO and not _eliminado:
+		await get_tree().process_frame
+	return not _eliminado and not _ruta_invalida and not _servicio_finalizado
+
+
 func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direccion: float, tiempo_disponible: float) -> void:
 	if estacion == null or not is_instance_valid(estacion):
 		return
@@ -2148,7 +2359,7 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 	if bajan > 0:
 		await bajar_pasajeros_escalonado(bajan, estacion, intervalo)
 
-	if _eliminado or not is_instance_valid(self):
+	if _eliminado or _ruta_invalida or not is_instance_valid(self):
 		return
 	if es_terminal_actual:
 		# En Bosques todos descienden y el tren no vuelve a captar pasajeros
@@ -2174,6 +2385,8 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float) -> void:
 
 	var intervalo_seguro: float = maxf(intervalo, INTERVALO_PASAJEROS_MINIMO)
 	while _espera > 0.0:
+		if not (await _intercambio_habilitado()):
+			return
 		if _eliminado or not is_instance_valid(self):
 			return
 		if not is_instance_valid(estacion):
@@ -2238,6 +2451,8 @@ func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 	var restante: int = mini(cantidad, pasajeros_actuales)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
 	while restante > 0:
+		if not (await _intercambio_habilitado()):
+			return
 		if _eliminado or not is_instance_valid(self):
 			return
 		if not is_instance_valid(estacion):
@@ -2267,6 +2482,8 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 	var restante: int = mini(cantidad, lugar_disponible)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
 	while restante > 0:
+		if not (await _intercambio_habilitado()):
+			return
 		if _eliminado or not is_instance_valid(self):
 			return
 		if not is_instance_valid(estacion):

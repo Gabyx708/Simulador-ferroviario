@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://dre166ib8u2ky" path="res://ui/screens/hud.tscn" id="18_hud"]
 [ext_resource type="Script" uid="uid://cjd3dm8ngg8nv" path="res://scenes/services/servicio_ferroviario.gd" id="19_servicio"]
 [ext_resource type="PackedScene" uid="uid://dalrdkn60wkut" path="res://assets/models/constitucion/constitucion_terminal.tscn" id="24_8kx6l"]
+[ext_resource type="Script" path="res://scenes/simulation/simulacion_controller.gd" id="25_simulacion_controller"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -79,8 +80,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.87121236, 0.87121236)
-shader_parameter/cirrus_position2 = Vector2(0.87121236, 0.87121236)
+shader_parameter/cirrus_position1 = Vector2(0.52876586, 0.52876586)
+shader_parameter/cirrus_position2 = Vector2(0.52876586, 0.52876586)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -90,7 +91,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(19.400927, 19.400927)
+shader_parameter/cumulus_position = Vector2(27.72021, 27.72021)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -4638,6 +4639,9 @@ script = ExtResource("1_level")
 red_ferroviaria = NodePath("TrackNetwork")
 camara = NodePath("Camaras/CamaraLibre")
 formacion_principal = NodePath("Formaciones/TrenCSR")
+
+[node name="SimulacionController" type="Node" parent="."]
+script = ExtResource("25_simulacion_controller")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
 
@@ -9900,7 +9904,7 @@ solo_ida = true
 [node name="Camaras" type="Node3D" parent="." unique_id=1068451313]
 
 [node name="CamaraLibre" parent="Camaras" unique_id=86635684 node_paths=PackedStringArray("formacion") instance=ExtResource("6_cam")]
-transform = Transform3D(0.6036514, 0.20634302, -0.77008283, -7.1967086e-09, 0.9659259, 0.258819, 0.79724836, -0.15623644, 0.58308256, 359.32233, 20, 3802.187)
+transform = Transform3D(0.6036514, 0.20634302, -0.77008283, -7.1967086e-09, 0.9659259, 0.25881898, 0.79724836, -0.15623644, 0.58308256, 68.9704, 36.582947, 369.2472)
 formacion = NodePath("../../Formaciones/TrenCSR")
 seguir_al_inicio = false
 
