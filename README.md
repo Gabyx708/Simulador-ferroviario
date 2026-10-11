@@ -92,6 +92,16 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 - El nivel principal reúne la red ferroviaria y sus aparatos de vía, el tren CSR, la terminal de Constitución y el HUD. `BaseLevel` conecta el velocímetro con la formación principal al iniciar.
 - Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
 
+### Configurar el recorrido por estaciones
+
+En `ramal_roca_main.tscn`, el nodo `ServicioConstitucionBosques` guarda la secuencia operacional, no el orden visual de las vías. Después de crear cada andén `Estacion`, asignalo a su `Path3D`, ajustá `progreso_en_via` y arrastralo a `paradas` en el Inspector del servicio, en orden Constitución → Bosques. El `TrenCSR` ya está vinculado al servicio.
+
+Al hacer clic sobre una formación, la cámara cambia a una vista cenital y la sigue. `WASD` desplaza el encuadre relativo al tren, `Q/E` acerca o aleja la cámara, `Shift` acelera ese desplazamiento y `C` alterna entre seguimiento cenital y cámara libre; el seguimiento no se pierde al mover el encuadre.
+
+Cada andén es una parada independiente: para vías distintas de ida y vuelta agregá dos estaciones con el mismo `nombre_estacion`. El planificador resuelve el camino por el grafo de `TrackNetwork` y mueve las agujas necesarias. Si un par de paradas debe tomar un itinerario no mínimo, agregá en `overrides_json` una entrada como `{"0>1": ["seg_470", "seg_471"]}`.
+
+Una `Estacion` puede cubrir varias vías paralelas sin duplicar el nodo: ajustá `ancho_cobertura_vias` en el Inspector. El tren proyecta el poste de parada sobre cada vía que atraviesa ese corredor y, si ya circula por una de ellas, frena allí sin buscar el `Path3D` usado como ancla visual de la estación.
+
 ### Pruebas headless
 
 Con `godot` disponible en el `PATH`, ejecutá desde la raíz del repositorio:
@@ -104,6 +114,10 @@ godot --headless --path . --quit-after 150
 godot --headless --path . -s res://tools/test_editable_tracks.gd
 godot --headless --path . -s res://tools/test_persistencia_edicion.gd
 godot --headless --path . -s res://tools/test_integridad_aparatos.gd
+
+# Servicio Constitución → Bosques: 16 paradas y enlaces topológicos
+godot --headless --path . -s res://tools/test_servicio_ferroviario.gd
+godot --headless --path . -s res://tools/test_recorrido_completo.gd
 
 # Auditorías de switches y empalmes con las vías
 godot --headless --path . -s res://tools/audit_switches.gd
