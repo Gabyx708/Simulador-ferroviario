@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
 [ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
+[ext_resource type="Script" path="res://ui/screens/navegacion_paneles.gd" id="3_navegacion"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
 bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
@@ -16,6 +17,9 @@ corner_radius_bottom_left = 6
 script = ExtResource("2_hud")
 
 [node name="Velocimetro" parent="." instance=ExtResource("1_veloc")]
+
+[node name="NavegacionPaneles" type="Control" parent="."]
+script = ExtResource("3_navegacion")
 
 [node name="Paneles" type="VBoxContainer" parent="."]
 offset_left = 20.0
