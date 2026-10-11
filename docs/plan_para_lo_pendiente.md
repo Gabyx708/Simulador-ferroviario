@@ -6,9 +6,9 @@ Leyenda:
 - `[~]` existe parcialmente o la base está lista, pero falta completar/validar
 - `[ ]` falta
 
-La prueba [test_servicio_ferroviario.gd](../tools/test_servicio_ferroviario.gd) pasó correctamente: 16 estaciones, 15 enlaces, cuatro trenes iniciales, quinto en cola y reservas FIFO.
+Godot 4.7.2 está disponible en el equipo. Pasaron `test_recorrido_completo.gd`, `test_finalizacion_bosques.gd`, `test_ruta_invalida_ida.gd`, `test_simulacion_controller.gd`, `test_comandos_simulacion.gd`, `test_hud_velocidad_simulacion.gd` y `test_velocidad_operativa.gd`. `test_servicio_ferroviario.gd` aún falla al validar que Plaza Constitución tenga candidato para `PosteParadaIda`; queda fuera de aceptación hasta que se revise esa geometría.
 
-> Alcance operativo vigente. La simulación actual es exclusivamente Constitución → Bosques. Al llegar a Bosques, el tren queda detenido y el servicio finaliza. Las referencias históricas a vuelta, ambos sentidos o `PosteParadaVuelta` no forman parte de las tareas de los compañeros en esta etapa. El detalle de las tareas de Diego se conserva sin cambios en `docs/plan_diego.md`.
+> Alcance operativo vigente. La simulación actual es exclusivamente Constitución → Bosques. Al llegar a Bosques, el tren queda detenido y el servicio finaliza. Las referencias históricas a vuelta, ambos sentidos o `PosteParadaVuelta` no forman parte de las tareas de los compañeros en esta etapa. El detalle actualizado de Diego está en `docs/plan_diego.md`.
 
 ## Regla de trabajo
 
@@ -19,7 +19,10 @@ Diego mantiene el núcleo ferroviario. Nadie más modifica:
 - `servicio_ferroviario.gd`
 - Rutas, `Path3D`, switches, reservas, señales de marcha ni geometría de vías.
 
-Diego entregará `SimulacionController`, la única API pública para el resto. Los compañeros usarán resúmenes, señales y comandos de alto nivel; no accederán a variables internas como `_ruta_pasos`, `_avance`, `_odometro_ferroviario` o `_desvios_switch`.
+Diego ya entregó las fases 2–6: `SimulacionController`, estados públicos,
+comandos seguros, velocidad operativa y documentación. Los compañeros usarán
+resúmenes, señales y comandos de alto nivel. No accederán a variables internas
+como `_ruta_pasos`, `_avance`, `_odometro_ferroviario` o `_desvios_switch`.
 
 ## Diego — Recorrido completo y núcleo ferroviario
 
@@ -34,26 +37,28 @@ Tarjetas Trello: **#9 Mapa** y **#11 Tren**
 - `[x]` Aceleración, frenado, detención y carga/descarga progresiva de pasajeros.
 - `[x]` Velocidad actual, ocupación, pasajeros e itinerario del tren seleccionado.
 - `[x]` Eliminar tren.
-- `[~]` Velocidad promedio 35–55 km/h: el Trello la marca visualmente como hecha, pero su checklist aún deja pendiente configurar y validar ese promedio real.
+- `[x]` Estados ferroviarios públicos y señales de estado, llegada/salida, finalización e incompleto.
+- `[x]` `SimulacionController` por nivel para consultas, snapshots, resumen global inicial, alta y baja de trenes.
+- `[~]` La alta del HUD ya pasa por el controlador; migrar el resto de los paneles y consultas del HUD a la API es trabajo de integración pendiente.
+- `[x]` Velocidad nominal de 50 km/h editable desde Inspector y promedio operativo validado entre 35–55 km/h.
 - `[~]` Bosques → Constitución: la clase genérica ya sabe invertir la dirección al llegar a una terminal si el servicio no es `solo_ida`; está en [tren.gd](../scenes/train/tren.gd). Pero la escena configura `solo_ida = true`, por lo que el juego termina en Bosques.
 - `[ ]` Configurar y validar el recorrido real de vuelta con `PosteParadaVuelta`.
 - `[ ]` Probar el ciclo completo Constitución → Bosques → Constitución.
-- `[ ]` Configurar límites operativos y prueba de velocidad promedio real entre 35 y 55 km/h.
-- `[ ]` Estados ferroviarios explícitos: `EN_TERMINAL`, `EN_MARCHA`, `DETENIDO_EN_ESTACION`, `ESPERANDO_RESERVA`, `FINALIZADO`, `INCOMPLETO`.
-- `[~]` Señales para HUD: ya existen velocidad, parada, reanudación, pasajeros, ruta, selección y eliminación; faltan señales de estado operativo, retraso, finalización e incidente.
-- `[ ]` `SimulacionController` o API global única para que otros módulos consulten trenes, estaciones y métricas sin tocar `Tren`.
-- `[ ]` Documentar la API ferroviaria para el equipo.
+- `[x]` Configurar valor nominal editable y prueba de velocidad promedio real entre 35 y 55 km/h.
+- `[x]` Estados ferroviarios: `EN_TERMINAL_INICIAL`, `EN_MARCHA`, `DETENIDO_EN_ESTACION`, `ESPERANDO_RESERVA`, `DETENIDO_POR_EVENTO`, `FINALIZADO_EN_BOSQUES`, `INCOMPLETO`.
+- `[x]` Señales públicas de estado, llegada/salida, finalización e incompleto, conservando las señales que usa el HUD actual.
+- `[x]` `SimulacionController` consulta trenes/estaciones/resumen y administra altas/bajas sin exponer detalles internos.
+- `[x]` Comandos de pausa, velocidad global y operación temporal/incompleta: fase 4 implementada y probada con `test_comandos_simulacion.gd`.
+- `[x]` Documentar la API ferroviaria para el equipo en `docs/api_simulacion.md`.
 
-### Entrega obligatoria de Diego: `SimulacionController`
+### Entrega de Diego: API pública y comandos de fase 4
 
-- `[ ]` `obtener_trenes()`, `obtener_estaciones()`, `obtener_tren(id)`, `obtener_estacion(id)`.
-- `[ ]` `obtener_resumen_global()` con valores neutros inicialmente.
-- `[ ]` `agregar_tren()` y `eliminar_tren(id)`.
-- `[ ]` Señales: `tren_actualizado`, `tren_llego_estacion`, `tren_reanudo`, `tren_finalizo`, `estacion_actualizada`, `resumen_global_actualizado`.
-- `[ ]` Comandos seguros: `pausar_simulacion`, `reanudar_simulacion`, `establecer_velocidad_simulacion(factor: float)`, `obtener_velocidad_simulacion`, `esta_pausada`, `velocidad_simulacion_cambiada`, `detener_tren_temporalmente`, `reanudar_tren`, `finalizar_tren_incompleto`.
-- `[ ]` Resúmenes de tren sin nodos internos: id, estado, servicio, sentido, próxima estación, distancia, velocidad, pasajeros, capacidad y retraso.
+- `[x]` Consultas, señales y resumen del controlador; IDs operativos asignados por nivel y snapshots sin nodos internos.
+- `[x]` `agregar_tren()` y `eliminar_tren(id)` con resultado estable y preservación de la cola existente.
+- `[x]` Comandos seguros de fase 4 con contrato de velocidad, pausa, evento temporal, estados incompatibles y liberación de reservas.
 
-Conclusión: Diego tiene resuelta la mayor parte del trabajo complejo. Debe consolidar el servicio de ida y exponer una interfaz estable antes de que el resto conecte sus módulos.
+Conclusión: fases 2–6 implementadas. La limitación geométrica de Constitución
+permanece registrada y fuera de aceptación hasta que se decida revisarla.
 
 ## Persona 2 — Paneles y diseño de interfaz
 
@@ -67,7 +72,7 @@ Tarjeta Trello: **#12 UI**
 - `[x]` Agregar tren desde Constitución y colocarlo en cola cuando no hay vía disponible.
 - `[x]` Eliminar el tren seleccionado.
 - `[~]` Listado de trenes: hoy muestra principalmente el nombre y selección; no muestra velocidad, ocupación, estado y próxima estación en cada fila.
-- `[ ]` Panel global de pausa/play/aceleración.
+- `[~]` Slider global de velocidad `0.0×–10.0×` disponible en Pruebas de marcha; faltan botones dedicados de pausa/play si la UI final los requiere.
 - `[ ]` Panel de fecha y hora simulada.
 - `[ ]` Listado de estaciones.
 - `[ ]` Panel de métricas globales.
@@ -76,7 +81,7 @@ Tarjeta Trello: **#12 UI**
 
 ### Restricción de Persona 2
 
-- `[ ]` Consumir únicamente `SimulacionController`.
+- `[~]` Migrar todo consumo a `SimulacionController`: el botón de alta ya usa la API, pero selección y paneles individuales aún usan las señales/referencias actuales de trenes.
 - `[ ]` No calcular rutas, pasajeros, retrasos ni métricas dentro del HUD.
 - `[ ]` No modificar trenes, estaciones, switches ni vías.
 
@@ -138,11 +143,11 @@ Tarjetas Trello: **#11 Tren** y **#12 UI**
 - `[x]` Multiplicadores de prueba por tren: velocidad máxima hasta ×3 y aceleración/frenado hasta ×10.
 - `[x]` Demora inicial y tiempo de parada configurables por tren.
 - `[~]` Eliminar tren ya existe, por lo que puede reutilizarse como consecuencia técnica de un desperfecto; falta el modelo de evento, su estado y sus métricas.
-- `[ ]` Pausa global de simulación.
+- `[x]` Pausa global de simulación mediante el controlador.
 - `[ ]` Reloj de simulación.
 - `[ ]` Fecha simulada.
-- `[ ]` Factor numérico libre de velocidad global mediante `establecer_velocidad_simulacion(factor: float)`: `1.0` es base, un valor positivo acelera o desacelera y `0.0` pausa.
-- `[ ]` Presets opcionales de interfaz, no modos internos: normal `1.0`, rápida `2.0`, ultra `4.5`. Persona 5 podrá asociarlos al reloj de calendario: 1 hora = 3 minutos, 1,5 minutos y 40 segundos respectivamente.
+- `[x]` Factor numérico libre de velocidad global mediante `establecer_velocidad_simulacion(factor: float)`: `1.0` es base, un valor positivo acelera o desacelera y `0.0` pausa.
+- `[~]` Slider global libre `0.0×–10.0×` ya disponible; los presets visuales normal `1.0`, rápida `2.0` y ultra `4.5` y su vínculo con reloj siguen pendientes.
 - `[ ]` Horario previsto por estación y servicio.
 - `[ ]` Cálculo de llegada real, retraso y estado “en tiempo / retrasado”.
 - `[ ]` Falla eléctrica.
@@ -161,8 +166,8 @@ Conclusión: esta área está prácticamente pendiente. Los controles de prueba 
 
 ## Dependencias reales e integración
 
-1. **Diego** completa el núcleo ferroviario de ida, estados y `SimulacionController`.
-2. **Persona 5** crea reloj, horarios y eventos usando comandos seguros.
+1. **Diego** completó fases 2–6 y documentó la API; el candidato geométrico de Constitución queda como limitación conocida fuera de aceptación.
+2. **Persona 5** crea reloj, horarios y eventos usando los comandos seguros de fase 4 ya disponibles.
 3. **Persona 4** conecta demanda y datos de las estaciones al reloj para el servicio de ida.
 4. **Persona 3** agrega métricas globales desde los resúmenes públicos.
 5. **Persona 2** conecta paneles, listados y controles al controlador.
