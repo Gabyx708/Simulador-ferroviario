@@ -36,6 +36,30 @@ func _run() -> void:
 	await process_frame
 	assert(nav.panel_abierto() == "metricas", "Apretar métricas debe cambiar al panel de métricas (no quedarse en control)")
 
+	# Métricas abre como modal grande (3/4 de pantalla), no como el bottom
+	# sheet chico que usa "control" -- se verifica con el tamaño real, no
+	# adivinando constantes.
+	var tamaño_modal: Vector2 = nav._panel_actual.get_global_rect().size
+	var tamaño_viewport: Vector2 = Vector2(root.size)
+	assert(tamaño_modal.x > tamaño_viewport.x * 0.7 and tamaño_modal.y > tamaño_viewport.y * 0.7,
+		"El modal de métricas debe ocupar la mayor parte de la pantalla (%s de %s)" % [str(tamaño_modal), str(tamaño_viewport)])
+
+	var boton_cerrar_modal: Button = nav._panel_actual.find_child("BotonCerrarModal", true, false) as Button
+	assert(boton_cerrar_modal != null, "El modal debe tener su propio botón de cierre")
+	boton_cerrar_modal.pressed.emit()
+	await process_frame
+	assert(nav.panel_abierto() == "", "El botón '✕ Cerrar' del modal debe cerrarlo")
+
+	boton_metricas.pressed.emit()
+	await process_frame
+	var fondo_modal: Button = nav._panel_actual.find_child("FondoModal", true, false) as Button
+	assert(fondo_modal != null, "El modal debe tener un fondo oscurecido clickeable")
+	fondo_modal.pressed.emit()
+	await process_frame
+	assert(nav.panel_abierto() == "", "Clickear el fondo oscurecido también debe cerrar el modal")
+
+	boton_metricas.pressed.emit()
+	await process_frame
 	boton_metricas.pressed.emit()
 	await process_frame
 	assert(nav.panel_abierto() == "", "Apretar el mismo botón de nuevo debe cerrar el panel")

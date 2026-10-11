@@ -23,16 +23,18 @@ func _run() -> void:
 		"El panel debe resolver SimulacionController/EstadisticasRetraso/GestorEventos subiendo por sus ancestros")
 
 	# --- Tabla por tren: una fila de datos por tren activo ---
+	var columnas_tren: int = PanelMetricas.COLUMNAS_TRENES.size()
 	var cantidad_trenes: int = controlador.obtener_trenes().size()
 	assert(cantidad_trenes > 0, "Debe haber al menos un tren para que el test sea significativo")
-	assert(panel._tabla_trenes.get_child_count() == 4 * (1 + cantidad_trenes),
-		"La tabla de trenes debe tener 4 columnas de encabezado + 4 por cada tren (%d trenes)" % cantidad_trenes)
+	assert(panel._tabla_trenes.get_child_count() == columnas_tren * (1 + cantidad_trenes),
+		"La tabla de trenes debe tener %d columnas de encabezado + %d por cada tren (%d trenes)" % [columnas_tren, columnas_tren, cantidad_trenes])
 	print("OK: la tabla por tren tiene una fila por cada tren de la flota")
 
 	# --- Totales: arrancan en 0 incompletos ---
 	assert(panel._etiqueta_totales.text.contains("Demora promedio"), "Debe mostrar la demora promedio")
+	assert(panel._etiqueta_totales.text.contains("Pasajeros con demora"), "Debe mostrar pasajeros con demora")
 	assert(panel._etiqueta_totales.text.contains("Incompletos: 0"), "Todavía no hay averías: 0 incompletos")
-	print("OK: la fila de totales muestra demora promedio e incompletos en vivo")
+	print("OK: la fila de totales muestra demora promedio, pasajeros con demora e incompletos en vivo")
 
 	# --- Disparar una avería real y verificar que ambas tablas y los totales lo reflejen ---
 	# Se busca la fila por posición (rango del id entre obtener_trenes(), que
@@ -45,7 +47,7 @@ func _run() -> void:
 	panel._actualizar()
 
 	assert(panel._etiqueta_totales.text.contains("Incompletos: 1"), "Tras la avería debe haber 1 incompleto")
-	var fila_tren: String = _fila_por_indice(panel._tabla_trenes, 4, rango_tren)
+	var fila_tren: String = _fila_por_indice(panel._tabla_trenes, columnas_tren, rango_tren)
 	assert(fila_tren.contains("INCOMPLETO"), "La fila del tren averiado (rango %d) debe mostrar su nuevo estado: '%s'" % [rango_tren, fila_tren])
 
 	var fila_evento: String = _buscar_fila_tabla(panel._tabla_eventos, 4, "Avería")

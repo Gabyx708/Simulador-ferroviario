@@ -15,10 +15,19 @@ const COLOR_BOTON: Color = Color(0.11, 0.12, 0.16, 0.95)
 const COLOR_BOTON_HOVER: Color = Color(0.17, 0.165, 0.12, 0.98)
 const COLOR_BOTON_ACTIVO: Color = Color(1.0, 0.756863, 0.278431, 0.92)
 const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
+const COLOR_ACENTO: Color = Color(1.0, 0.756863, 0.278431, 1.0)
+const COLOR_BACKDROP: Color = Color(0.0, 0.0, 0.0, 0.55)
 const DIAMETRO_BOTON: float = 56.0
 const ANCHO_PANEL: float = 420.0
 const ALTO_MAX_PANEL: float = 460.0
 const DURACION_ANIM: float = 0.18
+
+## Paneles que se abren como "bottom sheet" chico (por defecto) vs. como
+## modal grande centrado (3/4 de pantalla) -- Métricas necesita más espacio
+## para tablas, el formulario de control no.
+const PANELES_MODAL: Array[String] = ["metricas"]
+const MODAL_ANCHO_PCT: float = 0.82
+const MODAL_ALTO_PCT: float = 0.82
 
 ## Asignadas desde afuera (hud.tscn) una vez que existan las escenas reales.
 @export var escena_panel_control: PackedScene
@@ -122,12 +131,18 @@ func _alternar(clave: String) -> void:
 	_cerrar_panel()
 	_clave_actual = clave
 	_aplicar_estilo_boton(_botones[clave] as Button, true)
-	_panel_actual = _construir_contenido(clave)
-	_contenedor_panel.add_child(_panel_actual)
-	_animar_apertura(_panel_actual)
+	var contenido: Control = _instanciar_contenido(clave)
+	if clave in PANELES_MODAL:
+		_panel_actual = _construir_modal(contenido)
+		add_child(_panel_actual)
+		_animar_apertura_modal(_panel_actual)
+	else:
+		_panel_actual = _envolver_en_hoja(contenido)
+		_contenedor_panel.add_child(_panel_actual)
+		_animar_apertura(_panel_actual)
 
 
-func _construir_contenido(clave: String) -> Control:
+func _instanciar_contenido(clave: String) -> Control:
 	var escena: PackedScene = null
 	match clave:
 		"control":
@@ -135,18 +150,108 @@ func _construir_contenido(clave: String) -> Control:
 		"metricas":
 			escena = escena_panel_metricas
 	if escena != null:
-		var instancia: Control = escena.instantiate()
-		return _envolver_en_hoja(instancia, "")
+		return escena.instantiate()
 	var etiqueta := Label.new()
 	etiqueta.text = "Próximamente"
 	etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	etiqueta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
 	etiqueta.add_theme_font_size_override("font_size", 14)
-	return _envolver_en_hoja(etiqueta, "")
+	return etiqueta
 
 
-func _envolver_en_hoja(contenido: Control, _titulo: String) -> Control:
+## Modal grande centrado (ver PANELES_MODAL): fondo oscurecido clickeable
+## (cierra el panel) + tarjeta de MODAL_ANCHO_PCT x MODAL_ALTO_PCT de la
+## pantalla, con su propio título y botón "✕" -- los botones redondos
+## quedan tapados mientras el modal está abierto, así que necesita su
+## propio cierre explícito.
+func _construir_modal(contenido: Control) -> Control:
+	var raiz := Control.new()
+	raiz.set_anchors_preset(Control.PRESET_FULL_RECT)
+	raiz.offset_left = 0.0
+	raiz.offset_top = 0.0
+	raiz.offset_right = 0.0
+	raiz.offset_bottom = 0.0
+
+	var fondo := Button.new()
+	fondo.name = "FondoModal"
+	fondo.flat = true
+	fondo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fondo.offset_left = 0.0
+	fondo.offset_top = 0.0
+	fondo.offset_right = 0.0
+	fondo.offset_bottom = 0.0
+	fondo.focus_mode = Control.FOCUS_NONE
+	var estilo_fondo := StyleBoxFlat.new()
+	estilo_fondo.bg_color = COLOR_BACKDROP
+	fondo.add_theme_stylebox_override("normal", estilo_fondo)
+	fondo.add_theme_stylebox_override("hover", estilo_fondo)
+	fondo.add_theme_stylebox_override("pressed", estilo_fondo)
+	fondo.add_theme_stylebox_override("focus", estilo_fondo)
+	fondo.pressed.connect(_cerrar_panel)
+	raiz.add_child(fondo)
+
+	var margen_h: float = (1.0 - MODAL_ANCHO_PCT) / 2.0
+	var margen_v: float = (1.0 - MODAL_ALTO_PCT) / 2.0
+	var tarjeta := PanelContainer.new()
+	tarjeta.anchor_left = margen_h
+	tarjeta.anchor_right = 1.0 - margen_h
+	tarjeta.anchor_top = margen_v
+	tarjeta.anchor_bottom = 1.0 - margen_v
+	tarjeta.offset_left = 0.0
+	tarjeta.offset_top = 0.0
+	tarjeta.offset_right = 0.0
+	tarjeta.offset_bottom = 0.0
+	var estilo_tarjeta := StyleBoxFlat.new()
+	estilo_tarjeta.bg_color = COLOR_FONDO_PANEL
+	estilo_tarjeta.border_width_top = 1
+	estilo_tarjeta.border_width_left = 1
+	estilo_tarjeta.border_width_right = 1
+	estilo_tarjeta.border_width_bottom = 1
+	estilo_tarjeta.border_color = COLOR_BORDE
+	estilo_tarjeta.set_corner_radius_all(12)
+	estilo_tarjeta.content_margin_left = 20
+	estilo_tarjeta.content_margin_right = 20
+	estilo_tarjeta.content_margin_top = 16
+	estilo_tarjeta.content_margin_bottom = 16
+	estilo_tarjeta.shadow_size = 16
+	estilo_tarjeta.shadow_color = Color(0, 0, 0, 0.5)
+	tarjeta.add_theme_stylebox_override("panel", estilo_tarjeta)
+	raiz.add_child(tarjeta)
+	raiz.set_meta("tarjeta", tarjeta)
+
+	var columna := VBoxContainer.new()
+	columna.add_theme_constant_override("separation", 10)
+	tarjeta.add_child(columna)
+
+	var encabezado := HBoxContainer.new()
+	columna.add_child(encabezado)
+	var titulo := Label.new()
+	titulo.text = "MÉTRICAS"
+	titulo.add_theme_font_size_override("font_size", 16)
+	titulo.add_theme_color_override("font_color", COLOR_ACENTO)
+	titulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	encabezado.add_child(titulo)
+	var boton_cerrar := Button.new()
+	boton_cerrar.name = "BotonCerrarModal"
+	boton_cerrar.text = "✕ Cerrar"
+	boton_cerrar.flat = true
+	boton_cerrar.add_theme_color_override("font_color", COLOR_TEXTO)
+	boton_cerrar.pressed.connect(_cerrar_panel)
+	encabezado.add_child(boton_cerrar)
+	columna.add_child(HSeparator.new())
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	columna.add_child(scroll)
+	contenido.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(contenido)
+
+	return raiz
+
+
+func _envolver_en_hoja(contenido: Control) -> Control:
 	var hoja := PanelContainer.new()
 	hoja.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var estilo := StyleBoxFlat.new()
@@ -191,6 +296,23 @@ func _animar_apertura(panel: Control) -> void:
 	_tween_actual = create_tween().set_parallel(true)
 	_tween_actual.tween_property(panel, "modulate:a", 1.0, DURACION_ANIM)
 	_tween_actual.tween_property(panel, "scale", Vector2.ONE, DURACION_ANIM).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Igual que _animar_apertura, pero para un modal: no tiene sentido que
+## "crezca desde abajo" como el bottom sheet -- se desvanece el fondo
+## completo y la tarjeta escala desde su propio centro, no desde el borde
+## de la pantalla.
+func _animar_apertura_modal(raiz: Control) -> void:
+	if _tween_actual != null and _tween_actual.is_valid():
+		_tween_actual.kill()
+	var tarjeta: Control = raiz.get_meta("tarjeta", null) as Control
+	raiz.modulate.a = 0.0
+	_tween_actual = create_tween().set_parallel(true)
+	_tween_actual.tween_property(raiz, "modulate:a", 1.0, DURACION_ANIM)
+	if tarjeta != null:
+		tarjeta.pivot_offset = tarjeta.size / 2.0
+		tarjeta.scale = Vector2(0.96, 0.96)
+		_tween_actual.tween_property(tarjeta, "scale", Vector2.ONE, DURACION_ANIM).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Para tests: clave del panel abierto actualmente, o "" si ninguno.

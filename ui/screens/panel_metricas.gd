@@ -101,6 +101,8 @@ func _actualizar_totales() -> void:
 	var suma_retraso: float = 0.0
 	var cantidad_con_retraso_medido: int = 0
 	var incompletos: int = 0
+	var pasajeros_totales: int = 0
+	var pasajeros_demorados: int = 0
 	for tren: Dictionary in _controlador.obtener_trenes():
 		var estado: int = int(tren.get("estado", -1))
 		if estado == Tren.EstadoOperacion.INCOMPLETO:
@@ -108,37 +110,51 @@ func _actualizar_totales() -> void:
 			continue
 		if estado == Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES:
 			continue
-		suma_retraso += float(tren.get("retraso_s", 0.0))
+		var retraso: float = float(tren.get("retraso_s", 0.0))
+		var pasajeros: int = int(tren.get("pasajeros", 0))
+		suma_retraso += retraso
 		cantidad_con_retraso_medido += 1
+		pasajeros_totales += pasajeros
+		if retraso > 0.0:
+			pasajeros_demorados += pasajeros
 	var promedio: float = (suma_retraso / cantidad_con_retraso_medido) if cantidad_con_retraso_medido > 0 else 0.0
-	_etiqueta_totales.text = "Demora promedio de flota activa: %s  ·  Incompletos: %d" % [_formatear_duracion(promedio), incompletos]
+	_etiqueta_totales.text = "Demora promedio de flota activa: %s  ·  Pasajeros con demora: %d / %d  ·  Incompletos: %d" % [
+		_formatear_duracion(promedio), pasajeros_demorados, pasajeros_totales, incompletos,
+	]
 
 
 ## --- Tabla por tren ---
 
+const COLUMNAS_TRENES: Array[String] = ["Tren", "Estado", "Próxima estación", "Velocidad", "Retraso", "Estaciones", "Pasajeros"]
+
+
 func _construir_tabla_trenes(padre: VBoxContainer) -> void:
 	padre.add_child(_crear_titulo_seccion("POR TREN"))
 	_tabla_trenes = GridContainer.new()
-	_tabla_trenes.columns = 4
-	_tabla_trenes.add_theme_constant_override("h_separation", 14)
-	_tabla_trenes.add_theme_constant_override("v_separation", 3)
+	_tabla_trenes.columns = COLUMNAS_TRENES.size()
+	_tabla_trenes.add_theme_constant_override("h_separation", 18)
+	_tabla_trenes.add_theme_constant_override("v_separation", 4)
 	padre.add_child(_tabla_trenes)
-	for texto: String in ["Tren", "Estado", "Retraso", "Estaciones"]:
+	for texto: String in COLUMNAS_TRENES:
 		_tabla_trenes.add_child(_crear_celda_encabezado(texto))
 
 
 func _actualizar_tabla_trenes() -> void:
 	if _tabla_trenes == null or _controlador == null:
 		return
-	_vaciar_filas(_tabla_trenes, 4)
+	_vaciar_filas(_tabla_trenes, COLUMNAS_TRENES.size())
 	for tren: Dictionary in _controlador.obtener_trenes():
 		var id: int = int(tren.get("id", 0))
 		var retraso: float = float(tren.get("retraso_s", 0.0))
 		var estaciones: int = _estadisticas.obtener_estaciones_recorridas(id) if _estadisticas != null else 0
+		var velocidad: float = float(tren.get("velocidad_kmh", 0.0))
 		_tabla_trenes.add_child(_crear_celda(str(tren.get("nombre", "Tren %d" % id))))
 		_tabla_trenes.add_child(_crear_celda(str(tren.get("estado_nombre", "—"))))
+		_tabla_trenes.add_child(_crear_celda(str(tren.get("estacion_proxima", "—"))))
+		_tabla_trenes.add_child(_crear_celda("%d km/h" % roundi(velocidad)))
 		_tabla_trenes.add_child(_crear_celda(_formatear_duracion(retraso) if retraso > 0.0 else "—"))
 		_tabla_trenes.add_child(_crear_celda(str(estaciones)))
+		_tabla_trenes.add_child(_crear_celda(str(int(tren.get("pasajeros", 0)))))
 
 
 ## --- Tabla por evento ---
