@@ -61,6 +61,8 @@ func _ready() -> void:
 
 func _aplicar_estilo_minimalista(nodo: Node) -> void:
 	for hijo: Node in nodo.get_children():
+		if hijo is InformacionEstacion:
+			continue
 		if hijo is Label:
 			var etiqueta := hijo as Label
 			etiqueta.add_theme_font_size_override("font_size", 10)

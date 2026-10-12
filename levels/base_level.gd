@@ -47,10 +47,17 @@ func _ready() -> void:
 				nodo.seleccionado.connect(_on_tren_seleccionado.bind(nodo))
 			if not nodo.eliminado.is_connected(_on_tren_eliminado):
 				nodo.eliminado.connect(_on_tren_eliminado.bind(nodo))
+	for nodo: Node in get_tree().get_nodes_in_group("estaciones"):
+		if nodo is Estacion:
+			if not nodo.seleccionada.is_connected(_on_estacion_seleccionada):
+				nodo.seleccionada.connect(_on_estacion_seleccionada)
 
 
 ## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
 func _on_tren_seleccionado(tren: Tren) -> void:
+	var informacion: InformacionEstacion = find_child("InformacionEstacion", true, false) as InformacionEstacion
+	if informacion != null:
+		informacion.cerrar()
 	if camara is CamaraLibre:
 		(camara as CamaraLibre).seguir_tren_cenital(tren)
 	elif camara != null and "formacion" in camara:
@@ -59,6 +66,16 @@ func _on_tren_seleccionado(tren: Tren) -> void:
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
 	if velocimetro != null:
 		velocimetro.tren = tren
+
+
+func _on_estacion_seleccionada(estacion: Estacion) -> void:
+	var informacion: InformacionEstacion = find_child("InformacionEstacion", true, false) as InformacionEstacion
+	if informacion == null:
+		return
+	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
+	if velocimetro != null:
+		velocimetro.soltar_tren()
+	informacion.mostrar_estacion(estacion)
 
 
 ## Si la cámara estaba siguiendo al tren eliminado, la suelta (pasa a modo

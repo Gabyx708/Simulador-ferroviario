@@ -123,10 +123,18 @@ temporal; esos pasajeros no se incorporan a las filas de embarque.
 El render refleja las cantidades de cada fila y los totales de la estación
 siguen disponibles para el HUD y las estadísticas.
 
-El cartel de cada estación muestra una sección «En espera por andén», con
+Al hacer clic sobre una estación o su icono «ℹ», se abre una ventana en el HUD
+con el mismo fondo oscuro y borde ámbar del panel del tren. Muestra el nombre,
+el total en estación (quienes esperan y quienes acaban de bajar), la capacidad,
+el histórico y los totales de subida y bajada. La sección «En espera por andén» incluye
 una fila `Andén 1: ... pasajeros`, `Andén 2: ... pasajeros`, etc. Se numeran
 primero los andenes laterales y después los centrales. Los valores se actualizan
-al generarse o embarcarse pasajeros, y el fondo se adapta al tamaño del texto.
+mediante las señales de pasajeros de la estación seleccionada.
+
+La ventana ocupa el lugar del panel del tren: seleccionar otra estación cambia
+sus datos y seleccionar un tren vuelve a mostrar su tablero. Se cierra con «✕»
+o `Esc`. El icono de información permanece visible y reemplaza al antiguo cartel
+3D desplegable.
 
 Los modelos de pasajeros se reparten entre `AndenA`, `AndenB` y los andenes
 centrales habilitados con `cantidad_andenes_centrales`. Se colocan sobre la
@@ -134,7 +142,7 @@ superficie real de cada andén, respetando su posición, altura y ajustes
 laterales. Al cambiar la geometría se actualizan sus posiciones y el volumen
 usado para renderizarlos.
 En estaciones integradas a una terminal existente se puede ocultar la estructura
-genérica con `mostrar_estructura_andenes`, manteniendo visibles el cartel y los
+genérica con `mostrar_estructura_andenes`, manteniendo visibles el icono y los
 pasajeros.
 
 | Estación | Capacidad de pasajeros en espera |

@@ -14,6 +14,7 @@ signal transformada_cambiada(estacion: Estacion)
 signal edicion_guardada(estacion: Estacion)
 signal reseteada(estacion: Estacion)
 signal pasajeros_actualizados(estacion: Estacion)
+signal seleccionada(estacion: Estacion)
 
 enum DestinoAnden { CONSTITUCION, BOSQUES, AMBOS }
 
@@ -283,7 +284,7 @@ var _datos_originales: Dictionary = {}
 @export_range(0.0, 60.0, 0.1) var tiempo_salida_pasajeros: float = 3.0
 
 @export_group("Visualización")
-## Permite ocultar andenes y postes genéricos sin ocultar cartel ni pasajeros.
+## Permite ocultar andenes y postes genéricos sin ocultar el icono ni pasajeros.
 @export var mostrar_estructura_andenes: bool = true:
 	set(v):
 		mostrar_estructura_andenes = v
@@ -338,8 +339,6 @@ var _aviso_trenes_pendiente: bool = false
 var _poste_ida: Node3D
 var _poste_vuelta: Node3D
 var _area_icono_informacion: Area3D
-var _cartel_informacion: Label3D
-var _fondo_cartel: MeshInstance3D
 var _icono_informacion: Label3D
 
 
@@ -360,11 +359,10 @@ func _ready() -> void:
 	_actualizar_dimensiones_anden()
 	_actualizar_visibilidad_estructura()
 	_actualizar_posicion_postes()
-	_configurar_cartel_informacion()
+	_configurar_icono_informacion()
 	if not Engine.is_editor_hint() and maximo_pasajeros_visibles > 0:
 		_cargar_variantes_pasajeros()
 		_crear_multimeshes_pasajeros()
-	_actualizar_cartel_informacion()
 	if Engine.is_editor_hint():
 		set_process(true)
 		if traza == null:
@@ -387,7 +385,7 @@ func _autodetectar_y_alinear() -> void:
 		_notificar_trenes()
 
 
-func _configurar_cartel_informacion() -> void:
+func _configurar_icono_informacion() -> void:
 	var area: Area3D = get_node_or_null("AreaSeleccion") as Area3D
 	if area != null and not area.input_event.is_connected(_on_area_input_event):
 		area.input_event.connect(_on_area_input_event)
@@ -423,37 +421,6 @@ func _configurar_cartel_informacion() -> void:
 	_area_icono_informacion.position = _icono_informacion.position
 	_area_icono_informacion.scale = Vector3.ONE * ESCALA_ELEMENTOS_INFORMACION
 	_icono_informacion.scale = Vector3.ONE * ESCALA_ELEMENTOS_INFORMACION
-	_cartel_informacion = get_node_or_null("CartelInformacion") as Label3D
-	if _cartel_informacion == null:
-		_cartel_informacion = Label3D.new()
-		_cartel_informacion.name = "CartelInformacion"
-		_fondo_cartel = MeshInstance3D.new()
-		_fondo_cartel.name = "FondoCartelInformacion"
-		_fondo_cartel.position = Vector3(0.0, 0.0, 0.15)
-		var fondo_malla := QuadMesh.new()
-		fondo_malla.size = Vector2(90.0, 30.0)
-		var fondo_material := StandardMaterial3D.new()
-		fondo_material.albedo_color = Color(0.0, 0.0, 0.0, 0.9)
-		fondo_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		fondo_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		fondo_material.render_priority = -1
-		fondo_malla.material = fondo_material
-		_fondo_cartel.mesh = fondo_malla
-		_cartel_informacion.add_child(_fondo_cartel)
-		add_child(_cartel_informacion)
-	_cartel_informacion.position = Vector3(0.0, 30.0, 0.0)
-	_cartel_informacion.font_size = 320
-	_cartel_informacion.modulate = Color(1.0, 0.9, 0.2, 1.0)
-	_cartel_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_cartel_informacion.scale = Vector3.ONE
-	_cartel_informacion.outline_size = 60
-	if _fondo_cartel == null:
-		_fondo_cartel = _cartel_informacion.get_node_or_null("FondoCartelInformacion") as MeshInstance3D
-	if _fondo_cartel != null:
-		var fondo_malla_existente: QuadMesh = _fondo_cartel.mesh as QuadMesh
-		if fondo_malla_existente != null:
-			fondo_malla_existente.size = Vector2(90.0, 30.0)
-	_cartel_informacion.visible = false
 	_icono_informacion.visible = true
 	_area_icono_informacion.input_ray_pickable = true
 
@@ -468,47 +435,11 @@ func _actualizar_visibilidad_estructura() -> void:
 
 func _on_area_input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if _cartel_informacion == null:
-			_configurar_cartel_informacion()
-		var mostrar_cartel: bool = not _cartel_informacion.visible
-		_cartel_informacion.visible = mostrar_cartel
-		_icono_informacion.visible = not mostrar_cartel
-		_area_icono_informacion.input_ray_pickable = not mostrar_cartel
 		get_viewport().set_input_as_handled()
-		_actualizar_cartel_informacion()
-
-
-func _actualizar_cartel_informacion() -> void:
-	if _cartel_informacion == null:
-		return
-	var presentes: int = pasajeros_esperando + pasajeros_saliendo
-	var lineas: PackedStringArray = PackedStringArray([
-		"%s\nEn estación: %d / %d\nHistórico: %d\nSubieron: %d  Bajaron: %d" % [nombre_estacion, presentes, capacidad_maxima_espera, pasajeros_totales_historicos, pasajeros_subidos_total, pasajeros_bajados_total],
-		"",
-		"En espera por andén:",
-	])
-	var pasajeros_por_anden: Array[int] = obtener_pasajeros_por_anden()
-	for indice: int in range(pasajeros_por_anden.size()):
-		lineas.append("Andén %d: %d pasajeros" % [indice + 1, pasajeros_por_anden[indice]])
-	_cartel_informacion.text = "\n".join(lineas)
-	# Label3D recompone el texto de forma diferida antes de medir el fondo.
-	call_deferred("_actualizar_fondo_cartel")
-
-
-func _actualizar_fondo_cartel() -> void:
-	if _cartel_informacion == null or _fondo_cartel == null:
-		return
-	var fondo: QuadMesh = _fondo_cartel.mesh as QuadMesh
-	if fondo == null:
-		return
-	var bounds: AABB = _cartel_informacion.get_aabb()
-	fondo.size = Vector2(maxf(90.0, bounds.size.x + 6.0), maxf(30.0, bounds.size.y + 6.0))
-	var centro: Vector3 = bounds.get_center()
-	_fondo_cartel.position = Vector3(centro.x, centro.y, 0.15)
+		seleccionada.emit(self)
 
 
 func _on_pasajeros_actualizados(_estacion: Estacion) -> void:
-	_actualizar_cartel_informacion()
 	_sincronizar_pasajeros_visuales()
 
 
