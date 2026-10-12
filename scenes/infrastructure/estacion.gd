@@ -684,6 +684,24 @@ func obtener_pasajeros_por_anden() -> Array[int]:
 	return resultado
 
 
+## Límites globales de los andenes que muestran pasajeros, incluidos los
+## ajustes visuales de las terminales, para encuadrar la estación desde el HUD.
+func obtener_limites_andenes_pasajeros() -> AABB:
+	var limites: AABB = AABB(global_position, Vector3.ZERO)
+	var primero: bool = true
+	var anden_a: MeshInstance3D = get_node_or_null("AndenA") as MeshInstance3D
+	for anden: MeshInstance3D in _obtener_andenes_pasajeros():
+		var transformacion: Transform3D = anden.global_transform
+		if anden == anden_a:
+			transformacion.origin += transformacion.basis * Vector3(
+				0.0, desfasaje_vertical_pasajeros_anden_a, ajuste_lateral_pasajeros_anden_a
+			)
+		var bounds: AABB = transformacion * anden.mesh.get_aabb()
+		limites = bounds if primero else limites.merge(bounds)
+		primero = false
+	return limites
+
+
 func registrar_abordaje_tren(id_tren: int, activo: bool) -> void:
 	var habia_abordaje: bool = not _trenes_abordando.is_empty()
 	if activo:

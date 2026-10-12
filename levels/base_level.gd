@@ -51,6 +51,9 @@ func _ready() -> void:
 		if nodo is Estacion:
 			if not nodo.seleccionada.is_connected(_on_estacion_seleccionada):
 				nodo.seleccionada.connect(_on_estacion_seleccionada)
+	var navegacion: NavegacionPaneles = find_child("NavegacionPaneles", true, false) as NavegacionPaneles
+	if navegacion != null:
+		navegacion.estacion_seleccionada.connect(_on_estacion_elegida_desde_lista)
 
 
 ## Reapunta la cámara y el HUD al tren que el usuario clickeó en el viewport.
@@ -66,6 +69,14 @@ func _on_tren_seleccionado(tren: Tren) -> void:
 	var velocimetro: Velocimetro = find_child("Velocimetro", true, false) as Velocimetro
 	if velocimetro != null:
 		velocimetro.tren = tren
+
+
+func _on_estacion_elegida_desde_lista(estacion: Estacion) -> void:
+	if not is_instance_valid(estacion):
+		return
+	if camara is CamaraLibre:
+		(camara as CamaraLibre).enfocar_estacion(estacion)
+	_on_estacion_seleccionada(estacion)
 
 
 func _on_estacion_seleccionada(estacion: Estacion) -> void:

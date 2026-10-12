@@ -44,6 +44,25 @@ func seguir_tren_cenital(tren: Node3D) -> void:
 	rotation = Vector3(_giro.y, _giro.x, 0.0)
 
 
+## Reutiliza la cámara libre para visitar una estación y encuadrar sus andenes.
+## El salto es inmediato incluso si la simulación está pausada.
+func enfocar_estacion(estacion: Estacion) -> void:
+	if not is_instance_valid(estacion):
+		return
+	formacion = null
+	_modo = ModoSeguimiento.LIBRE
+	_mirando = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	var limites: AABB = estacion.obtener_limites_andenes_pasajeros()
+	var centro: Vector3 = limites.get_center()
+	# Misma altura que la vista del tren, conservando la mirada inclinada hacia los andenes.
+	var lateral: Vector3 = estacion.global_transform.basis.z
+	lateral.y = 0.0
+	var posicion: Vector3 = centro + Vector3.UP * altura_cenital + lateral.normalized() * altura_cenital * 0.35
+	look_at_from_position(posicion, centro, Vector3.UP)
+	_giro = Vector2(rotation.y, rotation.x)
+
+
 func _unhandled_input(evento: InputEvent) -> void:
 	if evento is InputEventMouseButton and evento.button_index == MOUSE_BUTTON_RIGHT:
 		_mirando = evento.pressed

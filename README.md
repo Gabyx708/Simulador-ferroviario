@@ -133,6 +133,16 @@ mediante las señales de pasajeros de la estación seleccionada.
 Cuando un tren embarca pasajeros, «En espera» cambia a «Abordando» hasta que
 termina esa operación.
 
+El botón «Estaciones», ubicado abajo entre «Métricas» y «Próximamente», abre
+un listado desplazable de todas las estaciones del nivel. Cada fila muestra
+sus pasajeros actuales (incluidos quienes acaban de bajar) y el estado
+«En espera» o «Abordando», actualizado por las mismas señales del panel individual.
+Al elegir una fila, el listado se cierra, la cámara libre existente encuadra
+los andenes de esa estación y se abre su información. No requiere cámaras
+adicionales y funciona también con la simulación pausada.
+La vista de estaciones usa la misma `altura_cenital` que la vista del tren
+(85 metros por defecto), manteniendo una mirada inclinada hacia los andenes.
+
 La ventana ocupa el lugar del panel del tren: seleccionar otra estación cambia
 sus datos y seleccionar un tren vuelve a mostrar su tablero. Se cierra con «✕»
 o `Esc`. El icono de información permanece visible y reemplaza al antiguo cartel

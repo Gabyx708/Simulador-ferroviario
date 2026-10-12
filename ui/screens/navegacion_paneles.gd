@@ -1,6 +1,6 @@
 extends Control
 class_name NavegacionPaneles
-## 3 botones redondos, abajo-centro, que abren/cierran un panel tipo
+## Botones redondos, abajo-centro, que abren/cierran un panel tipo
 ## "bottom sheet" sobre la simulación. Construido por código (mismo patrón
 ## que ya usa hud.gd para el panel de switches) para no depender de anchors
 ## escritos a mano sin poder verlos en un visor.
@@ -8,6 +8,8 @@ class_name NavegacionPaneles
 ## No contiene lógica de simulación: sólo instancia la escena del panel
 ## correspondiente y la muestra/oculta. Paleta compartida con el resto del
 ## HUD (ver hud.gd _estilo_boton_minimalista): panel oscuro, acento ámbar.
+
+signal estacion_seleccionada(estacion: Estacion)
 
 const COLOR_FONDO_PANEL: Color = Color(0.098, 0.106, 0.145, 0.97)
 const COLOR_BORDE: Color = Color(1.0, 0.756863, 0.278431, 0.55)
@@ -18,6 +20,7 @@ const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
 const COLOR_ACENTO: Color = Color(1.0, 0.756863, 0.278431, 1.0)
 const COLOR_BACKDROP: Color = Color(0.0, 0.0, 0.0, 0.55)
 const DIAMETRO_BOTON: float = 56.0
+const ALTO_NAVEGACION: float = 74.0
 const ANCHO_PANEL: float = 420.0
 const ALTO_MAX_PANEL: float = 460.0
 const DURACION_ANIM: float = 0.18
@@ -32,6 +35,7 @@ const MODAL_ALTO_PCT: float = 0.82
 ## Asignadas desde afuera (hud.tscn) una vez que existan las escenas reales.
 @export var escena_panel_control: PackedScene
 @export var escena_panel_metricas: PackedScene
+@export var escena_panel_estaciones: PackedScene
 
 var _contenedor_panel: Control
 var _fila_botones: HBoxContainer
@@ -60,21 +64,21 @@ func _ready() -> void:
 	_contenedor_panel.anchor_right = 0.5
 	_contenedor_panel.offset_left = -ANCHO_PANEL / 2.0
 	_contenedor_panel.offset_right = ANCHO_PANEL / 2.0
-	_contenedor_panel.offset_bottom = -(DIAMETRO_BOTON + 24.0)
+	_contenedor_panel.offset_bottom = -(ALTO_NAVEGACION + 24.0)
 	_contenedor_panel.offset_top = _contenedor_panel.offset_bottom - ALTO_MAX_PANEL
 	_contenedor_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_contenedor_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_contenedor_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_contenedor_panel)
+	_actualizar_tamano_panel()
+	get_viewport().size_changed.connect(_actualizar_tamano_panel)
 
 	_fila_botones = HBoxContainer.new()
 	_fila_botones.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_fila_botones.anchor_left = 0.5
 	_fila_botones.anchor_right = 0.5
 	_fila_botones.offset_bottom = -12.0
-	_fila_botones.offset_top = -12.0 - DIAMETRO_BOTON
-	_fila_botones.offset_left = -((DIAMETRO_BOTON * 3 + 24.0) / 2.0)
-	_fila_botones.offset_right = (DIAMETRO_BOTON * 3 + 24.0) / 2.0
+	_fila_botones.offset_top = -12.0 - ALTO_NAVEGACION
 	_fila_botones.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_fila_botones.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_fila_botones.add_theme_constant_override("separation", 12)
@@ -83,21 +87,57 @@ func _ready() -> void:
 
 	_agregar_boton("control", "⚙", "Control de simulación")
 	_agregar_boton("metricas", "☰", "Métricas")
+	_agregar_boton("estaciones", "⌂", "Estaciones", true)
 	_agregar_boton("reservado", "○", "Próximamente")
+	var ancho_botones: float = _fila_botones.get_combined_minimum_size().x
+	_fila_botones.offset_left = -ancho_botones / 2.0
+	_fila_botones.offset_right = ancho_botones / 2.0
 
 
-func _agregar_boton(clave: String, simbolo: String, tooltip: String) -> void:
+func _actualizar_tamano_panel() -> void:
+	var pantalla: Vector2 = get_viewport().get_visible_rect().size
+	var ancho: float = minf(ANCHO_PANEL, maxf(1.0, pantalla.x - 32.0))
+	var alto: float = minf(ALTO_MAX_PANEL, maxf(1.0, pantalla.y + _contenedor_panel.offset_bottom - 12.0))
+	_contenedor_panel.offset_left = -ancho / 2.0
+	_contenedor_panel.offset_right = ancho / 2.0
+	_contenedor_panel.offset_top = _contenedor_panel.offset_bottom - alto
+
+
+func _agregar_boton(clave: String, simbolo: String, tooltip: String, mostrar_etiqueta: bool = false) -> void:
 	var boton := Button.new()
 	boton.name = "Boton" + clave.capitalize()
 	boton.custom_minimum_size = Vector2(DIAMETRO_BOTON, DIAMETRO_BOTON)
+	boton.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	boton.text = simbolo
 	boton.tooltip_text = tooltip
 	boton.add_theme_font_size_override("font_size", 22)
 	boton.add_theme_color_override("font_color", COLOR_TEXTO)
 	_aplicar_estilo_boton(boton, false)
 	boton.pressed.connect(_alternar.bind(clave))
-	_fila_botones.add_child(boton)
+	if mostrar_etiqueta:
+		var columna: VBoxContainer = VBoxContainer.new()
+		columna.add_theme_constant_override("separation", 2)
+		columna.mouse_filter = Control.MOUSE_FILTER_STOP
+		columna.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		columna.gui_input.connect(_on_etiqueta_boton_input.bind(clave))
+		boton.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		columna.add_child(boton)
+		var etiqueta: Label = Label.new()
+		etiqueta.text = tooltip
+		etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		etiqueta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		etiqueta.add_theme_font_size_override("font_size", 10)
+		etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
+		columna.add_child(etiqueta)
+		_fila_botones.add_child(columna)
+	else:
+		_fila_botones.add_child(boton)
 	_botones[clave] = boton
+
+
+func _on_etiqueta_boton_input(evento: InputEvent, clave: String) -> void:
+	if evento is InputEventMouseButton and evento.button_index == MOUSE_BUTTON_LEFT and evento.pressed:
+		_alternar(clave)
 
 
 func _aplicar_estilo_boton(boton: Button, activo: bool) -> void:
@@ -149,8 +189,14 @@ func _instanciar_contenido(clave: String) -> Control:
 			escena = escena_panel_control
 		"metricas":
 			escena = escena_panel_metricas
+		"estaciones":
+			escena = escena_panel_estaciones
 	if escena != null:
-		return escena.instantiate()
+		var contenido: Control = escena.instantiate() as Control
+		if contenido is PanelEstaciones:
+			contenido.estacion_elegida.connect(_on_estacion_elegida)
+			contenido.cierre_solicitado.connect(_cerrar_panel)
+		return contenido
 	var etiqueta := Label.new()
 	etiqueta.text = "Próximamente"
 	etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -158,6 +204,13 @@ func _instanciar_contenido(clave: String) -> Control:
 	etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
 	etiqueta.add_theme_font_size_override("font_size", 14)
 	return etiqueta
+
+
+func _on_estacion_elegida(estacion: Estacion) -> void:
+	if not is_instance_valid(estacion):
+		return
+	_cerrar_panel()
+	estacion_seleccionada.emit(estacion)
 
 
 ## Modal grande centrado (ver PANELES_MODAL): fondo oscurecido clickeable
@@ -279,6 +332,8 @@ func _envolver_en_hoja(contenido: Control) -> Control:
 
 
 func _cerrar_panel() -> void:
+	if _tween_actual != null and _tween_actual.is_valid():
+		_tween_actual.kill()
 	if _clave_actual != "" and _botones.has(_clave_actual):
 		_aplicar_estilo_boton(_botones[_clave_actual] as Button, false)
 	if _panel_actual != null and is_instance_valid(_panel_actual):

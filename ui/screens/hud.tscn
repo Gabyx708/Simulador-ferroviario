@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://w3ge5g3k2vgds"]
+[gd_scene load_steps=9 format=3 uid="uid://w3ge5g3k2vgds"]
 
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
 [ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://ui/screens/panel_control_simulacion.tscn" id="4_panel_control"]
 [ext_resource type="PackedScene" path="res://ui/screens/panel_metricas.tscn" id="5_panel_metricas"]
 [ext_resource type="PackedScene" path="res://ui/components/informacion_estacion/informacion_estacion.tscn" id="6_estacion"]
+[ext_resource type="PackedScene" path="res://ui/screens/panel_estaciones.tscn" id="7_panel_estaciones"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
 bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
@@ -242,3 +243,4 @@ visible = false
 script = ExtResource("3_navegacion")
 escena_panel_control = ExtResource("4_panel_control")
 escena_panel_metricas = ExtResource("5_panel_metricas")
+escena_panel_estaciones = ExtResource("7_panel_estaciones")
