@@ -25,27 +25,27 @@
 [ext_resource type="PackedScene" uid="uid://dre166ib8u2ky" path="res://ui/screens/hud.tscn" id="18_hud"]
 [ext_resource type="Script" uid="uid://cjd3dm8ngg8nv" path="res://scenes/services/servicio_ferroviario.gd" id="19_servicio"]
 [ext_resource type="PackedScene" uid="uid://dalrdkn60wkut" path="res://assets/models/constitucion/constitucion_terminal.tscn" id="24_8kx6l"]
-[ext_resource type="Script" path="res://scenes/simulation/simulacion_controller.gd" id="25_simulacion_controller"]
-[ext_resource type="Script" path="res://scenes/simulation/reloj_simulacion.gd" id="26_reloj_simulacion"]
-[ext_resource type="Script" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
-[ext_resource type="Script" path="res://scenes/simulation/gestor_eventos.gd" id="28_gestor_eventos"]
-[ext_resource type="Script" path="res://scenes/simulation/indicador_eventos.gd" id="29_indicador_eventos"]
-[ext_resource type="Resource" path="res://resources/passengers/bosques.tres" id="demanda_bosques"]
-[ext_resource type="Resource" path="res://resources/passengers/zeballos.tres" id="demanda_zeballos"]
-[ext_resource type="Resource" path="res://resources/passengers/florencio_varela.tres" id="demanda_florencio_varela"]
-[ext_resource type="Resource" path="res://resources/passengers/dante_ardigo.tres" id="demanda_dante_ardigo"]
-[ext_resource type="Resource" path="res://resources/passengers/claypole.tres" id="demanda_claypole"]
-[ext_resource type="Resource" path="res://resources/passengers/rafael_calzada.tres" id="demanda_rafael_calzada"]
-[ext_resource type="Resource" path="res://resources/passengers/jose_marmol.tres" id="demanda_jose_marmol"]
-[ext_resource type="Resource" path="res://resources/passengers/temperley.tres" id="demanda_temperley"]
-[ext_resource type="Resource" path="res://resources/passengers/lomas_de_zamora.tres" id="demanda_lomas_de_zamora"]
+[ext_resource type="Script" uid="uid://o25af51ify20" path="res://scenes/simulation/simulacion_controller.gd" id="25_simulacion_controller"]
+[ext_resource type="Script" uid="uid://ccp4bukv57esc" path="res://scenes/simulation/reloj_simulacion.gd" id="26_reloj_simulacion"]
+[ext_resource type="Script" uid="uid://qaw02ijt1pe8" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
+[ext_resource type="Script" uid="uid://d1s2yxh630a00" path="res://scenes/simulation/gestor_eventos.gd" id="28_gestor_eventos"]
+[ext_resource type="Script" uid="uid://cu5d6jcckpvrt" path="res://scenes/simulation/indicador_eventos.gd" id="29_indicador_eventos"]
 [ext_resource type="Resource" path="res://resources/passengers/banfield.tres" id="demanda_banfield"]
-[ext_resource type="Resource" path="res://resources/passengers/lanus.tres" id="demanda_lanus"]
+[ext_resource type="Resource" path="res://resources/passengers/bosques.tres" id="demanda_bosques"]
+[ext_resource type="Resource" path="res://resources/passengers/claypole.tres" id="demanda_claypole"]
+[ext_resource type="Resource" path="res://resources/passengers/dante_ardigo.tres" id="demanda_dante_ardigo"]
 [ext_resource type="Resource" path="res://resources/passengers/dario_santillan_kosteki.tres" id="demanda_dario_santillan_kosteki"]
-[ext_resource type="Resource" path="res://resources/passengers/hipolito_yrigoyen.tres" id="demanda_hipolito_yrigoyen"]
-[ext_resource type="Resource" path="res://resources/passengers/plaza_constitucion.tres" id="demanda_plaza_constitucion"]
+[ext_resource type="Resource" path="res://resources/passengers/florencio_varela.tres" id="demanda_florencio_varela"]
 [ext_resource type="Resource" path="res://resources/passengers/gerli.tres" id="demanda_gerli"]
+[ext_resource type="Resource" path="res://resources/passengers/hipolito_yrigoyen.tres" id="demanda_hipolito_yrigoyen"]
+[ext_resource type="Resource" path="res://resources/passengers/jose_marmol.tres" id="demanda_jose_marmol"]
+[ext_resource type="Resource" path="res://resources/passengers/lanus.tres" id="demanda_lanus"]
+[ext_resource type="Resource" path="res://resources/passengers/lomas_de_zamora.tres" id="demanda_lomas_de_zamora"]
+[ext_resource type="Resource" path="res://resources/passengers/plaza_constitucion.tres" id="demanda_plaza_constitucion"]
+[ext_resource type="Resource" path="res://resources/passengers/rafael_calzada.tres" id="demanda_rafael_calzada"]
 [ext_resource type="Resource" path="res://resources/passengers/remedios_de_escalada.tres" id="demanda_remedios_de_escalada"]
+[ext_resource type="Resource" path="res://resources/passengers/temperley.tres" id="demanda_temperley"]
+[ext_resource type="Resource" path="res://resources/passengers/zeballos.tres" id="demanda_zeballos"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -76,7 +76,7 @@ shader_parameter/moon_texture_flip_u = false
 shader_parameter/moon_texture_flip_v = false
 shader_parameter/moon_size = 0.07
 shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
-shader_parameter/atm_moon_mie_intensity = 0.029151505827903736
+shader_parameter/atm_moon_mie_intensity = 0.029151484966278066
 shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
 shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
 shader_parameter/starmap_texture = ExtResource("8_6r5d0")
@@ -100,8 +100,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.52876586, 0.52876586)
-shader_parameter/cirrus_position2 = Vector2(0.52876586, 0.52876586)
+shader_parameter/cirrus_position1 = Vector2(0.21847071, 0.21847071)
+shader_parameter/cirrus_position2 = Vector2(0.21847071, 0.21847071)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -111,7 +111,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(27.72021, 27.72021)
+shader_parameter/cumulus_position = Vector2(1.0922029, 1.0922029)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -3253,14 +3253,6 @@ _data = {
 }
 point_count = 2
 
-[sub_resource type="Curve3D" id="Curve3D_tgjnx"]
-bake_interval = 2.0
-_data = {
-"points": PackedVector3Array(0, 0, 0, -14.699753, 0, -5.3652344, 466.023, 0, 18636.914, 14.961022, 0, 4.586534, -45.33114, 0, -13.896966, 407.224, 0, 18615.453, 45.68801, 0, 12.67452, 0, 0, 0, 224.964, 0, 18563.014),
-"tilts": PackedFloat32Array(0, 0, 0)
-}
-point_count = 3
-
 [sub_resource type="Curve3D" id="Curve3D_sen8p"]
 bake_interval = 2.0
 _data = {
@@ -3332,14 +3324,6 @@ _data = {
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
-
-[sub_resource type="Curve3D" id="Curve3D_5lsdg"]
-bake_interval = 2.0
-_data = {
-"points": PackedVector3Array(0, 0, 0, 19.831764, 0, 5.237695, 115.511, 0, 18529.623, -19.619125, 0, -5.9851704, 7.7919893, 0, 2.3770878, 194.824, 0, 18550.627, -7.535, 0, -3.0966797, 0, 0, 0, 224.964, 0, 18563.014),
-"tilts": PackedFloat32Array(0, 0, 0)
-}
-point_count = 3
 
 [sub_resource type="Curve3D" id="Curve3D_j58gc"]
 bake_interval = 2.0
@@ -4660,19 +4644,19 @@ red_ferroviaria = NodePath("TrackNetwork")
 camara = NodePath("Camaras/CamaraLibre")
 formacion_principal = NodePath("Formaciones/TrenCSR")
 
-[node name="SimulacionController" type="Node" parent="."]
+[node name="SimulacionController" type="Node" parent="." unique_id=1793653375]
 script = ExtResource("25_simulacion_controller")
 
-[node name="RelojSimulacion" type="Node" parent="."]
+[node name="RelojSimulacion" type="Node" parent="." unique_id=1683405963]
 script = ExtResource("26_reloj_simulacion")
 
-[node name="EstadisticasRetraso" type="Node" parent="."]
+[node name="EstadisticasRetraso" type="Node" parent="." unique_id=1967042533]
 script = ExtResource("27_estadisticas_retraso")
 
-[node name="GestorEventos" type="Node" parent="."]
+[node name="GestorEventos" type="Node" parent="." unique_id=2031756733]
 script = ExtResource("28_gestor_eventos")
 
-[node name="IndicadorEventos" type="Node" parent="."]
+[node name="IndicadorEventos" type="Node" parent="." unique_id=914661508]
 script = ExtResource("29_indicador_eventos")
 
 [node name="Entorno" type="Node3D" parent="." unique_id=2107888023]
@@ -4728,12 +4712,12 @@ transform = Transform3D(1.1249382, 0, 0.0117807565, 0, 1.125, 0, -0.0117807565, 
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=479191820]
+[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=300881645]
 visible = false
 
 [node name="TrackNetwork" type="Node3D" parent="." unique_id=541304712]
 script = ExtResource("2_tracknet")
-tramos_excluidos = PackedStringArray("seg_499", "seg_498", "seg_703", "seg_707", "seg_506", "seg_508", "seg_507", "seg_371", "seg_399", "seg_114", "seg_116", "seg_115", "seg_123", "seg_124", "seg_119", "seg_97", "seg_118", "seg_98", "seg_126", "seg_99", "seg_12", "seg_11", "seg_341", "seg_359", "seg_565", "seg_326", "seg_572", "seg_330", "seg_320", "seg_571", "seg_319", "seg_564", "seg_329", "seg_335", "seg_321", "seg_130", "seg_30", "seg_31", "seg_138", "seg_139", "seg_208", "seg_710", "seg_29", "seg_28", "seg_663", "seg_385", "seg_169", "seg_170", "seg_171", "seg_449", "seg_418", "seg_173", "seg_417", "seg_174", "seg_172", "seg_434", "seg_432", "seg_415", "seg_414", "seg_413", "seg_660", "seg_665", "seg_666", "seg_664", "seg_408", "seg_407", "seg_406", "seg_433", "seg_517", "seg_515", "seg_518", "seg_516", "seg_461", "seg_460", "seg_448", "seg_447")
+tramos_excluidos = PackedStringArray("seg_499", "seg_498", "seg_703", "seg_707", "seg_506", "seg_508", "seg_507", "seg_371", "seg_399", "seg_114", "seg_116", "seg_115", "seg_123", "seg_124", "seg_119", "seg_97", "seg_118", "seg_98", "seg_126", "seg_99", "seg_12", "seg_11", "seg_341", "seg_359", "seg_565", "seg_326", "seg_572", "seg_330", "seg_320", "seg_571", "seg_319", "seg_564", "seg_329", "seg_335", "seg_321", "seg_130", "seg_30", "seg_31", "seg_138", "seg_139", "seg_208", "seg_710", "seg_29", "seg_28", "seg_663", "seg_385", "seg_169", "seg_170", "seg_171", "seg_449", "seg_418", "seg_173", "seg_417", "seg_174", "seg_172", "seg_434", "seg_432", "seg_415", "seg_414", "seg_413", "seg_660", "seg_665", "seg_666", "seg_664", "seg_408", "seg_407", "seg_406", "seg_433", "seg_517", "seg_515", "seg_518", "seg_516", "seg_461", "seg_460", "seg_448", "seg_447", "seg_216", "seg_135")
 switch_id_inspeccion = 1957896612
 info_switch_actual = "=== CAMBIO DE VÍA [1 / 214] (TIPO_A) ===
 Sector: Sector_01_Constitucion_Avellaneda | Tramo: 01_Plaza_Constitucion
@@ -7955,14 +7939,6 @@ sector_nombre = "Sector_04_Temperley_Claypole"
 tramo_nombre = "10_Temperley_Marmol"
 longitud_metros = 39.215393
 
-[node name="seg_135" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=2098845095]
-curve = SubResource("Curve3D_tgjnx")
-script = ExtResource("4_7yiem")
-segment_id = "seg_135"
-sector_nombre = "Sector_04_Temperley_Claypole"
-tramo_nombre = "10_Temperley_Marmol"
-longitud_metros = 252.25813
-
 [node name="seg_136" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=627888827]
 curve = SubResource("Curve3D_sen8p")
 script = ExtResource("4_7yiem")
@@ -8034,14 +8010,6 @@ segment_id = "seg_215"
 sector_nombre = "Sector_04_Temperley_Claypole"
 tramo_nombre = "10_Temperley_Marmol"
 longitud_metros = 251.33528
-
-[node name="seg_216" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=67171912]
-curve = SubResource("Curve3D_5lsdg")
-script = ExtResource("4_7yiem")
-segment_id = "seg_216"
-sector_nombre = "Sector_04_Temperley_Claypole"
-tramo_nombre = "10_Temperley_Marmol"
-longitud_metros = 114.64987
 
 [node name="seg_253" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1213614809]
 curve = SubResource("Curve3D_j58gc")
@@ -9591,22 +9559,6 @@ via_directa_id = "seg_90"
 via_desviada_id = "seg_696"
 tipo_aparato_override = "TIPO_A"
 
-[node name="Desvio_A_5215454635" parent="TrackNetwork/Switches/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=213633364 instance=ExtResource("16_12tge")]
-transform = Transform3D(-0.25468016, 0, -0.9670254, 0, 1, 0, 0.9670254, 0, -0.25468016, 466.023, 0, 18636.914)
-node_id = 5215454635
-via_comun_id = "seg_211"
-via_directa_id = "seg_210"
-via_desviada_id = "seg_135"
-tipo_aparato_override = "TIPO_A"
-
-[node name="Desvio_A_310923081" parent="TrackNetwork/Switches/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=713413511 instance=ExtResource("16_12tge")]
-transform = Transform3D(-0.26721662, 0, -0.9636365, 0, 1, 0, 0.9636365, 0, -0.26721662, 224.964, 0, 18563.014)
-node_id = 310923081
-via_comun_id = "seg_135"
-via_directa_id = "seg_136"
-via_desviada_id = "seg_216"
-tipo_aparato_override = "TIPO_A"
-
 [node name="Desvio_A_1549491937" parent="TrackNetwork/Switches/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=144053274 instance=ExtResource("16_12tge")]
 transform = Transform3D(-0.9902969, 0, -0.13896763, 0, 1, 0, 0.13896763, 0, -0.9902969, -1222.277, 0, 17620.348)
 node_id = 1549491937
@@ -9884,6 +9836,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.196198, 0, 49.59752)
 [node name="TrenCSR" parent="Formaciones" unique_id=1268589130 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
 transform = Transform3D(-0.99911886, 0, 0.041969452, 0, 1, 0, -0.041969452, 0, -0.99911886, 160.33153, 0, 168.08672)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_585")
+alinear_a_via = false
 avance_inicial = 76.4
 cantidad_coches = 3
 tiempo_parada_servicio = 0.0
@@ -9895,6 +9848,7 @@ distancia_maxima_via = 1.0
 [node name="TrenCSR_02" parent="Formaciones" unique_id=1933757396 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104.2963, 0, 172.21573)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_186")
+alinear_a_via = false
 avance_inicial = 79.5
 cantidad_coches = 3
 demora_salida_inicial = 6.0
@@ -9907,6 +9861,7 @@ distancia_maxima_via = 1.0
 [node name="TrenCSR_03" parent="Formaciones" unique_id=1337099888 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 177.89026, 0, 169.19832)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_583")
+alinear_a_via = false
 avance_inicial = 77.7
 cantidad_coches = 3
 demora_salida_inicial = 12.0
@@ -9919,6 +9874,7 @@ distancia_maxima_via = 1.0
 [node name="TrenCSR_04" parent="Formaciones" unique_id=171155855 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139.5946, 0, 171.52867)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_468")
+alinear_a_via = false
 avance_inicial = 78.60000000000001
 cantidad_coches = 3
 demora_salida_inicial = 18.0
@@ -9931,7 +9887,10 @@ distancia_maxima_via = 1.0
 [node name="ServicioConstitucionBosques" type="Node" parent="." unique_id=406195018]
 script = ExtResource("19_servicio")
 paradas = Array[NodePath]([NodePath("../EstacionPlazaConstitucion"), NodePath("../EstacionYrigoyen"), NodePath("../EstacionDarioSantillanKosteki"), NodePath("../EstacionGerli"), NodePath("../EstacionLanus"), NodePath("../EstacionRemediosDeEscalada"), NodePath("../EstacionBanfield"), NodePath("../EstacionLomasDeZamora"), NodePath("../EstacionTemperley"), NodePath("../EstacionJoseMarmol"), NodePath("../EstacionRafaelCalzada"), NodePath("../EstacionClaypole"), NodePath("../EstacionDanteArdigo"), NodePath("../EstacionFlorencioVarela"), NodePath("../EstacionZeballos"), NodePath("../EstacionBosques")])
-solo_ida = true
+finalizar_al_volver = true
+separar_vias_por_sentido = true
+tiempos_tramos_ida_s = PackedFloat32Array()
+tiempos_tramos_vuelta_s = PackedFloat32Array()
 
 [node name="Camaras" type="Node3D" parent="." unique_id=1068451313]
 
@@ -9948,14 +9907,14 @@ separacion_vias = 30.0
 ajuste_lateral_anden_ida = -20.0
 ajuste_lateral_anden_vuelta = 20.0
 nombre_estacion = "Plaza Constitución"
-demanda_pasajeros = ExtResource("demanda_plaza_constitucion")
+tiempo_espera = 3.0
+esta_editada = true
 capacidad_maxima_espera = 3000
 incluir_anden_b_pasajeros = false
 desfasaje_vertical_pasajeros_anden_a = 0.74
 ajuste_lateral_pasajeros_anden_a = 9.5
 mostrar_estructura_andenes = false
-tiempo_espera = 3.0
-esta_editada = true
+demanda_pasajeros = ExtResource("demanda_plaza_constitucion")
 
 [node name="EstacionYrigoyen" parent="." unique_id=141049133 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.19795483, 0, -0.98021114, 0, 1, 0, 0.98021114, 0, 0.19795483, 269.10388, 0, 2960.4004)
@@ -9964,10 +9923,10 @@ progreso_en_via = 751.3000000000001
 ajuste_lateral_anden_ida = -0.1999999999999993
 ajuste_lateral_anden_vuelta = 12.75
 nombre_estacion = "Hipólito Yrigoyen"
-demanda_pasajeros = ExtResource("demanda_hipolito_yrigoyen")
-capacidad_maxima_espera = 1000
 tiempo_espera = 3.0
 esta_editada = true
+capacidad_maxima_espera = 1000
+demanda_pasajeros = ExtResource("demanda_hipolito_yrigoyen")
 
 [node name="EstacionDarioSantillanKosteki" parent="." unique_id=141049134 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.20181464, 0, -0.97942376, 0, 1, 0, 0.97942376, 0, 0.20181464, 512.24677, 0, 4063.9001)
@@ -9978,9 +9937,9 @@ ajuste_lateral_anden_vuelta = 20.0
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.9
 nombre_estacion = "Darío Santillán y Maximiliano Kosteki"
-demanda_pasajeros = ExtResource("demanda_dario_santillan_kosteki")
-capacidad_maxima_espera = 2300
 tiempo_espera = 3.0
+capacidad_maxima_espera = 2300
+demanda_pasajeros = ExtResource("demanda_dario_santillan_kosteki")
 
 [node name="EstacionGerli" parent="." unique_id=141049135 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.29173926, 0, -0.9564979, 0, 1, 0, 0.9564979, 0, -0.29173926, -35.95728, 0, 6730.204)
@@ -9991,10 +9950,10 @@ ajuste_lateral_anden_ida = -5.949999999999999
 ajuste_lateral_anden_vuelta = 13.65
 posicion_lateral_anden_central_1 = 5.5
 nombre_estacion = "Gerli"
-demanda_pasajeros = ExtResource("demanda_gerli")
-capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 esta_editada = true
+capacidad_maxima_espera = 1200
+demanda_pasajeros = ExtResource("demanda_gerli")
 
 [node name="EstacionLanus" parent="." unique_id=141049136 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.24094369, 0, -0.9705391, 0, 1, 0, 0.9705391, 0, -0.24094369, -823.7555, 0, 9380.521)
@@ -10005,9 +9964,9 @@ ajuste_lateral_anden_vuelta = 17.15
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.25
 nombre_estacion = "Lanús"
-demanda_pasajeros = ExtResource("demanda_lanus")
-capacidad_maxima_espera = 2500
 tiempo_espera = 3.0
+capacidad_maxima_espera = 2500
+demanda_pasajeros = ExtResource("demanda_lanus")
 
 [node name="EstacionRemediosDeEscalada" parent="." unique_id=141049137 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.086932786, 0, -0.9962143, 0, 1, 0, 0.9962143, 0, -0.086932786, -1050.8507, 0, 11329.662)
@@ -10018,9 +9977,9 @@ ajuste_lateral_anden_vuelta = 4.199999999999999
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = -3.8500000000000014
 nombre_estacion = "Remedios de Escalada"
-demanda_pasajeros = ExtResource("demanda_remedios_de_escalada")
-capacidad_maxima_espera = 1600
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1600
+demanda_pasajeros = ExtResource("demanda_remedios_de_escalada")
 
 [node name="EstacionBanfield" parent="." unique_id=141049138 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.085664846, 0, -0.99632406, 0, 1, 0, 0.99632406, 0, -0.085664846, -1198.9132, 0, 13160.227)
@@ -10033,9 +9992,9 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 8.25
 posicion_lateral_anden_central_2 = 13.200000000000005
 nombre_estacion = "Banfield"
-demanda_pasajeros = ExtResource("demanda_banfield")
-capacidad_maxima_espera = 1900
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1900
+demanda_pasajeros = ExtResource("demanda_banfield")
 
 [node name="EstacionLomasDeZamora" parent="." unique_id=141049139 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(-0.09273667, 0, -0.9956907, 0, 1, 0, 0.9956907, 0, -0.09273667, -1372.205, 0, 15118.288)
@@ -10048,9 +10007,9 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 9.35
 posicion_lateral_anden_central_2 = 15.400000000000006
 nombre_estacion = "Lomas de Zamora"
-demanda_pasajeros = ExtResource("demanda_lomas_de_zamora")
-capacidad_maxima_espera = 2200
 tiempo_espera = 3.0
+capacidad_maxima_espera = 2200
+demanda_pasajeros = ExtResource("demanda_lomas_de_zamora")
 
 [node name="EstacionTemperley" parent="." unique_id=141049140 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.079758175, 0, -0.99681425, 0, 1, 0, 0.99681425, 0, 0.079758175, -1256.5645, 0, 17223.063)
@@ -10060,21 +10019,22 @@ invertir_sentido = true
 ajuste_lateral_anden_ida = -5.5
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "Temperley"
-demanda_pasajeros = ExtResource("demanda_temperley")
-capacidad_maxima_espera = 2400
 tiempo_espera = 3.0
 esta_editada = true
+capacidad_maxima_espera = 2400
+demanda_pasajeros = ExtResource("demanda_temperley")
 
 [node name="EstacionJoseMarmol" parent="." unique_id=141049141 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.96714026, 0, -0.2542435, 0, 1, 0, 0.2542435, 0, 0.96714026, 123.7016, 0, 18546.912)
 traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol/seg_210")
 progreso_en_via = 156.6
+usar_traza_como_via_ida = true
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "José Mármol"
-demanda_pasajeros = ExtResource("demanda_jose_marmol")
-capacidad_maxima_espera = 1100
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1100
+demanda_pasajeros = ExtResource("demanda_jose_marmol")
 
 [node name="EstacionRafaelCalzada" parent="." unique_id=141049142 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.967579, 0, -0.25256872, 0, 1, 0, 0.25256872, 0, 0.967579, 2117.1892, 0, 19067.7)
@@ -10082,9 +10042,9 @@ traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley
 progreso_en_via = 1584.8
 ajuste_lateral_anden_vuelta = 7.449999999999999
 nombre_estacion = "Rafael Calzada"
-demanda_pasajeros = ExtResource("demanda_rafael_calzada")
-capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1200
+demanda_pasajeros = ExtResource("demanda_rafael_calzada")
 
 [node name="EstacionClaypole" parent="." unique_id=141049143 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.9672259, 0, -0.25391734, 0, 1, 0, 0.25391734, 0, 0.9672259, 4032.8892, 0, 19569.795)
@@ -10093,9 +10053,9 @@ progreso_en_via = 235.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Claypole"
-demanda_pasajeros = ExtResource("demanda_claypole")
-capacidad_maxima_espera = 1600
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1600
+demanda_pasajeros = ExtResource("demanda_claypole")
 
 [node name="EstacionDanteArdigo" parent="." unique_id=141049144 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.9678435, 0, -0.25155342, 0, 1, 0, 0.25155342, 0, 0.9678435, 7447.2227, 0, 20465.414)
@@ -10104,9 +10064,9 @@ progreso_en_via = 872.9
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 3.1000000000000014
 nombre_estacion = "Ing. Dante Ardigó"
-demanda_pasajeros = ExtResource("demanda_dante_ardigo")
-capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1200
+demanda_pasajeros = ExtResource("demanda_dante_ardigo")
 
 [node name="EstacionFlorencioVarela" parent="." unique_id=141049145 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.99908644, 0, 0.04273528, 0, 1, 0, -0.04273528, 0, 0.99908644, 9895.215, 0, 20673.33)
@@ -10115,9 +10075,9 @@ progreso_en_via = 342.0
 ajuste_lateral_anden_ida = -0.4499999999999993
 ajuste_lateral_anden_vuelta = 5.050000000000001
 nombre_estacion = "Florencio Varela"
-demanda_pasajeros = ExtResource("demanda_florencio_varela")
-capacidad_maxima_espera = 1500
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1500
+demanda_pasajeros = ExtResource("demanda_florencio_varela")
 
 [node name="EstacionZeballos" parent="." unique_id=141049146 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.9317583, 0, -0.3630793, 0, 1, 0, 0.3630793, 0, 0.9317583, 11661.457, 0, 20724.262)
@@ -10126,10 +10086,10 @@ progreso_en_via = 1462.1
 ajuste_lateral_anden_ida = -1.1000000000000014
 ajuste_lateral_anden_vuelta = 5.25
 nombre_estacion = "Estanislao S. Zeballos"
-demanda_pasajeros = ExtResource("demanda_zeballos")
-capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 esta_editada = true
+capacidad_maxima_espera = 1200
+demanda_pasajeros = ExtResource("demanda_zeballos")
 
 [node name="EstacionBosques" parent="." unique_id=141049147 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.93009657, 0, -0.36731514, 0, 1, 0, 0.36731514, 0, 0.93009657, 13912.615, 0, 21611.266)
@@ -10138,9 +10098,9 @@ progreso_en_via = 221.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Bosques"
-demanda_pasajeros = ExtResource("demanda_bosques")
-capacidad_maxima_espera = 1400
 tiempo_espera = 3.0
+capacidad_maxima_espera = 1400
+demanda_pasajeros = ExtResource("demanda_bosques")
 
 [node name="HUD" parent="." unique_id=1717866822 instance=ExtResource("18_hud")]
 

@@ -12,6 +12,8 @@ class_name PanelControlSimulacion
 ## eventos. Por eso el feedback muestra trenes afectados + retraso total de
 ## cada uno, no sólo que "pasó algo".
 
+signal cierre_solicitado
+
 const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
 const COLOR_TEXTO_SUAVE: Color = Color(0.60, 0.63, 0.70, 1.0)
 const COLOR_ACENTO: Color = Color(1.0, 0.756863, 0.278431, 1.0)
@@ -111,11 +113,25 @@ func _actualizar_todo() -> void:
 ## --- Encabezado: fecha/hora ---
 
 func _construir_encabezado(padre: VBoxContainer) -> void:
+	var encabezado: HBoxContainer = HBoxContainer.new()
+	padre.add_child(encabezado)
+	var espacio: Control = Control.new()
+	espacio.custom_minimum_size = Vector2(24.0, 0.0)
+	encabezado.add_child(espacio)
 	_etiqueta_fecha = Label.new()
 	_etiqueta_fecha.add_theme_font_size_override("font_size", 20)
 	_etiqueta_fecha.add_theme_color_override("font_color", COLOR_ACENTO)
 	_etiqueta_fecha.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	padre.add_child(_etiqueta_fecha)
+	_etiqueta_fecha.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	encabezado.add_child(_etiqueta_fecha)
+	var cerrar: Button = Button.new()
+	cerrar.text = "✕"
+	cerrar.tooltip_text = "Cerrar opciones generales"
+	cerrar.flat = true
+	cerrar.add_theme_font_size_override("font_size", 12)
+	cerrar.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75, 1.0))
+	cerrar.pressed.connect(func() -> void: cierre_solicitado.emit())
+	encabezado.add_child(cerrar)
 
 
 func _actualizar_fecha() -> void:
@@ -160,7 +176,7 @@ func _actualizar_flota() -> void:
 		if estado == Tren.EstadoOperacion.INCOMPLETO:
 			incompletos += 1
 			continue
-		if estado == Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES:
+		if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA]:
 			continue
 		activos += 1
 		var retraso: float = float(tren.get("retraso_s", 0.0))
@@ -289,7 +305,7 @@ func _actualizar_objetivos() -> void:
 	if tipo == 2:
 		for tren: Dictionary in _controlador.obtener_trenes():
 			var estado: int = int(tren.get("estado", -1))
-			if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.INCOMPLETO]:
+			if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA, Tren.EstadoOperacion.INCOMPLETO]:
 				continue
 			_opcion_objetivo.add_item(str(tren.get("nombre", "Tren %d" % int(tren.get("id", 0)))), int(tren.get("id", 0)))
 	else:

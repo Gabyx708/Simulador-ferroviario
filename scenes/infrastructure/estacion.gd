@@ -176,6 +176,14 @@ static var _cache_bounds_mallas_pasajeros: Array[AABB] = []
 		if is_inside_tree():
 			_notificar_trenes()
 
+## Fija la parada Constitución -> Bosques sobre la traza asignada a la estación.
+## Evita perseguir una vía paralela cuyo acceso queda después del andén.
+@export var usar_traza_como_via_ida: bool = false:
+	set(v):
+		usar_traza_como_via_ida = v
+		if is_inside_tree():
+			_notificar_trenes()
+
 @export_group("Puntos de Parada")
 ## Distancia métrica respecto al centro del andén para el frenado de ida (hacia adelante).
 ## Se sincroniza automáticamente al arrastrar el PosteParadaIda en el visor 3D.
@@ -353,6 +361,9 @@ var pasajeros_bajados_total: int = 0
 var _reloj_pasajeros: float = 0.0
 var _salidas_pasajeros_pendientes: Array[Dictionary] = []
 var _trenes_abordando: Dictionary = {}
+var _colas_espera: Dictionary = {}
+var _espera_completada_s: float = 0.0
+var _pasajeros_espera_completada: int = 0
 var _mallas_pasajeros: Array[Mesh] = []
 var _transformaciones_mallas_pasajeros: Array[Transform3D] = []
 var _bounds_mallas_pasajeros: Array[AABB] = []
@@ -384,6 +395,9 @@ func _ready() -> void:
 		_proximo_sorteo_demanda = 0.0
 		_salidas_pasajeros_pendientes.clear()
 		_trenes_abordando.clear()
+		_colas_espera.clear()
+		_espera_completada_s = 0.0
+		_pasajeros_espera_completada = 0
 	_conectar_postes()
 	_actualizar_dimensiones_anden()
 	_actualizar_visibilidad_estructura()
@@ -655,6 +669,34 @@ func _configurar_pasajeros_por_anden() -> void:
 	_esperando_por_anden = esperando
 	_esperando_por_destino = por_destino
 	_pendientes_por_anden = pendientes
+	_sincronizar_colas_espera()
+
+
+func _sincronizar_colas_espera() -> void:
+	for id: String in _colas_espera.keys():
+		if id not in _ids_andenes_pasajeros:
+			_colas_espera.erase(id)
+	for indice: int in _ids_andenes_pasajeros.size():
+		var id: String = _ids_andenes_pasajeros[indice]
+		if not _colas_espera.has(id):
+			_colas_espera[id] = [ColaEsperaPasajeros.new(), ColaEsperaPasajeros.new()]
+		var colas: Array = _colas_espera[id]
+		(colas[0] as ColaEsperaPasajeros).ajustar_cantidad(_esperando_por_destino[indice].x, _reloj_pasajeros)
+		(colas[1] as ColaEsperaPasajeros).ajustar_cantidad(_esperando_por_destino[indice].y, _reloj_pasajeros)
+
+
+func obtener_metricas_espera() -> Dictionary:
+	var espera_actual: float = 0.0
+	for colas: Array in _colas_espera.values():
+		for cola: ColaEsperaPasajeros in colas:
+			espera_actual += cola.espera_acumulada_actual(_reloj_pasajeros)
+	return {
+		"espera_total_completada_s": _espera_completada_s,
+		"pasajeros_con_espera": _pasajeros_espera_completada,
+		"espera_promedio_s": _espera_completada_s / _pasajeros_espera_completada if _pasajeros_espera_completada > 0 else 0.0,
+		"espera_actual_total_s": espera_actual,
+		"espera_promedio_actual_s": espera_actual / pasajeros_esperando if pasajeros_esperando > 0 else 0.0,
+	}
 
 
 func _sumar_pasajeros(cantidades: Array[int]) -> int:
@@ -673,6 +715,7 @@ func _repartir_pasajeros_esperando(cantidad: int) -> void:
 	for indice: int in range(andenes):
 		_esperando_por_anden[indice] = int(total / andenes) + (1 if indice < total % andenes else 0)
 		_esperando_por_destino[indice] = _repartir_por_destino(_esperando_por_anden[indice], _ids_andenes_pasajeros[indice])
+	_sincronizar_colas_espera()
 	if is_inside_tree():
 		pasajeros_actualizados.emit(self)
 
@@ -894,6 +937,9 @@ func _generar_pasajeros(delta: float) -> void:
 		var reparto: Vector2i = Vector2i(a_constitucion, nuevos - a_constitucion)
 		_esperando_por_destino[indice] += reparto
 		_esperando_por_anden[indice] += nuevos
+		var colas: Array = _colas_espera[_ids_andenes_pasajeros[indice]]
+		(colas[0] as ColaEsperaPasajeros).agregar(reparto.x, _reloj_pasajeros)
+		(colas[1] as ColaEsperaPasajeros).agregar(reparto.y, _reloj_pasajeros)
 		_pendientes_por_anden[indice] = Vector2.ZERO if nuevos == lugar else pendientes - Vector2(reparto)
 		generados += nuevos
 	if generados > 0:
@@ -944,6 +990,10 @@ func embarcar_pasajeros(cantidad: int, id_anden: String = "", hacia_constitucion
 	if pasajeros <= 0:
 		return 0
 	_esperando_por_anden[indice] -= pasajeros
+	var colas: Array = _colas_espera[_ids_andenes_pasajeros[indice]]
+	var cola: ColaEsperaPasajeros = colas[0 if hacia_constitucion else 1] as ColaEsperaPasajeros
+	_espera_completada_s += cola.retirar(pasajeros, _reloj_pasajeros)
+	_pasajeros_espera_completada += pasajeros
 	if hacia_constitucion:
 		fila.x -= pasajeros
 	else:
@@ -1187,17 +1237,18 @@ func _actualizar_area_seleccion() -> void:
 ## Calcula y devuelve el offset exacto a lo largo de la curva de la vía donde debe detenerse
 ## la cabina del tren, proyectando la posición 3D real del poste correspondiente.
 func obtener_offset_parada(sentido_ida: bool) -> float:
-	var poste: Node3D = _poste_ida if sentido_ida else _poste_vuelta
+	var usar_ida: bool = sentido_ida or not incluir_anden_b_pasajeros
+	var poste: Node3D = _poste_ida if usar_ida else _poste_vuelta
 	if poste == null:
 		_conectar_postes()
-		poste = _poste_ida if sentido_ida else _poste_vuelta
+		poste = _poste_ida if usar_ida else _poste_vuelta
 
 	if poste != null and is_instance_valid(poste) and traza != null and is_instance_valid(traza) and traza.curve != null:
 		var pos_local: Vector3 = traza.to_local(poste.global_position)
 		return snappedf(traza.curve.get_closest_offset(pos_local), 0.01)
 
 	# Fallback si no está el nodo del poste
-	var desfasaje: float = desfasaje_parada_ida if sentido_ida else desfasaje_parada_vuelta
+	var desfasaje: float = desfasaje_parada_ida if usar_ida else desfasaje_parada_vuelta
 	if invertir_sentido:
 		desfasaje = -desfasaje
 	return snappedf(progreso_en_via + desfasaje, 0.01)
@@ -1211,13 +1262,26 @@ func obtener_puntos_parada_multivia(red: Node, sentido_ida: bool) -> Array[Dicti
 	if red == null or not ("paths" in red):
 		return resultado
 	_conectar_postes()
-	var poste: Node3D = _poste_ida if sentido_ida else _poste_vuelta
+	var poste: Node3D = _poste_ida if sentido_ida or not incluir_anden_b_pasajeros else _poste_vuelta
 	if poste == null or not is_instance_valid(poste):
 		return resultado
 	var paths_var: Variant = red.get("paths")
 	if not (paths_var is Dictionary):
 		return resultado
 	var paths: Dictionary = paths_var as Dictionary
+	if sentido_ida and usar_traza_como_via_ida:
+		if traza == null or traza.curve == null or traza.curve.point_count < 2 or not paths.values().has(traza):
+			return resultado
+		var offset_asignado: float = snappedf(traza.curve.get_closest_offset(traza.to_local(poste.global_position)), 0.01)
+		resultado.append({
+			"segmento": String(traza.name),
+			"traza": traza,
+			"offset": offset_asignado,
+			"offset_ida": offset_asignado,
+			"offset_vuelta": offset_asignado,
+			"punto_global": traza.to_global(traza.curve.sample_baked(offset_asignado, true)),
+		})
+		return resultado
 	var eje_estacion: Vector3 = global_transform.basis.x.normalized()
 	var mitad_largo: float = longitud_anden * 0.5 + 3.0
 	var mitad_ancho: float = ancho_cobertura_vias * 0.5
@@ -1463,6 +1527,7 @@ func serializar_datos() -> Dictionary:
 		"posicion_lateral_anden_central_1": posicion_lateral_anden_central_1,
 		"posicion_lateral_anden_central_2": posicion_lateral_anden_central_2,
 		"ancho_cobertura_vias": ancho_cobertura_vias,
+		"usar_traza_como_via_ida": usar_traza_como_via_ida,
 		"desfasaje_parada_ida": desfasaje_parada_ida,
 		"desfasaje_parada_vuelta": desfasaje_parada_vuelta,
 		"nombre_estacion": nombre_estacion,
@@ -1491,6 +1556,7 @@ func deserializar_datos(data: Dictionary) -> void:
 	posicion_lateral_anden_central_1 = float(data.get("posicion_lateral_anden_central_1", posicion_lateral_anden_central_1))
 	posicion_lateral_anden_central_2 = float(data.get("posicion_lateral_anden_central_2", posicion_lateral_anden_central_2))
 	ancho_cobertura_vias = maxf(5.0, float(data.get("ancho_cobertura_vias", ancho_cobertura_vias)))
+	usar_traza_como_via_ida = bool(data.get("usar_traza_como_via_ida", usar_traza_como_via_ida))
 	desfasaje_parada_ida = float(data.get("desfasaje_parada_ida", desfasaje_parada_ida))
 	desfasaje_parada_vuelta = float(data.get("desfasaje_parada_vuelta", desfasaje_parada_vuelta))
 	nombre_estacion = str(data.get("nombre_estacion", nombre_estacion))

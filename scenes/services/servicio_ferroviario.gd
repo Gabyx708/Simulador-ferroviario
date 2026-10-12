@@ -11,6 +11,18 @@ class_name ServicioFerroviario
 @export_range(0, 999, 1) var indice_parada_inicial: int = 0
 ## Al completar la última parada el tren queda detenido: no inicia el retorno.
 @export var solo_ida: bool = false
+## Completa una ida y una vuelta, en lugar de repetir indefinidamente el servicio.
+@export var finalizar_al_volver: bool = false
+## Derecha/izquierda mirando hacia la primera parada (Constitución).
+@export var separar_vias_por_sentido: bool = false
+
+@export_group("Horario previsto")
+@export_range(1.0, 200.0, 1.0) var velocidad_horario_kmh: float = 50.0
+@export_range(1.0, 3.0, 0.001) var factor_tiempo_horario: float = 1.123
+## Segundos de marcha por tramo; vacío estima desde la distancia entre estaciones.
+@export var tiempos_tramos_ida_s: PackedFloat32Array = PackedFloat32Array()
+@export var tiempos_tramos_vuelta_s: PackedFloat32Array = PackedFloat32Array()
+@export_range(0.0, 600.0, 1.0) var tiempo_maniobra_terminal_s: float = 30.0
 
 @export_group("Itinerarios forzados")
 ## JSON opcional: {"0>1": ["seg_10", "seg_11"]}. Cada clave identifica los
@@ -22,6 +34,33 @@ class_name ServicioFerroviario
 ## caché evita repetir quince búsquedas iguales hasta Bosques por cada opción.
 var _continuidad_cache: Dictionary = {}
 var _validacion_ida_cache: Dictionary = {}
+
+
+func _ready() -> void:
+	if not Engine.is_editor_hint() and separar_vias_por_sentido:
+		call_deferred("_configurar_destinos_andenes")
+
+
+## La demanda de cada andén lateral acompaña a la vía que lo sirve.
+func _configurar_destinos_andenes() -> void:
+	for indice: int in paradas.size():
+		var estacion: Estacion = obtener_parada(indice) as Estacion
+		if estacion == null:
+			continue
+		if not estacion.incluir_anden_b_pasajeros:
+			estacion.destino_anden_a = Estacion.DestinoAnden.BOSQUES
+			continue
+		var vecino: Node3D = obtener_parada(indice - 1 if indice > 0 else 1) as Node3D
+		var a: Node3D = estacion.get_node_or_null("AndenA") as Node3D
+		var b: Node3D = estacion.get_node_or_null("AndenB") as Node3D
+		if vecino == null or a == null or b == null:
+			continue
+		var hacia_constitucion: Vector3 = vecino.global_position - estacion.global_position if indice > 0 else estacion.global_position - vecino.global_position
+		hacia_constitucion.y = 0.0
+		var derecha: Vector3 = hacia_constitucion.normalized().cross(Vector3.UP)
+		var a_derecha: bool = a.global_position.dot(derecha) > b.global_position.dot(derecha)
+		estacion.destino_anden_a = Estacion.DestinoAnden.BOSQUES if a_derecha else Estacion.DestinoAnden.CONSTITUCION
+		estacion.destino_anden_b = Estacion.DestinoAnden.CONSTITUCION if a_derecha else Estacion.DestinoAnden.BOSQUES
 
 
 func obtener_continuidad(clave: String) -> Dictionary:
@@ -115,7 +154,94 @@ func es_terminal(indice: int) -> bool:
 
 
 func finaliza_en(indice: int, direccion: int) -> bool:
-	return solo_ida and direccion > 0 and indice == paradas.size() - 1
+	return (solo_ida and direccion > 0 and indice == paradas.size() - 1) or (not solo_ida and finalizar_al_volver and direccion < 0 and indice == 0)
+
+
+## Selecciona la vía del lado indicado sin depender de la orientación de cada Path3D.
+## Las playas de Constitución conservan sus accesos propios de terminal.
+func filtrar_vias_sentido(estacion: Node, candidatos: Array[Dictionary], sentido_ida: bool) -> Array[Dictionary]:
+	var estacion_datos: Estacion = estacion as Estacion
+	if sentido_ida and estacion_datos != null and estacion_datos.usar_traza_como_via_ida:
+		var candidatos_asignados: Array[Dictionary] = []
+		for candidato: Dictionary in candidatos:
+			if candidato.get("traza") == estacion_datos.traza:
+				candidatos_asignados.append(candidato)
+		return candidatos_asignados
+	if not separar_vias_por_sentido or estacion == obtener_parada(0):
+		return candidatos
+	if candidatos.size() < 2:
+		return []
+	var indice: int = -1
+	for i: int in paradas.size():
+		if obtener_parada(i) == estacion:
+			indice = i
+			break
+	if indice <= 0 or not (estacion is Node3D):
+		return candidatos
+	var anterior: Node3D = obtener_parada(indice - 1) as Node3D
+	if anterior == null:
+		return candidatos
+	var hacia_constitucion: Vector3 = anterior.global_position - (estacion as Node3D).global_position
+	hacia_constitucion.y = 0.0
+	var derecha: Vector3 = hacia_constitucion.normalized().cross(Vector3.UP)
+	var extremo: float = -INF if sentido_ida else INF
+	var minimo: float = INF
+	var maximo: float = -INF
+	for candidato: Dictionary in candidatos:
+		var punto: Vector3 = candidato.get("punto_global", (estacion as Node3D).global_position)
+		var lateral: float = punto.dot(derecha)
+		minimo = minf(minimo, lateral)
+		maximo = maxf(maximo, lateral)
+		extremo = maxf(extremo, lateral) if sentido_ida else minf(extremo, lateral)
+	if maximo - minimo <= 1.0:
+		return []
+	var resultado: Array[Dictionary] = []
+	for candidato: Dictionary in candidatos:
+		var punto: Vector3 = candidato.get("punto_global", (estacion as Node3D).global_position)
+		if absf(punto.dot(derecha) - extremo) <= 1.0:
+			resultado.append(candidato)
+	return resultado
+
+
+## Horario relativo al alta del tren. Se copia una vez antes de medir las llegadas.
+func crear_horario_previsto(espera_s: float, demora_inicial_s: float = 0.0) -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	if paradas.size() < 2:
+		return resultado
+	var acumulado: float = 0.0
+	var estancia: float = maxf(1.0, espera_s)
+	for indice: int in paradas.size():
+		if indice > 0:
+			acumulado += estancia + _tiempo_tramo_horario(indice - 1, true)
+			if indice == 1:
+				acumulado += maxf(0.0, demora_inicial_s)
+		resultado.append(_visita_horario(indice, "ida", acumulado))
+	if not solo_ida:
+		acumulado += tiempo_maniobra_terminal_s
+		for indice: int in range(paradas.size() - 2, -1, -1):
+			acumulado += estancia + _tiempo_tramo_horario(indice, false)
+			resultado.append(_visita_horario(indice, "vuelta", acumulado))
+	return resultado
+
+
+func _visita_horario(indice: int, sentido: String, llegada_s: float) -> Dictionary:
+	var estacion: Estacion = obtener_parada(indice) as Estacion
+	return {
+		"id": estacion.obtener_id_edicion() if estacion != null else str(paradas[indice]),
+		"nombre": estacion.nombre_estacion if estacion != null else str(paradas[indice]),
+		"indice": indice, "sentido": sentido, "llegada_prevista_s": llegada_s,
+	}
+
+
+func _tiempo_tramo_horario(indice: int, ida: bool) -> float:
+	var tiempos: PackedFloat32Array = tiempos_tramos_ida_s if ida else tiempos_tramos_vuelta_s
+	if indice < tiempos.size() and tiempos[indice] > 0.0:
+		return tiempos[indice]
+	var origen: Node3D = obtener_parada(indice) as Node3D
+	var destino: Node3D = obtener_parada(indice + 1) as Node3D
+	if origen == null or destino == null:
+		return 0.0
+	return origen.global_position.distance_to(destino.global_position) / maxf(velocidad_horario_kmh / 3.6, 0.1) * factor_tiempo_horario
 
 
 func override_para(origen: int, destino: int) -> Array[String]:

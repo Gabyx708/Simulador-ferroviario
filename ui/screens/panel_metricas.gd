@@ -1,9 +1,9 @@
-extends Control
+extends VBoxContainer
 class_name PanelMetricas
 ## Panel 2 de NavegacionPaneles: métricas de sólo lectura para comparar el
 ## impacto de los eventos entre sí (objetivo del proyecto) y ver de un
-## vistazo cómo está la flota. Sin controles: sólo lee SimulacionController,
-## RelojSimulacion, EstadisticasRetraso y GestorEventos.
+## vistazo cómo está la flota. Los listados despliegan información de
+## SimulacionController, RelojSimulacion, EstadisticasRetraso y GestorEventos.
 ##
 ## Layout en una sola columna de ancho completo (KPIs arriba, gráficas,
 ## tablas abajo) en vez de 2 columnas lado a lado: con nombres de estación
@@ -13,9 +13,9 @@ class_name PanelMetricas
 ##
 ## Pensado para que Persona 3 lo extienda: `_actualizar()` es el único punto
 ## de refresco, `_calcular_kpis()` es una función pura (testeable sin
-## simulación real) y cada tabla/gráfico se reconstruye entera desde datos
-## públicos en cada llamada, sin estado acumulado propio salvo los buffers
-## de historial para el gráfico de evolución.
+## simulación real). Los selectores conservan la estación o tren elegido al
+## refrescar; la tabla de llegadas corresponde únicamente a esa formación.
+## El historial del gráfico de evolución se conserva en un buffer acotado.
 
 const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
 const COLOR_TEXTO_SUAVE: Color = Color(0.60, 0.63, 0.70, 1.0)
@@ -24,9 +24,8 @@ const COLOR_FILA_FONDO: Color = Color(0.14, 0.145, 0.18, 0.85)
 const COLOR_OK: Color = Color(0.45, 0.85, 0.55, 1.0)
 const COLOR_ADVERTENCIA: Color = Color(0.95, 0.80, 0.15, 1.0)
 const COLOR_ERROR: Color = Color(0.9, 0.35, 0.35, 1.0)
-const COLOR_NEUTRO: Color = Color(0.45, 0.68, 0.88, 1.0)
-const COLOR_MUTED: Color = Color(0.5, 0.52, 0.58, 1.0)
 const INTERVALO_REFRESCO_S: float = 0.5
+const TAMANO_FUENTE_DETALLE: int = 14
 ## Techo del buffer de muestras para el gráfico de evolución -- ventana
 ## móvil de los últimos N refrescos (a 0.5s cada uno, 600 = 5 minutos
 ## reales de muestreo; a velocidad de simulación alta cubre mucho más
@@ -39,8 +38,11 @@ var _estadisticas: EstadisticasRetraso
 var _gestor: GestorEventos
 
 var _tarjetas_kpi: Dictionary = {}  ## clave -> Label (valor dentro de la tarjeta)
-var _tabla_trenes: GridContainer
 var _tabla_eventos: GridContainer
+var _selector_estacion: OptionButton
+var _resumen_estacion: Label
+var _selector_tren: OptionButton
+var _detalle_tren: Dictionary = {}
 var _grafico_barras: GraficoBarras
 var _grafico_linea: GraficoLinea
 
@@ -75,18 +77,21 @@ func _ready() -> void:
 		_estadisticas = nivel.get_node_or_null("EstadisticasRetraso") as EstadisticasRetraso
 		_gestor = nivel.get_node_or_null("GestorEventos") as GestorEventos
 
-	var raiz := VBoxContainer.new()
+	var raiz: VBoxContainer = self
 	raiz.add_theme_constant_override("separation", 14)
 	raiz.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(raiz)
 
 	_construir_kpis(raiz)
+	raiz.add_child(HSeparator.new())
+	_construir_datos_globales(raiz)
+	raiz.add_child(HSeparator.new())
+	_construir_espera_estacion(raiz)
+	raiz.add_child(HSeparator.new())
+	_construir_horarios(raiz)
 	raiz.add_child(HSeparator.new())
 	_construir_comparacion_eventos(raiz)
 	raiz.add_child(HSeparator.new())
 	_construir_evolucion(raiz)
-	raiz.add_child(HSeparator.new())
-	_construir_tabla_trenes(raiz)
 	raiz.add_child(HSeparator.new())
 	_construir_tabla_eventos(raiz)
 
@@ -119,8 +124,10 @@ func _actualizar() -> void:
 	_actualizar_kpis(kpis)
 	_registrar_muestra_evolucion(kpis)
 	_actualizar_comparacion_eventos()
-	_actualizar_tabla_trenes(trenes)
 	_actualizar_tabla_eventos()
+	_actualizar_datos_globales()
+	_actualizar_espera_estacion()
+	_actualizar_horarios()
 
 
 ## --- Cálculo puro (testeable sin simulación real: toma una lista de
@@ -131,9 +138,8 @@ func _actualizar() -> void:
 ## mide llegada a llegada, así que un tren recién detenido o bloqueado por la
 ## reserva de otro tren (p.ej. uno frenado por un evento más adelante) recién
 ## actualiza retraso_s cuando llega a destino, pero sus pasajeros YA están
-## sufriendo el impacto en este momento. retraso_s en la tabla por tren sigue
-## mostrando "—" en ese caso (es el valor medido correcto, no una demora en
-## vivo) -- ver docs/reporte_hud_control.md.
+## sufriendo el impacto en este momento. El detalle por tren conserva el
+## retraso_s medido por eventos separado de la demora respecto del horario.
 static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 	var a_tiempo: int = 0
 	var retrasados: int = 0
@@ -152,7 +158,7 @@ static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 		if estado == Tren.EstadoOperacion.INCOMPLETO:
 			incompletos += 1
 			continue
-		if estado == Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES:
+		if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA]:
 			continue
 		activos += 1
 		var retraso: float = float(tren.get("retraso_s", 0.0))
@@ -195,9 +201,9 @@ func _construir_kpis(padre: VBoxContainer) -> void:
 	var fila1 := HBoxContainer.new()
 	fila1.add_theme_constant_override("separation", 12)
 	padre.add_child(fila1)
-	_agregar_tarjeta_kpi(fila1, "puntualidad", "PUNTUALIDAD", "Trenes a tiempo / trenes activos (sin incompletos ni finalizados). 100% si no hay ninguno activo todavía.")
-	_agregar_tarjeta_kpi(fila1, "retraso_demorados", "RETRASO PROMEDIO (demorados)", "Promedio de retraso_s sólo entre los trenes que SÍ tienen retraso medido > 0 -- no se diluye con los que están a tiempo.")
-	_agregar_tarjeta_kpi(fila1, "demora_maxima", "DEMORA MÁXIMA", "El mayor retraso_s medido ahora mismo entre los trenes activos, con cuál tren lo tiene.")
+	_agregar_tarjeta_kpi(fila1, "puntualidad", "PUNTUALIDAD POR HORARIO", "Trenes en tiempo / servicios activos con horario. Se actualiza en cada llegada y puede recuperarse.")
+	_agregar_tarjeta_kpi(fila1, "retraso_demorados", "RETRASO ACUMULADO PROMEDIO", "Promedio de retraso_s entre trenes con retraso acumulado medido. Conserva el impacto histórico de los eventos, aunque recuperen puntualidad.")
+	_agregar_tarjeta_kpi(fila1, "demora_maxima", "DEMORA ACUMULADA MÁXIMA", "El mayor retraso_s acumulado entre servicios activos y el tren que lo tiene.")
 
 	var fila2 := HBoxContainer.new()
 	fila2.add_theme_constant_override("separation", 12)
@@ -273,6 +279,211 @@ func _actualizar_kpis(kpis: Dictionary) -> void:
 		]
 
 
+## Datos globales de servicio; conserva las métricas históricas de eventos.
+func _construir_datos_globales(padre: VBoxContainer) -> void:
+	padre.add_child(_crear_titulo_seccion("DATOS GLOBALES DEL RECORRIDO"))
+	var fila: HBoxContainer = HBoxContainer.new()
+	fila.add_theme_constant_override("separation", 12)
+	padre.add_child(fila)
+	_agregar_tarjeta_kpi(fila, "transportados", "PASAJEROS TRANSPORTADOS", "Total de embarques. En viaje: pasajeros a bordo. Completados: viajes de pasajeros que ya descendieron. Interrumpidos: pasajeros en trenes incompletos.")
+	_agregar_tarjeta_kpi(fila, "finalizados", "RECORRIDOS FINALIZADOS", "Recorridos completos: salir de una terminal, llegar a la otra y regresar a la terminal de origen.")
+	_agregar_tarjeta_kpi(fila, "simultaneos", "TRENES EN SIMULTÁNEO", "Servicios activos, incluidos los detenidos en estación o por evento. Excluye finalizados, incompletos y eliminados. Pico histórico de trenes, no de pasajeros.")
+	var fila2: HBoxContainer = HBoxContainer.new()
+	fila2.add_theme_constant_override("separation", 12)
+	padre.add_child(fila2)
+	_agregar_tarjeta_kpi(fila2, "incompletos_evento", "INCOMPLETOS POR EVENTO TERMINAL", "Los desperfectos definitivos se distinguen de las interrupciones por falta de ruta.")
+	_agregar_tarjeta_kpi(fila2, "espera_global", "ESPERA GLOBAL DE PASAJEROS", "Promedio de la espera actual de todas las estaciones. Cada estación tiene el mismo peso; las que no tienen pasajeros en espera aportan cero.")
+	_agregar_tarjeta_kpi(fila2, "tasa_demora", "TASA DE DEMORA POR HORARIO", "Trenes atrasados / servicios activos con horario. La demora promedio incluye los que están en tiempo con demora cero; se recalcula en cada llegada y puede disminuir.")
+
+
+func _actualizar_datos_globales() -> void:
+	var datos: Dictionary = _controlador.obtener_resumen_global()
+	(_tarjetas_kpi["transportados"] as Label).text = "%d total\nEn viaje: %d\nCompletados: %d\nInterrumpidos: %d" % [
+		int(datos["pasajeros_transportados"]), int(datos["pasajeros_en_viaje"]),
+		int(datos["pasajeros_recorrido_completado"]), int(datos["pasajeros_interrumpidos"]),
+	]
+	(_tarjetas_kpi["finalizados"] as Label).text = str(int(datos["trenes_finalizados"]))
+	(_tarjetas_kpi["simultaneos"] as Label).text = "%d actuales\nPico: %d" % [int(datos["trenes_activos"]), int(datos["concurrencia_maxima"])]
+	var por_evento: int = int(datos["trenes_incompletos_evento"])
+	(_tarjetas_kpi["incompletos_evento"] as Label).text = "%d por evento\n%d por otras causas" % [por_evento, int(datos["trenes_incompletos"]) - por_evento]
+	(_tarjetas_kpi["incompletos"] as Label).text = str(int(datos["trenes_incompletos"]))
+	(_tarjetas_kpi["espera_global"] as Label).text = "Tiempo de espera actual: %s" % _formatear_tiempo_exacto(float(datos["espera_promedio_actual_s"]))
+	(_tarjetas_kpi["tasa_demora"] as Label).text = "%.1f%% (%d/%d)\nPromedio: %s" % [
+		float(datos["tasa_demora_pct"]), int(datos["trenes_atrasados"]), int(datos["trenes_con_horario"]),
+		_formatear_tiempo_exacto(float(datos["demora_promedio_s"])),
+	]
+	var con_horario: int = int(datos["trenes_con_horario"])
+	if con_horario > 0:
+		(_tarjetas_kpi["puntualidad"] as Label).text = "%.0f%% (%d/%d)" % [
+			100.0 - float(datos["tasa_demora_pct"]), con_horario - int(datos["trenes_atrasados"]), con_horario,
+		]
+
+
+func _construir_espera_estacion(padre: VBoxContainer) -> void:
+	padre.add_child(_crear_titulo_seccion("ESPERA DE PASAJEROS POR ESTACIÓN"))
+	_selector_estacion = OptionButton.new()
+	_selector_estacion.item_selected.connect(func(_indice: int) -> void: _actualizar_espera_estacion())
+	padre.add_child(_selector_estacion)
+	_resumen_estacion = _crear_celda("", TAMANO_FUENTE_DETALLE)
+	_resumen_estacion.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	padre.add_child(_resumen_estacion)
+
+
+func _actualizar_espera_estacion() -> void:
+	var estaciones: Array[Dictionary] = _controlador.obtener_estaciones()
+	var opciones: Array[Dictionary] = []
+	for estacion: Dictionary in estaciones:
+		opciones.append({"id": str(estacion["id"]), "nombre": str(estacion["nombre"])})
+	_sincronizar_selector(_selector_estacion, opciones, "Sin estaciones")
+	if estaciones.is_empty():
+		_resumen_estacion.text = "No hay estaciones registradas."
+		return
+	var id: String = str(_selector_estacion.get_item_metadata(_selector_estacion.selected))
+	for estacion: Dictionary in estaciones:
+		if str(estacion["id"]) != id:
+			continue
+		var muestra: int = int(estacion.get("pasajeros_con_espera", 0))
+		_resumen_estacion.text = "Tiempo de espera actual: %s\nPasajeros en espera: %d\nEspera promedio hasta abordar: %s" % [
+			_formatear_tiempo_exacto(float(estacion.get("espera_promedio_actual_s", 0.0))),
+			int(estacion["pasajeros_esperando"]),
+			_formatear_tiempo_exacto(float(estacion.get("espera_promedio_s", 0.0))) if muestra > 0 else "Sin embarques",
+		]
+		break
+
+
+const COLUMNAS_HORARIOS: Array[String] = ["Estación", "Destino", "Llegada prevista", "Llegada real", "Puntualidad"]
+
+
+func _construir_horarios(padre: VBoxContainer) -> void:
+	padre.add_child(_crear_titulo_seccion("HORARIO PREVISTO Y LLEGADAS POR TREN"))
+	_selector_tren = OptionButton.new()
+	_selector_tren.item_selected.connect(func(_indice: int) -> void: _actualizar_horarios())
+	padre.add_child(_selector_tren)
+	_detalle_tren = _construir_detalle_tren(padre)
+
+
+func _actualizar_horarios() -> void:
+	var horarios: Array[Dictionary] = _controlador.obtener_horarios()
+	var opciones: Array[Dictionary] = []
+	for horario: Dictionary in horarios:
+		var id_tren: int = int(horario["id_tren"])
+		opciones.append({"id": id_tren, "nombre": "Tren %d" % id_tren})
+	_sincronizar_selector(_selector_tren, opciones, "Sin trenes")
+	if horarios.is_empty():
+		(_detalle_tren["resumen"] as Label).text = "No hay trenes registrados."
+		(_detalle_tren["referencia"] as Label).hide()
+		(_detalle_tren["scroll"] as ScrollContainer).hide()
+		_vaciar_filas(_detalle_tren["tabla"] as GridContainer, COLUMNAS_HORARIOS.size())
+		return
+	var id: int = int(_selector_tren.get_item_metadata(_selector_tren.selected))
+	for horario: Dictionary in horarios:
+		if int(horario["id_tren"]) != id:
+			continue
+		var datos: Dictionary = horario.duplicate()
+		var actual: Dictionary = _controlador.obtener_tren(id)
+		if not actual.is_empty():
+			datos.merge(actual, true)
+		_actualizar_resumen_tren(_detalle_tren, datos)
+		_actualizar_llegadas_tren(_detalle_tren, horario["visitas"] as Array)
+		break
+
+
+func _construir_detalle_tren(padre: VBoxContainer) -> Dictionary:
+	var contenido: VBoxContainer = VBoxContainer.new()
+	contenido.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contenido.add_theme_constant_override("separation", 10)
+	padre.add_child(contenido)
+	var resumen: Label = _crear_celda("", TAMANO_FUENTE_DETALLE)
+	resumen.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contenido.add_child(resumen)
+	var referencia: Label = _crear_celda("Llegadas desde el inicio del recorrido (minutos:segundos).", TAMANO_FUENTE_DETALLE)
+	referencia.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	referencia.add_theme_color_override("font_color", COLOR_TEXTO_SUAVE)
+	contenido.add_child(referencia)
+	var tabla: GridContainer = GridContainer.new()
+	tabla.columns = COLUMNAS_HORARIOS.size()
+	tabla.add_theme_constant_override("h_separation", 18)
+	tabla.add_theme_constant_override("v_separation", 8)
+	var scroll: ScrollContainer = _agregar_tabla_desplazable(contenido, tabla)
+	for columna: String in COLUMNAS_HORARIOS:
+		tabla.add_child(_crear_celda_encabezado(columna, TAMANO_FUENTE_DETALLE))
+	return {"resumen": resumen, "referencia": referencia, "scroll": scroll, "tabla": tabla}
+
+
+func _actualizar_resumen_tren(fila: Dictionary, datos: Dictionary) -> void:
+	var estado: int = int(datos.get("estado", -1))
+	var nombre_estado: String = str(NOMBRES_ESTADO.get(estado, "Desconocido"))
+	if bool(datos.get("eliminado", false)):
+		nombre_estado += " (eliminado)"
+	var puntualidad: String = str(datos.get("puntualidad_nombre", "Sin horario"))
+	if bool(datos.get("atrasado", false)):
+		puntualidad += " · " + _formatear_tiempo_exacto(float(datos.get("retraso_horario_s", 0.0)))
+	var resumen: Label = fila["resumen"] as Label
+	resumen.text = "Estado: %s\nRecorrido: %s\nPróxima estación: %s\nPasajeros a bordo: %d / %d\nRetraso acumulado: %s\nHorario: %s" % [
+		nombre_estado,
+		"Constitución → Bosques" if str(datos.get("sentido", "ida")) == "ida" else "Bosques → Constitución",
+		str(datos.get("estacion_proxima", "—")),
+		int(datos.get("pasajeros", 0)), int(datos.get("capacidad", 0)),
+		_formatear_tiempo_exacto(float(datos.get("retraso_s", 0.0))), puntualidad,
+	]
+	var con_horario: bool = bool(datos.get("horario_disponible", false))
+	if con_horario:
+		resumen.text += "\nTiempo total previsto: %s\nTiempo transcurrido: %s" % [
+			_formatear_tiempo_exacto(float(datos.get("tiempo_previsto_total_s", 0.0))),
+			_formatear_tiempo_exacto(float(datos.get("tiempo_recorrido_s", 0.0))),
+		]
+	(fila["referencia"] as Label).visible = con_horario
+	(fila["scroll"] as ScrollContainer).visible = con_horario
+
+
+func _actualizar_llegadas_tren(fila: Dictionary, visitas: Array) -> void:
+	var tabla: GridContainer = fila["tabla"] as GridContainer
+	_vaciar_filas(tabla, COLUMNAS_HORARIOS.size())
+	for visita: Dictionary in visitas:
+		var real: float = float(visita["llegada_real_s"])
+		var retraso: float = float(visita["retraso_s"])
+		tabla.add_child(_crear_celda(str(visita["nombre"]), TAMANO_FUENTE_DETALLE))
+		tabla.add_child(_crear_celda("Bosques" if str(visita["sentido"]) == "ida" else "Constitución", TAMANO_FUENTE_DETALLE))
+		tabla.add_child(_crear_celda(_formatear_tiempo_exacto(float(visita["llegada_prevista_s"])), TAMANO_FUENTE_DETALLE))
+		tabla.add_child(_crear_celda(_formatear_tiempo_exacto(real) if real >= 0.0 else "Pendiente", TAMANO_FUENTE_DETALLE))
+		var atraso: bool = retraso > _controlador.tolerancia_horario_s
+		var texto: String = "Pendiente" if real < 0.0 else ("Atrasado +%s" % _formatear_tiempo_exacto(retraso) if atraso else "En tiempo")
+		var celda: Label = _crear_celda(texto, TAMANO_FUENTE_DETALLE)
+		celda.add_theme_color_override("font_color", COLOR_ADVERTENCIA if atraso else COLOR_TEXTO_SUAVE)
+		tabla.add_child(celda)
+
+
+## Sólo modifica el menú si cambia la lista; los refrescos no cierran el popup.
+func _sincronizar_selector(selector: OptionButton, opciones: Array[Dictionary], texto_vacio: String) -> void:
+	var anterior: Variant = selector.get_item_metadata(selector.selected) if selector.selected >= 0 else null
+	var cambio: bool = selector.item_count != opciones.size()
+	if not cambio:
+		for indice: int in opciones.size():
+			if selector.get_item_metadata(indice) != opciones[indice]["id"] or selector.get_item_text(indice) != str(opciones[indice]["nombre"]):
+				cambio = true
+				break
+	selector.disabled = opciones.is_empty()
+	if opciones.is_empty():
+		selector.clear()
+		selector.text = texto_vacio
+		return
+	if not cambio:
+		return
+	selector.clear()
+	var seleccionado: int = 0
+	for indice: int in opciones.size():
+		selector.add_item(str(opciones[indice]["nombre"]))
+		selector.set_item_metadata(indice, opciones[indice]["id"])
+		if opciones[indice]["id"] == anterior:
+			seleccionado = indice
+	selector.select(seleccionado)
+
+
+static func _formatear_tiempo_exacto(segundos: float) -> String:
+	var total: int = roundi(maxf(0.0, segundos))
+	return "%d:%02d" % [int(total / 60), total % 60]
+
+
 ## --- Comparación de eventos: barras horizontales por tipo ---
 
 func _construir_comparacion_eventos(padre: VBoxContainer) -> void:
@@ -313,7 +524,7 @@ func _actualizar_comparacion_eventos() -> void:
 ## --- Evolución de la demora promedio en el tiempo simulado ---
 
 func _construir_evolucion(padre: VBoxContainer) -> void:
-	padre.add_child(_crear_titulo_seccion("EVOLUCIÓN DE LA DEMORA PROMEDIO (las líneas verticales marcan cuándo se disparó cada evento)"))
+	padre.add_child(_crear_titulo_seccion("EVOLUCIÓN DEL RETRASO ACUMULADO PROMEDIO (las líneas verticales marcan cada evento)"))
 	_grafico_linea = GraficoLinea.new()
 	_grafico_linea.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_grafico_linea.custom_minimum_size = Vector2(0, 150)
@@ -341,37 +552,6 @@ func _color_tipo_evento(tipo: int) -> Color:
 	return Color.GRAY
 
 
-## --- Tabla por tren ---
-
-const COLUMNAS_TRENES: Array[String] = ["Tren", "Estado", "Próxima estación", "Retraso", "Pasajeros"]
-
-
-func _construir_tabla_trenes(padre: VBoxContainer) -> void:
-	padre.add_child(_crear_titulo_seccion("POR TREN"))
-	_tabla_trenes = GridContainer.new()
-	_tabla_trenes.columns = COLUMNAS_TRENES.size()
-	_tabla_trenes.add_theme_constant_override("h_separation", 22)
-	_tabla_trenes.add_theme_constant_override("v_separation", 6)
-	padre.add_child(_tabla_trenes)
-	for texto: String in COLUMNAS_TRENES:
-		_tabla_trenes.add_child(_crear_celda_encabezado(texto))
-
-
-func _actualizar_tabla_trenes(trenes: Array[Dictionary]) -> void:
-	if _tabla_trenes == null:
-		return
-	_vaciar_filas(_tabla_trenes, COLUMNAS_TRENES.size())
-	for tren: Dictionary in trenes:
-		var id: int = int(tren.get("id", 0))
-		var estado: int = int(tren.get("estado", -1))
-		var retraso: float = float(tren.get("retraso_s", 0.0))
-		_tabla_trenes.add_child(_crear_celda("Tren %d" % id))
-		_tabla_trenes.add_child(_crear_badge_estado(estado))
-		_tabla_trenes.add_child(_crear_celda(str(tren.get("estacion_proxima", "—"))))
-		_tabla_trenes.add_child(_crear_celda_retraso(retraso))
-		_tabla_trenes.add_child(_crear_celda(str(int(tren.get("pasajeros", 0)))))
-
-
 ## --- Tabla por evento ---
 
 const COLUMNAS_EVENTOS: Array[String] = ["Tipo", "Objetivo", "Hora simulada", "Duración", "Trenes afectados", "Retraso total", "Estado"]
@@ -383,7 +563,7 @@ func _construir_tabla_eventos(padre: VBoxContainer) -> void:
 	_tabla_eventos.columns = COLUMNAS_EVENTOS.size()
 	_tabla_eventos.add_theme_constant_override("h_separation", 22)
 	_tabla_eventos.add_theme_constant_override("v_separation", 6)
-	padre.add_child(_tabla_eventos)
+	_agregar_tabla_desplazable(padre, _tabla_eventos)
 	for texto: String in COLUMNAS_EVENTOS:
 		_tabla_eventos.add_child(_crear_celda_encabezado(texto))
 
@@ -436,18 +616,29 @@ func _vaciar_filas(tabla: GridContainer, columnas: int) -> void:
 		hijos[i].free()
 
 
+func _agregar_tabla_desplazable(padre: VBoxContainer, tabla: GridContainer) -> ScrollContainer:
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	padre.add_child(scroll)
+	scroll.add_child(tabla)
+	return scroll
+
+
 func _crear_titulo_seccion(texto: String) -> Label:
 	var etiqueta := Label.new()
 	etiqueta.text = texto
+	etiqueta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	etiqueta.add_theme_font_size_override("font_size", 11)
 	etiqueta.add_theme_color_override("font_color", COLOR_ACENTO)
 	return etiqueta
 
 
-func _crear_celda_encabezado(texto: String) -> Label:
+func _crear_celda_encabezado(texto: String, tamano_fuente: int = 10) -> Label:
 	var etiqueta := Label.new()
 	etiqueta.text = texto
-	etiqueta.add_theme_font_size_override("font_size", 10)
+	etiqueta.add_theme_font_size_override("font_size", tamano_fuente)
 	etiqueta.add_theme_color_override("font_color", COLOR_TEXTO_SUAVE)
 	return etiqueta
 
@@ -456,21 +647,11 @@ func _crear_celda_encabezado(texto: String) -> Label:
 ## contenido más ancho de esa columna, y este panel usa una sola columna de
 ## ancho completo (ver comentario de cabecera) para que eso nunca se quede
 ## sin espacio -- cortar texto estaba explícitamente prohibido.
-func _crear_celda(texto: String) -> Label:
+func _crear_celda(texto: String, tamano_fuente: int = 11) -> Label:
 	var etiqueta := Label.new()
 	etiqueta.text = texto
-	etiqueta.add_theme_font_size_override("font_size", 11)
+	etiqueta.add_theme_font_size_override("font_size", tamano_fuente)
 	etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
-	return etiqueta
-
-
-func _crear_celda_retraso(retraso: float) -> Label:
-	if retraso <= 0.0:
-		var vacio := _crear_celda("—")
-		vacio.add_theme_color_override("font_color", COLOR_TEXTO_SUAVE)
-		return vacio
-	var etiqueta := _crear_celda(_formatear_duracion(retraso))
-	etiqueta.add_theme_color_override("font_color", COLOR_ERROR if retraso > 120.0 else COLOR_ADVERTENCIA)
 	return etiqueta
 
 
@@ -482,42 +663,8 @@ const NOMBRES_ESTADO: Dictionary = {
 	4: "Detenido por evento",  # DETENIDO_POR_EVENTO
 	5: "Finalizado",  # FINALIZADO_EN_BOSQUES
 	6: "Incompleto",  # INCOMPLETO
+	7: "Ida y vuelta finalizada",
 }
-const COLORES_ESTADO: Dictionary = {
-	0: COLOR_MUTED,
-	1: COLOR_OK,
-	2: COLOR_NEUTRO,
-	3: COLOR_ADVERTENCIA,
-	4: COLOR_ERROR,
-	5: COLOR_MUTED,
-	6: COLOR_ERROR,
-}
-
-
-func _crear_badge_estado(estado: int) -> Control:
-	var texto: String = str(NOMBRES_ESTADO.get(estado, "Desconocido"))
-	var color: Color = COLORES_ESTADO.get(estado, Color.GRAY) as Color
-	var badge := PanelContainer.new()
-	var estilo := StyleBoxFlat.new()
-	estilo.bg_color = Color(color.r, color.g, color.b, 0.18)
-	estilo.border_width_left = 1
-	estilo.border_width_top = 1
-	estilo.border_width_right = 1
-	estilo.border_width_bottom = 1
-	estilo.border_color = color
-	estilo.set_corner_radius_all(5)
-	estilo.content_margin_left = 7
-	estilo.content_margin_right = 7
-	estilo.content_margin_top = 1
-	estilo.content_margin_bottom = 1
-	badge.add_theme_stylebox_override("panel", estilo)
-	badge.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var etiqueta := Label.new()
-	etiqueta.text = texto
-	etiqueta.add_theme_font_size_override("font_size", 10)
-	etiqueta.add_theme_color_override("font_color", color)
-	badge.add_child(etiqueta)
-	return badge
 
 
 static func _formatear_duracion(segundos: float) -> String:

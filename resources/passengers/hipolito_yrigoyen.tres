@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1_demanda")
-suben_a_constitucion = 15
-bajan_a_constitucion = 40
-suben_a_bosques = 40
-bajan_a_bosques = 15
+suben_a_constitucion = 40
+bajan_a_constitucion = 15
+suben_a_bosques = 15
+bajan_a_bosques = 40
 

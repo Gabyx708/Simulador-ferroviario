@@ -36,6 +36,7 @@ const MODAL_ALTO_PCT: float = 0.82
 @export var escena_panel_control: PackedScene
 @export var escena_panel_metricas: PackedScene
 @export var escena_panel_estaciones: PackedScene
+@export var escena_panel_trenes: PackedScene
 
 var _contenedor_panel: Control
 var _fila_botones: HBoxContainer
@@ -87,8 +88,8 @@ func _ready() -> void:
 
 	_agregar_boton("control", "⚙", "Control de simulación")
 	_agregar_boton("metricas", "☰", "Métricas")
-	_agregar_boton("estaciones", "⌂", "Estaciones", true)
-	_agregar_boton("reservado", "○", "Próximamente")
+	_agregar_boton("estaciones", "⌂", "Estaciones")
+	_agregar_boton("trenes", "⇄", "Trenes")
 	var ancho_botones: float = _fila_botones.get_combined_minimum_size().x
 	_fila_botones.offset_left = -ancho_botones / 2.0
 	_fila_botones.offset_right = ancho_botones / 2.0
@@ -103,7 +104,7 @@ func _actualizar_tamano_panel() -> void:
 	_contenedor_panel.offset_top = _contenedor_panel.offset_bottom - alto
 
 
-func _agregar_boton(clave: String, simbolo: String, tooltip: String, mostrar_etiqueta: bool = false) -> void:
+func _agregar_boton(clave: String, simbolo: String, tooltip: String) -> void:
 	var boton := Button.new()
 	boton.name = "Boton" + clave.capitalize()
 	boton.custom_minimum_size = Vector2(DIAMETRO_BOTON, DIAMETRO_BOTON)
@@ -112,32 +113,10 @@ func _agregar_boton(clave: String, simbolo: String, tooltip: String, mostrar_eti
 	boton.tooltip_text = tooltip
 	boton.add_theme_font_size_override("font_size", 22)
 	boton.add_theme_color_override("font_color", COLOR_TEXTO)
-	_aplicar_estilo_boton(boton, false)
 	boton.pressed.connect(_alternar.bind(clave))
-	if mostrar_etiqueta:
-		var columna: VBoxContainer = VBoxContainer.new()
-		columna.add_theme_constant_override("separation", 2)
-		columna.mouse_filter = Control.MOUSE_FILTER_STOP
-		columna.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		columna.gui_input.connect(_on_etiqueta_boton_input.bind(clave))
-		boton.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		columna.add_child(boton)
-		var etiqueta: Label = Label.new()
-		etiqueta.text = tooltip
-		etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		etiqueta.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		etiqueta.add_theme_font_size_override("font_size", 10)
-		etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
-		columna.add_child(etiqueta)
-		_fila_botones.add_child(columna)
-	else:
-		_fila_botones.add_child(boton)
+	_fila_botones.add_child(boton)
+	_aplicar_estilo_boton(boton, false)
 	_botones[clave] = boton
-
-
-func _on_etiqueta_boton_input(evento: InputEvent, clave: String) -> void:
-	if evento is InputEventMouseButton and evento.button_index == MOUSE_BUTTON_LEFT and evento.pressed:
-		_alternar(clave)
 
 
 func _aplicar_estilo_boton(boton: Button, activo: bool) -> void:
@@ -146,6 +125,8 @@ func _aplicar_estilo_boton(boton: Button, activo: bool) -> void:
 	boton.add_theme_stylebox_override("normal", normal)
 	boton.add_theme_stylebox_override("hover", hover)
 	boton.add_theme_stylebox_override("pressed", hover)
+	boton.add_theme_stylebox_override("hover_pressed", hover)
+	boton.add_theme_stylebox_override("focus", _estilo_foco_circular())
 	boton.add_theme_color_override("font_color", Color(0.1, 0.09, 0.05, 1.0) if activo else COLOR_TEXTO)
 	boton.add_theme_color_override("font_color_hover", Color(0.1, 0.09, 0.05, 1.0) if activo else COLOR_TEXTO)
 
@@ -161,6 +142,15 @@ func _estilo_circular(color: Color) -> StyleBoxFlat:
 	estilo.border_color = COLOR_BORDE
 	estilo.shadow_size = 6
 	estilo.shadow_color = Color(0, 0, 0, 0.35)
+	return estilo
+
+
+func _estilo_foco_circular() -> StyleBoxFlat:
+	var estilo := StyleBoxFlat.new()
+	estilo.bg_color = Color.TRANSPARENT
+	estilo.set_corner_radius_all(int(DIAMETRO_BOTON / 2.0))
+	estilo.set_border_width_all(2)
+	estilo.border_color = COLOR_ACENTO
 	return estilo
 
 
@@ -191,14 +181,17 @@ func _instanciar_contenido(clave: String) -> Control:
 			escena = escena_panel_metricas
 		"estaciones":
 			escena = escena_panel_estaciones
+		"trenes":
+			escena = escena_panel_trenes
 	if escena != null:
 		var contenido: Control = escena.instantiate() as Control
 		if contenido is PanelEstaciones:
 			contenido.estacion_elegida.connect(_on_estacion_elegida)
-			contenido.cierre_solicitado.connect(_cerrar_panel)
+		if contenido.has_signal("cierre_solicitado"):
+			contenido.connect("cierre_solicitado", _cerrar_panel)
 		return contenido
 	var etiqueta := Label.new()
-	etiqueta.text = "Próximamente"
+	etiqueta.text = "Panel no disponible"
 	etiqueta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	etiqueta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	etiqueta.add_theme_color_override("font_color", COLOR_TEXTO)
@@ -287,9 +280,11 @@ func _construir_modal(contenido: Control) -> Control:
 	encabezado.add_child(titulo)
 	var boton_cerrar := Button.new()
 	boton_cerrar.name = "BotonCerrarModal"
-	boton_cerrar.text = "✕ Cerrar"
+	boton_cerrar.text = "✕"
+	boton_cerrar.tooltip_text = "Cerrar métricas"
 	boton_cerrar.flat = true
-	boton_cerrar.add_theme_color_override("font_color", COLOR_TEXTO)
+	boton_cerrar.add_theme_font_size_override("font_size", 12)
+	boton_cerrar.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75, 1.0))
 	boton_cerrar.pressed.connect(_cerrar_panel)
 	encabezado.add_child(boton_cerrar)
 	columna.add_child(HSeparator.new())

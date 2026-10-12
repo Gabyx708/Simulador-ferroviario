@@ -16,7 +16,7 @@ class_name Tren
 
 ## Estado operativo publicado para UI, estadísticas y futuros controladores.
 ## La dirección local de un Path3D no forma parte de este estado: el servicio
-## actual siempre representa la ida Constitución → Bosques.
+## puede representar la ida Constitución → Bosques o la vuelta.
 enum EstadoOperacion {
 	EN_TERMINAL_INICIAL,
 	EN_MARCHA,
@@ -25,6 +25,7 @@ enum EstadoOperacion {
 	DETENIDO_POR_EVENTO,
 	FINALIZADO_EN_BOSQUES,
 	INCOMPLETO,
+	FINALIZADO_IDA_VUELTA,
 }
 
 signal velocidad_cambiada(kmh: float)
@@ -314,6 +315,9 @@ const INTERVALO_REINTENTO_RUTA_S: float = 0.5
 ## Cierre terminal de un servicio sólo ida. No equivale a eliminar el nodo:
 ## queda disponible para métricas, pero no vuelve a planificar ni reservar vías.
 var _servicio_finalizado: bool = false
+var _maniobra_terminal_pendiente: bool = false
+var _en_maniobra_terminal: bool = false
+var _causa_resultado: String = ""
 var _error_ruta_emitido: bool = false
 var _ultimo_suben: int = 0
 var _ultimo_bajan: int = 0
@@ -445,7 +449,7 @@ func avance_inicial_ajustado_a_formacion(avance_deseado: float, sentido_invertid
 
 ## Indica si la cabecera o la cola todavía ocupa un puesto de despacho.
 func ocupa_puesto_instancia(path: Path3D, avance_puesto: float) -> bool:
-	if traza != path or traza == null:
+	if _servicio_finalizado or _eliminado or traza != path or traza == null:
 		return false
 	var alcance: float = float(maxi(0, cantidad_coches - 1)) * paso + semi_bogie + 3.0
 	return absf(_avance - avance_puesto) <= alcance
@@ -524,6 +528,8 @@ func _nombre_estado_operacion() -> String:
 			return "FINALIZADO_EN_BOSQUES"
 		EstadoOperacion.INCOMPLETO:
 			return "INCOMPLETO"
+		EstadoOperacion.FINALIZADO_IDA_VUELTA:
+			return "FINALIZADO_IDA_VUELTA"
 	return "DESCONOCIDO"
 
 
@@ -562,7 +568,7 @@ func obtener_estado_operacion() -> int:
 func detener_por_evento(motivo: String, duracion_s: float) -> bool:
 	if Engine.is_editor_hint() or _eliminado or _servicio_finalizado or _ruta_invalida:
 		return false
-	if _estado_operacion in [EstadoOperacion.DETENIDO_POR_EVENTO, EstadoOperacion.INCOMPLETO, EstadoOperacion.FINALIZADO_EN_BOSQUES]:
+	if _estado_operacion in [EstadoOperacion.DETENIDO_POR_EVENTO, EstadoOperacion.INCOMPLETO, EstadoOperacion.FINALIZADO_EN_BOSQUES, EstadoOperacion.FINALIZADO_IDA_VUELTA]:
 		return false
 	if motivo.strip_edges().is_empty() or not is_finite(duracion_s) or duracion_s <= 0.0:
 		return false
@@ -595,8 +601,12 @@ func finalizar_incompleto(motivo: String) -> bool:
 		return false
 	_tiempo_evento_restante = 0.0
 	_motivo_evento = ""
-	_detener_por_ruta_invalida(motivo.strip_edges())
+	_detener_por_ruta_invalida(motivo.strip_edges(), "evento_terminal")
 	return true
+
+
+func obtener_horario_previsto() -> Array[Dictionary]:
+	return _servicio_ferroviario.crear_horario_previsto(tiempo_parada_servicio, demora_salida_inicial) if _usa_servicio() else []
 
 
 func obtener_resumen_operativo() -> Dictionary:
@@ -606,7 +616,7 @@ func obtener_resumen_operativo() -> Dictionary:
 		"estado": _estado_operacion,
 		"estado_nombre": _nombre_estado_operacion(),
 		"servicio": _servicio_ferroviario.name if _servicio_ferroviario != null else "",
-		"sentido": "ida",
+		"sentido": "ida" if _direccion_servicio > 0 else "vuelta",
 		"estacion_proxima": proxima_estacion_nombre(),
 		"distancia_m": distancia_a_proxima_estacion(),
 		"velocidad_kmh": velocidad_actual(),
@@ -615,6 +625,7 @@ func obtener_resumen_operativo() -> Dictionary:
 		"retraso_s": retraso_externo_s,
 		"resultado": _resultado_recorrido,
 		"motivo_resultado": _motivo_resultado,
+		"causa_resultado": _causa_resultado,
 		"motivo_evento": _motivo_evento,
 		"tiempo_evento_restante_s": _tiempo_evento_restante,
 		"velocidad_media_marcha_kmh": velocidad_media_marcha_kmh(),
@@ -624,7 +635,7 @@ func obtener_resumen_operativo() -> Dictionary:
 ## Inmoviliza una formación de servicio ante un itinerario inconsistente. El
 ## objetivo lógico no se borra: HUD y diagnóstico conservan la estación que no
 ## pudo alcanzarse. La señal se emite una única vez por incidente.
-func _detener_por_ruta_invalida(motivo: String) -> void:
+func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida") -> void:
 	if _servicio_finalizado:
 		return
 	_ruta_invalida = true
@@ -647,6 +658,7 @@ func _detener_por_ruta_invalida(motivo: String) -> void:
 		red.call("liberar_reservas_tren", get_instance_id())
 	velocidad_cambiada.emit(0.0)
 	_resultado_recorrido = "incompleto"
+	_causa_resultado = causa
 	_motivo_resultado = motivo
 	if _establecer_estado(EstadoOperacion.INCOMPLETO, motivo):
 		recorrido_incompleto.emit(obtener_resumen_operativo(), motivo)
@@ -655,8 +667,7 @@ func _detener_por_ruta_invalida(motivo: String) -> void:
 		ruta_error.emit(motivo)
 
 
-## Termina el servicio en su terminal de ida sin eliminar la formación. Liberar
-## reservas antes de ocultarla permite que el siguiente tren alcance Bosques.
+## Termina el servicio sin eliminar la formación y libera las reservas de la terminal.
 func _finalizar_servicio_en_terminal() -> void:
 	if _servicio_finalizado:
 		return
@@ -684,8 +695,10 @@ func _finalizar_servicio_en_terminal() -> void:
 	visible = false
 	velocidad_cambiada.emit(0.0)
 	ruta_actualizada.emit(proxima_estacion_nombre(), 0.0)
-	_resultado_recorrido = "finalizado_en_bosques"
-	if _establecer_estado(EstadoOperacion.FINALIZADO_EN_BOSQUES, "Terminal Bosques alcanzada."):
+	var ida_vuelta: bool = _usa_servicio() and not _servicio_ferroviario.solo_ida and _direccion_servicio < 0
+	_resultado_recorrido = "finalizado_ida_vuelta" if ida_vuelta else "finalizado_en_bosques"
+	var estado_final: EstadoOperacion = EstadoOperacion.FINALIZADO_IDA_VUELTA if ida_vuelta else EstadoOperacion.FINALIZADO_EN_BOSQUES
+	if _establecer_estado(estado_final, "Recorrido completado."):
 		recorrido_finalizado.emit(obtener_resumen_operativo())
 	set_process(false)
 
@@ -948,6 +961,8 @@ func _candidatos_estacion_servicio(estacion: Node, red: Node, sentido_ida: bool)
 	if estacion != null and estacion.has_method("obtener_puntos_parada_multivia"):
 		candidatos = estacion.call("obtener_puntos_parada_multivia", red, sentido_ida) as Array[Dictionary]
 	if not candidatos.is_empty():
+		return _servicio_ferroviario.filtrar_vias_sentido(estacion, candidatos, sentido_ida) if _usa_servicio() else candidatos
+	if _usa_servicio() and _servicio_ferroviario.separar_vias_por_sentido and estacion != _servicio_ferroviario.obtener_parada(0):
 		return candidatos
 	# Compatibilidad con estaciones antiguas o una red aún no inicializada.
 	var ancla: Path3D = estacion.get("traza") as Path3D if estacion != null and "traza" in estacion else null
@@ -1359,6 +1374,43 @@ func opcion_switch_reservada_por_otro(nodo_id: int, segmento_elegido: String) ->
 	return red != null and red.has_method("recurso_reservado_por_otro") and bool(red.call("recurso_reservado_por_otro", get_instance_id(), segmento_elegido, nodo_id))
 
 
+## Cruza por los cambios de la terminal hasta el poste de la vía de regreso.
+## No reubica ni teletransporta la formación y no contabiliza una segunda llegada.
+func _iniciar_maniobra_terminal() -> void:
+	var red: Node = _obtener_red()
+	var estacion: Node = _parada_objetivo_servicio()
+	if red == null or estacion == null or traza == null:
+		return
+	var candidatos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, false)
+	var sin_override: Array[String] = []
+	var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, sin_override)
+	if eleccion.is_empty():
+		eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, not invertir_sentido, sin_override)
+	if eleccion.is_empty():
+		_reintentos_ruta_servicio += 1
+		if _reintentos_ruta_servicio >= MAX_REINTENTOS_RUTA_SERVICIO:
+			_detener_por_ruta_invalida("La terminal no tiene un cambio transitable hacia la vía de regreso.")
+		else:
+			_espera = INTERVALO_REINTENTO_RUTA_S
+		return
+	_reintentos_ruta_servicio = 0
+	_direccion_servicio = -1
+	_maniobra_terminal_pendiente = false
+	_en_maniobra_terminal = true
+	var objetivo: Dictionary = _objetivo_desde_candidato(estacion, eleccion["candidato"] as Dictionary)
+	_objetivo_servicio_resuelto = objetivo
+	_indice_objetivo_resuelto = _indice_servicio
+	var ruta: Dictionary = eleccion["ruta"] as Dictionary
+	_aplicar_ruta_actualizada(ruta, objetivo)
+	invertir_sentido = bool(ruta.get("sentido_invertido", invertir_sentido))
+	_id_parada_atendida = 0
+	_parada_servicio_activa = false
+	_detenido = false
+	_actualizar_ruta_servicio()
+	_establecer_estado(EstadoOperacion.EN_MARCHA)
+	marcha_reanudada.emit()
+
+
 func _aplicar_ruta_actualizada(ruta: Dictionary, objetivo: Dictionary) -> void:
 	_invalidar_opciones_switch()
 	_ruta_segmentos.clear()
@@ -1426,7 +1478,7 @@ func _actualizar_ruta_servicio() -> void:
 		# Un servicio sólo ida no puede convertir una falta de conexión hacia
 		# adelante en una maniobra de retorno. Es preferible diagnosticar la vía
 		# faltante que alejarse de la próxima estación.
-		if eleccion.is_empty() and not _servicio_ferroviario.solo_ida:
+		if eleccion.is_empty() and not _servicio_ferroviario.solo_ida and not _servicio_ferroviario.separar_vias_por_sentido:
 			# Sólo ante una desconexión real se prueba el sentido inverso y, por lo
 			# tanto, el poste opuesto de la misma estación.
 			var inversos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, _direccion_servicio < 0)
@@ -1810,6 +1862,9 @@ func _process(delta: float) -> void:
 		_espera -= delta
 		if _espera <= 0.0 and not _procesando_pasajeros:
 			if _usa_servicio() and _parada_servicio_activa:
+				if _maniobra_terminal_pendiente:
+					_iniciar_maniobra_terminal()
+					return
 				if _origen_servicio_inicializado and not _reserva_inicial_lista:
 					var red_origen: Node = _obtener_red()
 					var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
@@ -1820,7 +1875,7 @@ func _process(delta: float) -> void:
 						return
 					_reserva_inicial_lista = true
 				if _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio):
-					# El servicio unidireccional concluye definitivamente en Bosques.
+					# Solo ida termina en Bosques; ida y vuelta termina en Constitución.
 					_finalizar_servicio_en_terminal()
 					return
 				_detenido = false
@@ -1949,6 +2004,8 @@ func _process(delta: float) -> void:
 ## Cierra una detención tanto para el frenado normal como para el caso en que
 ## el avance de un frame llega exactamente al poste tras cruzar varios tramos.
 func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetivo_avance: float) -> void:
+	var llegada_de_maniobra: bool = _en_maniobra_terminal
+	_en_maniobra_terminal = false
 	_vel = 0.0
 	_avance = objetivo_avance
 	_detenido = true
@@ -1963,6 +2020,8 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 	var sentido_ida_parada: bool = _direccion_servicio > 0 if _usa_servicio() else direccion > 0.0
 	var clave_terminal: String = "es_terminal_ida" if sentido_ida_parada else "es_terminal_vuelta"
 	var es_term: bool = bool(info_parada.get(clave_terminal, info_parada.get("es_terminal", false)))
+	if llegada_de_maniobra:
+		es_term = false
 	var tiempo_est: float = float(info_parada.get("tiempo_espera", tiempo_parada))
 	_id_parada_atendida = int(info_parada.get("id", 0))
 	_espera = maxf(tiempo_est, 1.0)
@@ -1971,7 +2030,8 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
 	_establecer_estado(EstadoOperacion.DETENIDO_EN_ESTACION)
 	parada_alcanzada.emit(_idx_parada)
-	llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(info_parada))
+	if not llegada_de_maniobra:
+		llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(info_parada))
 	_ubicar(0.0)
 
 
@@ -2410,8 +2470,9 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 	if _eliminado or _ruta_invalida or not is_instance_valid(self):
 		return
 	if es_terminal_actual:
-		# En Bosques todos descienden y el tren no vuelve a captar pasajeros
-		# durante los segundos restantes de la parada terminal.
+		# La terminal de regreso se atiende en su vía de salida antes de embarcar.
+		if _usa_servicio() and not _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio) and _servicio_ferroviario.separar_vias_por_sentido:
+			_maniobra_terminal_pendiente = true
 		_procesando_pasajeros = false
 		pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
 		return

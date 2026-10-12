@@ -1,11 +1,7 @@
 extends CanvasLayer
-## Selector de formaciones disponible desde el HUD. Reutiliza la señal de
-## selección normal, por lo que cámara y tablero siempre cambian juntos.
+## Paneles de pruebas de marcha y switches de la formación seleccionada.
+## El listado de trenes pertenece a la navegación inferior.
 
-@onready var _lista: VBoxContainer = %ContenidoListaTrenes
-@onready var _panel_trenes: PanelContainer = $Paneles/SelectorTrenes
-@onready var _contenido_trenes: VBoxContainer = $Paneles/SelectorTrenes/Margen/Contenido
-@onready var _titulo_trenes: Button = $Paneles/SelectorTrenes/Margen/Contenido/Titulo
 @onready var _panel_pruebas: PanelContainer = %PanelPruebas
 @onready var _contenido_pruebas: VBoxContainer = $Paneles/PanelPruebas/Margen/Contenido
 @onready var _titulo_pruebas: Button = $Paneles/PanelPruebas/Margen/Contenido/Titulo
@@ -17,7 +13,6 @@ extends CanvasLayer
 @onready var _valor_aceleracion: Label = %ValorAceleracionPrueba
 @onready var _valor_frenado: Label = %ValorFrenadoPrueba
 @onready var _restablecer: Button = %RestablecerPruebas
-@onready var _agregar_tren: Button = %AgregarTren
 @onready var _lista_switches: VBoxContainer = %ListaSwitches
 @onready var _estado_switches: Label = %EstadoSwitches
 @onready var _mostrar_mas_switches: Button = %MostrarMasSwitches
@@ -26,17 +21,14 @@ extends CanvasLayer
 @onready var _titulo_switches: Button = $Paneles/PanelSwitches/Margen/Contenido/Titulo
 @onready var _demora_salida: SpinBox = %DemoraSalida
 @onready var _espera_estaciones: SpinBox = %EsperaEstaciones
-@onready var _nivel: Node = get_tree().current_scene
-var _botones: Dictionary = {}
 var _tren_seleccionado: Tren
 var _botones_switch: Dictionary = {}
 var _titulos_switch: Dictionary = {}
 var _firma_switches: String = ""
 var _switch_seleccionado: int = 0
-var _paneles_abiertos: Dictionary = {"trenes": false, "pruebas": false, "switches": false}
+var _paneles_abiertos: Dictionary = {"pruebas": false, "switches": false}
 const ALTURA_PANEL_CERRADO := 28.0
-const SEPARACION_PANELES := 6.0
-const ALTURAS_PANELES := {"trenes": 145.0, "pruebas": 230.0, "switches": 230.0}
+const ALTURAS_PANELES := {"pruebas": 230.0, "switches": 230.0}
 
 
 func _ready() -> void:
@@ -45,23 +37,22 @@ func _ready() -> void:
 	_aceleracion_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_frenado_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_restablecer.pressed.connect(_restablecer_parametros_prueba)
-	_agregar_tren.pressed.connect(_agregar_formacion)
 	_demora_salida.value_changed.connect(_cambiar_tiempos_servicio)
 	_espera_estaciones.value_changed.connect(_cambiar_tiempos_servicio)
-	_titulo_trenes.pressed.connect(_alternar_panel.bind("trenes"))
 	_titulo_pruebas.pressed.connect(_alternar_panel.bind("pruebas"))
 	_titulo_switches.pressed.connect(_alternar_panel.bind("switches"))
 	_mostrar_mas_switches.pressed.connect(_mostrar_siguiente_bloque_switches)
-	if _nivel != null and _nivel.has_signal("tren_agregado"):
-		_nivel.connect("tren_agregado", _on_tren_agregado)
+	var nivel: Node = get_parent()
+	if nivel != null and nivel.has_signal("tren_agregado"):
+		nivel.connect("tren_agregado", _on_tren_agregado)
 	_actualizar_panel_pruebas()
 	_aplicar_estado_paneles()
-	call_deferred("_construir_lista")
+	call_deferred("_conectar_trenes")
 
 
 func _aplicar_estilo_minimalista(nodo: Node) -> void:
 	for hijo: Node in nodo.get_children():
-		if hijo is InformacionEstacion:
+		if hijo is InformacionEstacion or hijo is NavegacionPaneles:
 			continue
 		if hijo is Label:
 			var etiqueta := hijo as Label
@@ -106,35 +97,21 @@ func _identificador_tren(tren: Tren) -> String:
 	return "Tren %d" % id if id > 0 else tren.name
 
 
-func _construir_lista() -> void:
-	for hijo: Node in _lista.get_children():
-		hijo.queue_free()
-	_botones.clear()
+func _conectar_trenes() -> void:
 	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
 		if nodo is Tren:
-			var tren := nodo as Tren
-			var boton := Button.new()
-			boton.text = _identificador_tren(tren)
-			boton.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			boton.add_theme_font_size_override("font_size", 10)
-			boton.add_theme_stylebox_override("normal", _estilo_boton_minimalista(false))
-			boton.add_theme_stylebox_override("hover", _estilo_boton_minimalista(true))
-			boton.add_theme_stylebox_override("pressed", _estilo_boton_minimalista(true, true))
-			boton.tooltip_text = "Seleccionar %s" % _identificador_tren(tren)
-			boton.pressed.connect(_seleccionar_tren.bind(tren))
-			_lista.add_child(boton)
-			_botones[tren] = boton
-			var al_seleccionar: Callable = _marcar_seleccion.bind(tren)
-			if not tren.seleccionado.is_connected(al_seleccionar):
-				tren.seleccionado.connect(al_seleccionar)
-			if not tren.eliminado.is_connected(_construir_lista):
-				tren.eliminado.connect(_construir_lista)
-	_actualizar_estado_agregar()
+			_conectar_seleccion_tren(nodo as Tren)
 
 
-func _seleccionar_tren(tren: Tren) -> void:
-	if is_instance_valid(tren):
-		tren.seleccionado.emit()
+func _conectar_seleccion_tren(tren: Tren) -> void:
+	if not is_instance_valid(tren) or tren.esta_eliminado():
+		return
+	var al_seleccionar: Callable = _marcar_seleccion.bind(tren)
+	if not tren.seleccionado.is_connected(al_seleccionar):
+		tren.seleccionado.connect(al_seleccionar)
+	var al_eliminar: Callable = _on_tren_eliminado.bind(tren)
+	if not tren.eliminado.is_connected(al_eliminar):
+		tren.eliminado.connect(al_eliminar)
 
 
 func _marcar_seleccion(tren: Tren) -> void:
@@ -145,10 +122,6 @@ func _marcar_seleccion(tren: Tren) -> void:
 	_tren_seleccionado = tren
 	if tren != null and is_instance_valid(tren):
 		tren.activar_opciones_switch(bool(_paneles_abiertos.get("switches", false)))
-	for candidato: Tren in _botones.keys():
-		var boton := _botones[candidato] as Button
-		if is_instance_valid(boton):
-			boton.text = ("▶ " if candidato == tren else "") + _identificador_tren(candidato)
 	if bool(_paneles_abiertos.get("pruebas", false)):
 		_actualizar_panel_pruebas()
 	if tren != null and is_instance_valid(tren):
@@ -378,38 +351,19 @@ func _cambiar_tiempos_servicio(_valor: float) -> void:
 	_tren_seleccionado.configurar_tiempos_servicio(_demora_salida.value, _espera_estaciones.value)
 
 
-func _agregar_formacion() -> void:
-	# El HUD puede entrar al árbol antes de que Godot asigne `current_scene`.
-	# Resolverlo al pulsar evita que el botón quede silencioso en esa carrera de
-	# inicialización.
-	if _nivel == null or not is_instance_valid(_nivel) or not _nivel.has_method("agregar_tren"):
-		_nivel = get_tree().current_scene
-	if _nivel == null or not _nivel.has_method("agregar_tren"):
+func _on_tren_agregado(tren: Tren) -> void:
+	_conectar_seleccion_tren(tren)
+
+
+func _on_tren_eliminado(tren: Tren) -> void:
+	if _tren_seleccionado != tren:
 		return
-	var controlador: Node = _nivel.get_node_or_null("SimulacionController")
-	if controlador != null and controlador.has_method("agregar_tren"):
-		var resultado: Dictionary = controlador.call("agregar_tren") as Dictionary
-		if bool(resultado.get("ok", false)):
-			_construir_lista()
-		_actualizar_estado_agregar()
-		return
-	var tren: Variant = _nivel.call("agregar_tren")
-	if tren is Tren:
-		_construir_lista()
-		_marcar_seleccion(tren as Tren)
-	elif _nivel.has_method("trenes_en_cola"):
-		_actualizar_estado_agregar()
-
-
-func _on_tren_agregado(_tren: Tren) -> void:
-	_construir_lista()
-	_actualizar_estado_agregar()
-
-
-func _actualizar_estado_agregar() -> void:
-	if _nivel != null and _nivel.has_method("trenes_en_cola"):
-		var en_cola: int = int(_nivel.call("trenes_en_cola"))
-		_agregar_tren.text = "En cola (%d)" % en_cola if en_cola > 0 else "+ Agregar tren en Constitución"
+	_tren_seleccionado = null
+	_ocultar_indicador_switch()
+	_switch_seleccionado = 0
+	_actualizar_panel_pruebas()
+	_limpiar_panel_switches()
+	_estado_switches.text = "Seleccioná un tren para ver sus próximos desvíos."
 
 
 func _on_ruta_actualizada(_destino: String, _distancia: float) -> void:
@@ -432,11 +386,10 @@ func _alternar_panel(id_panel: String) -> void:
 
 
 func _aplicar_estado_paneles() -> void:
-	_configurar_panel("trenes", _panel_trenes, _contenido_trenes, _titulo_trenes, "TRENES")
 	_configurar_panel("pruebas", _panel_pruebas, _contenido_pruebas, _titulo_pruebas, "PRUEBAS DE MARCHA")
 	_configurar_panel("switches", _panel_switches, _contenido_switches, _titulo_switches, "SWITCHES PRÓXIMOS")
-	for id_panel: String in ["trenes", "pruebas", "switches"]:
-		var panel: PanelContainer = {"trenes": _panel_trenes, "pruebas": _panel_pruebas, "switches": _panel_switches}[id_panel] as PanelContainer
+	for id_panel: String in ["pruebas", "switches"]:
+		var panel: PanelContainer = {"pruebas": _panel_pruebas, "switches": _panel_switches}[id_panel] as PanelContainer
 		var alto: float = float(ALTURAS_PANELES[id_panel]) if bool(_paneles_abiertos[id_panel]) else ALTURA_PANEL_CERRADO
 		panel.custom_minimum_size.y = alto
 

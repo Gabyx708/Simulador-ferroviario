@@ -84,7 +84,7 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 
 - Abrí `project.godot` con **Godot 4.7** (la integración se verificó con Godot 4.7.2) y esperá a que termine la importación inicial de recursos.
 - La escena de inicio es `levels/ramal_roca_main/ramal_roca_main.tscn`. Usá **F5** para ejecutar el proyecto; con **F6** podés ejecutar la escena abierta en el editor.
-- El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio actual opera exclusivamente Constitución → Bosques y finaliza en Bosques.
+- El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio actual completa Constitución → Bosques → Constitución y finaliza al regresar.
 - Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
 
 ### Configurar el recorrido por estaciones
@@ -96,6 +96,22 @@ Al hacer clic sobre una formación, la cámara cambia a una vista cenital y la s
 Cada andén es una parada independiente: para vías distintas de ida y vuelta agregá dos estaciones con el mismo `nombre_estacion`. El planificador resuelve el camino por el grafo de `TrackNetwork` y mueve las agujas necesarias. Si un par de paradas debe tomar un itinerario no mínimo, agregá en `overrides_json` una entrada como `{"0>1": ["seg_470", "seg_471"]}`.
 
 Una `Estacion` puede cubrir varias vías paralelas sin duplicar el nodo: ajustá `ancho_cobertura_vias` en el Inspector. El tren proyecta el poste de parada sobre cada vía que atraviesa ese corredor y, si ya circula por una de ellas, frena allí sin buscar el `Path3D` usado como ancla visual de la estación.
+
+En José Mármol, `usar_traza_como_via_ida` fija la parada Constitución → Bosques
+en la vía asignada a la estación (`seg_210`), usando su poste de ida para frenar
+y embarcar. El desvío posterior `seg_135` y su aparato se eliminaron de la escena
+y se registraron como bajas en las ediciones de la red. La salida conserva la
+continuidad `seg_210` → `seg_211` → `seg_212` → `seg_694` hacia Rafael Calzada.
+
+En el nivel principal, `separar_vias_por_sentido` selecciona la vía derecha para
+Constitución → Bosques y la izquierda para Bosques → Constitución, siempre
+mirando hacia Constitución. Los accesos de la playa de Constitución se conservan.
+Los destinos de los andenes laterales se asignan al iniciar según ese lado;
+los centrales mantienen sus destinos configurados. En Bosques bajan todos y
+la formación recorre los cambios de la terminal hasta el poste de la vía de
+regreso antes de embarcar. `finalizar_al_volver` cierra el servicio después de
+la última bajada en Constitución. Si el grafo no tiene una conexión transitable,
+el tren informa un recorrido incompleto; no cambia de vía por teletransporte.
 
 ### Capacidad de pasajeros por estación
 
@@ -115,6 +131,9 @@ andén se ajusta en «Demanda por destino» del Inspector: por defecto, `AndenA`
 sirve a Bosques, `AndenB` a Constitución y los centrales sirven ambos destinos,
 compartiendo su capacidad. Un tren toma solo pasajeros de su destino dentro
 del andén donde se detiene.
+Al habilitar la separación de vías por sentido, el servicio adapta los destinos
+de `AndenA` y `AndenB` a su ubicación física. Constitución conserva su único
+andén de pasajeros, dedicado al embarque hacia Bosques.
 
 El tren embarca únicamente desde el andén más cercano a la vía por la que
 se detiene; el sentido de servicio desempata entre los andenes laterales.
@@ -133,7 +152,8 @@ mediante las señales de pasajeros de la estación seleccionada.
 Cuando un tren embarca pasajeros, «En espera» cambia a «Abordando» hasta que
 termina esa operación.
 
-El botón «Estaciones», ubicado abajo entre «Métricas» y «Próximamente», abre
+El botón de estaciones muestra sólo el icono «⌂», conserva su nombre en el tooltip
+y está ubicado abajo entre «Métricas» y «Trenes». Abre
 un listado desplazable de todas las estaciones del nivel. Cada fila muestra
 sus pasajeros actuales (incluidos quienes acaban de bajar) y el estado
 «En espera» o «Abordando», actualizado por las mismas señales del panel individual.
@@ -143,10 +163,22 @@ adicionales y funciona también con la simulación pausada.
 La vista de estaciones usa la misma `altura_cenital` que la vista del tren
 (85 metros por defecto), manteniendo una mirada inclinada hacia los andenes.
 
-La ventana ocupa el lugar del panel del tren: seleccionar otra estación cambia
+El botón «Trenes» reemplaza a «Próximamente» y reúne el listado que antes estaba
+en la esquina del HUD. Muestra la cantidad simultánea, la próxima estación de
+cada formación, sus pasajeros a bordo y capacidad, destino, estado y puntualidad.
+Al elegir «▶ Tren N», el menú se cierra y la cámara y el tablero seleccionan esa
+formación. Cada tarjeta tiene su botón «Eliminar», independiente de la selección,
+que elimina sólo ese tren mediante `SimulacionController`. El menú conserva
+«Agregar tren en Constitución» y muestra la cola de despacho. Se cierra con «✕»
+o `Esc`, y sus datos se refrescan también con la simulación pausada.
+
+La ventana de información de la estación ocupa el lugar del panel del tren: seleccionar otra estación cambia
 sus datos y seleccionar un tren vuelve a mostrar su tablero. Se cierra con «✕»
 o `Esc`. El icono de información permanece visible y reemplaza al antiguo cartel
 3D desplegable.
+Los paneles de opciones generales y métricas también tienen una cruz para cerrar.
+La cruz del tablero del tren oculta su información sin eliminar la formación;
+al volver a seleccionarla, el tablero vuelve a aparecer.
 
 Los modelos de pasajeros se reparten entre `AndenA`, `AndenB` y los andenes
 centrales habilitados con `cantidad_andenes_centrales`. Se colocan sobre la
@@ -192,11 +224,19 @@ Las 16 estaciones de la tabla usan perfiles `DemandaEstacion` en
 son pasajeros promedio por formación; entre paréntesis se conserva la estimación
 diaria proporcionada como referencia.
 
+La demanda se asigna por el destino real del servicio: Constitución → Bosques
+usa los valores «a Bosques» y Bosques → Constitución usa «a Constitución».
+La orientación de cada Path3D no invierte estos valores.
+En las estaciones intermedias, la subida hacia Constitución supera a la subida
+hacia Bosques, y la bajada es mayor en los trenes que van hacia Bosques. Los
+perfiles de Yrigoyen y Santillán y Kosteki se ajustaron a ese patrón. Constitución
+y Bosques conservan sus perfiles de terminal; allí baja toda la formación.
+
 | Estación | Suben a Constitución | Bajan a Constitución | Suben a Bosques | Bajan a Bosques |
 | :------- | -------------------: | -------------------: | --------------: | --------------: |
 | Plaza Constitución | 10 (500/día) | 1.420 (71.000/día) | 1.420 (71.000/día) | 12 (600/día) |
-| Hipólito Yrigoyen | 15 (750/día) | 40 (2.000/día) | 40 (2.000/día) | 15 (750/día) |
-| Darío Santillán y Maximiliano Kosteki | 90 (4.500/día) | 120 (6.000/día) | 125 (6.200/día) | 90 (4.500/día) |
+| Hipólito Yrigoyen | 40 (2.000/día) | 15 (750/día) | 15 (750/día) | 40 (2.000/día) |
+| Darío Santillán y Maximiliano Kosteki | 125 (6.200/día) | 90 (4.500/día) | 90 (4.500/día) | 120 (6.000/día) |
 | Gerli | 55 (2.750/día) | 15 (750/día) | 18 (900/día) | 55 (2.750/día) |
 | Lanús | 240 (12.000/día) | 110 (5.500/día) | 120 (6.000/día) | 240 (12.000/día) |
 | Remedios de Escalada | 80 (4.000/día) | 45 (2.250/día) | 50 (2.500/día) | 80 (4.000/día) |
@@ -224,10 +264,66 @@ Si hace falta, la parada se prolonga hasta terminar ese embarque. Los pasajeros
 que no entran en el tren permanecen en su fila para la próxima formación.
 
 La bajada intermedia usa el promedio del destino correspondiente, limitado por
-los pasajeros a bordo. En la terminal de finalización siguen bajando todos.
+los pasajeros a bordo. En ambas terminales bajan todos; en Bosques se embarca
+la nueva fila hacia Constitución después de la maniobra de regreso.
 El tren conserva a los pasajeros embarcados en su contador `pasajeros_actuales`
 hasta que desciendan en una parada. La capacidad actual de la formación es 500.
+Las cuatro formaciones del nivel principal heredan la configuración de pasajeros
+de `Tren`: 500 lugares, tandas de 6 e intervalo base de 0,15 segundos, ajustado
+al tiempo disponible en cada parada.
 Las estaciones sin perfil conservan el porcentaje de bajada anterior.
+
+### Métricas globales, espera y puntualidad
+
+El panel «Métricas» conserva la comparación de eventos, el retraso acumulado,
+su evolución y la tabla por evento. Además muestra:
+
+- Pasajeros transportados: total de embarques; «En viaje» cuenta pasajeros a
+  bordo de servicios activos y, debajo, «Completados» cuenta a quienes ya
+  descendieron. Los pasajeros en trenes incompletos se muestran aparte.
+- Un único contador de recorridos finalizados: salir de una terminal, llegar
+  a la otra y regresar al origen. Llegar sólo a la terminal opuesta no suma.
+  Los incompletos por evento terminal se distinguen de errores de ruta y los
+  resultados se conservan si una formación se elimina.
+- Trenes simultáneos actuales y máximo histórico. El menú «Trenes» de la
+  navegación inferior muestra también la cantidad actual y la puntualidad de cada formación.
+- Espera global: sólo el tiempo de espera actual, calculado como el promedio de
+  las esperas actuales de todas las estaciones. Cada estación tiene el mismo
+  peso; las que no tienen pasajeros en espera aportan cero.
+- Espera por estación: un menú `OptionButton` con el mismo diseño que los
+  selectores de fallas. Al elegir una estación aparecen debajo su espera actual,
+  los pasajeros esperando y la espera media hasta abordar. Se usan colas FIFO
+  independientes por andén y destino, sin atribuir espera a quienes acaban de bajar.
+- Tasa de demora: porcentaje de servicios activos atrasados respecto de su
+  horario y demora media, incluyendo cero para quienes están en tiempo.
+
+En «Horario previsto» del servicio, `tiempos_tramos_ida_s` y
+`tiempos_tramos_vuelta_s` permiten fijar segundos de marcha por cada par de
+estaciones, en orden Constitución → Bosques (la vuelta usa el mismo índice de
+tramo en sentido inverso). Sin valores, el tiempo se **estima** con la distancia
+entre estaciones, una velocidad de referencia de 50 km/h y un factor 1,123.
+Se agregan las paradas nominales de cada formación, su demora inicial programada
+y los 30 segundos de referencia de la maniobra terminal, todos configurables.
+La estimación geométrica puede ajustarse con tiempos de tramo explícitos para
+calibrar el horario a la traza y la maniobra reales.
+
+`MetricasServicio` copia ese horario al dar de alta cada tren; los eventos y
+los cambios posteriores de velocidad no desplazan sus llegadas previstas.
+El menú «Horario previsto y llegadas por tren» reúne también la información
+que antes aparecía en «Por tren» y usa el mismo diseño que los selectores de fallas.
+Al elegir una formación aparecen debajo su estado, destino, próxima estación,
+pasajeros, retraso acumulado, puntualidad, tiempo total previsto, tiempo
+transcurrido y todas las llegadas de ambos sentidos. Los detalles usan una fuente
+de 14 puntos. Ambos menús conservan la selección y sólo reconstruyen sus opciones
+cuando cambia el listado, manteniendo el menú abierto durante los refrescos.
+Los tiempos de llegada se
+expresan en minutos:segundos desde el inicio del recorrido. Un tren queda
+«Atrasado» si supera la llegada prevista; conserva ese estado hasta que
+una llegada posterior lo deje nuevamente «En tiempo». También se detecta una
+próxima llegada vencida mientras sigue viajando. La tolerancia independiente
+`tolerancia_horario_s` del controlador es de un segundo por defecto.
+Este estado puede recuperar puntualidad; el retraso acumulado usado para
+atribuir el impacto de los eventos se conserva por separado.
 
 ### Pruebas headless
 
@@ -245,6 +341,8 @@ Ejecutá desde la raíz del repositorio:
 & 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . --quit-after 150
 
 # Servicio, estados y terminal
+# Las pruebas históricas de solo ida requieren configurar solo_ida = true
+# y finalizar_al_volver = false; el nivel principal ahora opera ida y vuelta.
 & 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_recorrido_completo.gd
 & 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_finalizacion_bosques.gd
 & 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_ruta_invalida_ida.gd

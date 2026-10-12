@@ -150,7 +150,7 @@ func _tren_al_azar() -> int:
 		return -1
 	var activos: Array[Dictionary] = []
 	for datos: Dictionary in _controlador.obtener_trenes():
-		if int(datos.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.INCOMPLETO]:
+		if int(datos.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA, Tren.EstadoOperacion.INCOMPLETO]:
 			activos.append(datos)
 	return int(activos[randi() % activos.size()].get("id", -1)) if not activos.is_empty() else -1
 
@@ -211,7 +211,7 @@ func _primer_tren_activo() -> int:
 	if _controlador == null:
 		return -1
 	for datos: Dictionary in _controlador.obtener_trenes():
-		if int(datos.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.INCOMPLETO]:
+		if int(datos.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA, Tren.EstadoOperacion.INCOMPLETO]:
 			return int(datos.get("id", -1))
 	return -1
 

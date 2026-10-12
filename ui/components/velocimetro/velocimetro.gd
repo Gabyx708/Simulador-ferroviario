@@ -34,6 +34,7 @@ const COLOR_SIN_TREN: Color = Color(0.5, 0.52, 0.58)
 @onready var _etiqueta_flujo: Label = %FlujoPasajeros
 @onready var _etiqueta_itinerario: Label = %Itinerario
 @onready var _boton_eliminar: Button = %BotonEliminar
+@onready var _boton_cerrar: Button = %BotonCerrar
 
 var _valor_mostrado: float = 0.0
 var _tween: Tween
@@ -41,6 +42,7 @@ var _tween: Tween
 
 func _ready() -> void:
 	_boton_eliminar.pressed.connect(_on_boton_eliminar_pressed)
+	_boton_cerrar.pressed.connect(_on_boton_cerrar_pressed)
 	_conectar_tren()
 
 
@@ -124,6 +126,10 @@ func _on_tren_eliminado() -> void:
 func _on_boton_eliminar_pressed() -> void:
 	if tren != null and is_instance_valid(tren):
 		tren.eliminar()
+
+
+func _on_boton_cerrar_pressed() -> void:
+	hide()
 
 
 func _on_velocidad_cambiada(kmh: float) -> void:

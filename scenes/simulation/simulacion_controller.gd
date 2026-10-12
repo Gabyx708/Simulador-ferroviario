@@ -20,9 +20,13 @@ var _concurrencia_maxima: int = 0
 var _factor_velocidad_simulacion: float = 1.0
 var _factor_antes_de_pausa: float = 1.0
 var _escala_engine_previa: float = 1.0
+@export_range(0.0, 60.0, 0.5) var tolerancia_horario_s: float = 1.0
+var _metricas: MetricasServicio
 
 
 func _ready() -> void:
+	_metricas = MetricasServicio.new(get_parent().get_node_or_null("RelojSimulacion") as RelojSimulacion)
+	_metricas.tolerancia_s = tolerancia_horario_s
 	_escala_engine_previa = Engine.time_scale
 	_factor_velocidad_simulacion = Engine.time_scale
 	if Engine.time_scale > 0.0:
@@ -79,6 +83,7 @@ func _registrar_tren(tren: Tren) -> void:
 	if _trenes.has(id):
 		return
 	_trenes[id] = tren
+	_metricas.registrar_tren(tren)
 	_conectar_tren(tren, id)
 	_actualizar_concurrencia()
 	tren_agregado.emit(tren.obtener_resumen_operativo())
@@ -119,7 +124,7 @@ func _id_estacion(estacion: Estacion) -> String:
 
 
 func _resumen_estacion(estacion: Estacion) -> Dictionary:
-	return {
+	var datos: Dictionary = {
 		"id": _id_estacion(estacion),
 		"nombre": estacion.nombre_estacion,
 		"activa": estacion.activa,
@@ -128,6 +133,15 @@ func _resumen_estacion(estacion: Estacion) -> Dictionary:
 		"pasajeros_subidos_total": estacion.pasajeros_subidos_total,
 		"pasajeros_bajados_total": estacion.pasajeros_bajados_total,
 	}
+	datos.merge(estacion.obtener_metricas_espera(), true)
+	return datos
+
+
+func _resumen_tren(tren: Tren) -> Dictionary:
+	var datos: Dictionary = tren.obtener_resumen_operativo()
+	if _metricas != null:
+		datos.merge(_metricas.obtener_puntualidad(tren.obtener_id_operativo()), true)
+	return datos
 
 
 func obtener_trenes() -> Array[Dictionary]:
@@ -138,14 +152,18 @@ func obtener_trenes() -> Array[Dictionary]:
 	for id: int in ids:
 		var tren: Tren = _trenes[id] as Tren
 		if tren != null and is_instance_valid(tren):
-			resultado.append(tren.obtener_resumen_operativo())
+			resultado.append(_resumen_tren(tren))
 	return resultado
 
 
 func obtener_tren(id_tren: int) -> Dictionary:
 	_limpiar_referencias_inactivas()
 	var tren: Tren = _trenes.get(id_tren) as Tren
-	return tren.obtener_resumen_operativo() if tren != null and is_instance_valid(tren) else {}
+	return _resumen_tren(tren) if tren != null and is_instance_valid(tren) else {}
+
+
+func obtener_horarios() -> Array[Dictionary]:
+	return _metricas.obtener_horarios() if _metricas != null else []
 
 
 func obtener_estaciones() -> Array[Dictionary]:
@@ -168,30 +186,59 @@ func obtener_resumen_global() -> Dictionary:
 	_limpiar_referencias_inactivas()
 	var pasajeros_esperando: int = 0
 	var pasajeros_transportados: int = 0
-	for estacion: Dictionary in obtener_estaciones():
+	var pasajeros_completados: int = 0
+	var espera_actual_total: float = 0.0
+	var estaciones: Array[Dictionary] = obtener_estaciones()
+	for estacion: Dictionary in estaciones:
 		pasajeros_esperando += int(estacion.get("pasajeros_esperando", 0))
 		pasajeros_transportados += int(estacion.get("pasajeros_subidos_total", 0))
+		pasajeros_completados += int(estacion.get("pasajeros_bajados_total", 0))
+		espera_actual_total += float(estacion.get("espera_promedio_actual_s", 0.0))
 	var pasajeros_en_viaje: int = 0
 	var activos: int = 0
 	var finalizados: int = 0
 	var incompletos: int = 0
+	var incompletos_evento: int = 0
+	var pasajeros_interrumpidos: int = 0
+	var atrasados: int = 0
+	var con_horario: int = 0
+	var demora_total: float = 0.0
 	for tren: Dictionary in obtener_trenes():
+		var estado: int = int(tren.get("estado", -1))
+		if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA, Tren.EstadoOperacion.INCOMPLETO]:
+			continue
+		activos += 1
 		pasajeros_en_viaje += int(tren.get("pasajeros", 0))
-		match int(tren.get("estado", -1)):
-			Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES:
+		if bool(tren.get("horario_disponible", false)):
+			con_horario += 1
+			demora_total += float(tren.get("retraso_horario_s", 0.0))
+			if bool(tren.get("atrasado", false)):
+				atrasados += 1
+	if _metricas != null:
+		for tren: Dictionary in _metricas.obtener_resultados():
+			var estado: int = int(tren.get("estado", -1))
+			if estado == Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA:
 				finalizados += 1
-			Tren.EstadoOperacion.INCOMPLETO:
+			elif estado == Tren.EstadoOperacion.INCOMPLETO:
 				incompletos += 1
-			_:
-				activos += 1
+				pasajeros_interrumpidos += int(tren.get("pasajeros", 0))
+				if str(tren.get("causa_resultado", "")) == "evento_terminal":
+					incompletos_evento += 1
 	return {
 		"pasajeros_esperando": pasajeros_esperando,
 		"pasajeros_en_viaje": pasajeros_en_viaje,
 		"pasajeros_transportados": pasajeros_transportados,
+		"pasajeros_recorrido_completado": pasajeros_completados,
+		"pasajeros_interrumpidos": pasajeros_interrumpidos,
 		"trenes_activos": activos,
 		"trenes_finalizados": finalizados,
 		"trenes_incompletos": incompletos,
-		"demora_promedio_s": 0.0,
+		"trenes_incompletos_evento": incompletos_evento,
+		"trenes_atrasados": atrasados,
+		"trenes_con_horario": con_horario,
+		"tasa_demora_pct": 100.0 * atrasados / con_horario if con_horario > 0 else 0.0,
+		"demora_promedio_s": demora_total / con_horario if con_horario > 0 else 0.0,
+		"espera_promedio_actual_s": espera_actual_total / estaciones.size() if not estaciones.is_empty() else 0.0,
 		"concurrencia_maxima": _concurrencia_maxima,
 	}
 
@@ -211,6 +258,14 @@ func agregar_tren() -> Dictionary:
 	if cola_despues > cola_antes:
 		return {"ok": true, "en_cola": true, "tren": {}, "motivo": "Tren agregado a la cola de despacho."}
 	return {"ok": false, "en_cola": false, "tren": {}, "motivo": "No hay un puesto de instancia disponible."}
+
+
+func seleccionar_tren(id_tren: int) -> bool:
+	var tren: Tren = _trenes.get(id_tren) as Tren
+	if tren == null or not is_instance_valid(tren) or tren.esta_eliminado():
+		return false
+	tren.seleccionado.emit()
+	return true
 
 
 func eliminar_tren(id_tren: int) -> bool:
@@ -321,16 +376,20 @@ func _on_estacion_pasajeros_actualizados(estacion: Estacion, id: String) -> void
 func _publicar_actualizacion(datos_tren: Dictionary) -> void:
 	if datos_tren.is_empty():
 		return
+	if _metricas != null:
+		_metricas.actualizar_datos(datos_tren)
+		datos_tren.merge(_metricas.obtener_puntualidad(int(datos_tren.get("id", 0))), true)
 	_actualizar_concurrencia()
 	tren_actualizado.emit(datos_tren)
 	_emitir_resumen_global()
 
 
 func _actualizar_concurrencia() -> void:
-	var pasajeros_actuales: int = 0
+	var activos: int = 0
 	for tren: Dictionary in obtener_trenes():
-		pasajeros_actuales += int(tren.get("pasajeros", 0))
-	_concurrencia_maxima = maxi(_concurrencia_maxima, pasajeros_actuales)
+		if int(tren.get("estado", -1)) not in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA, Tren.EstadoOperacion.INCOMPLETO]:
+			activos += 1
+	_concurrencia_maxima = maxi(_concurrencia_maxima, activos)
 
 
 func _emitir_resumen_global() -> void:

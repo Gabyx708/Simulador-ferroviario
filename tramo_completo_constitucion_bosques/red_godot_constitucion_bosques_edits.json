@@ -77,14 +77,15 @@
 			"seg_461",
 			"seg_460",
 			"seg_448",
-			"seg_447"
+			"seg_447",
+			"seg_135"
 		],
 		"_switches": {
 			"10965418611": {
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_10965418611",
-				"node_id": 10965418611,
+				"node_id": 10965418611.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.901313185691834,
@@ -108,7 +109,7 @@
 				"desviada": false,
 				"largo_aparato": 25.387306,
 				"name": "Desvio_A_10965418616",
-				"node_id": 10965418616,
+				"node_id": 10965418616.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999997973442078,
@@ -132,7 +133,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_11063518226",
-				"node_id": 11063518226,
+				"node_id": 11063518226.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.986687660217285,
@@ -156,7 +157,7 @@
 				"desviada": true,
 				"largo_aparato": 75.7793,
 				"name": "Escape_Crossover_D_11811730944_11811730945",
-				"node_id": 11811730944,
+				"node_id": 11811730944.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					0.253137439489365,
@@ -180,7 +181,7 @@
 				"desviada": true,
 				"largo_aparato": 56.88379,
 				"name": "Escape_Crossover_D_11811730948_11811730949",
-				"node_id": 11811730948,
+				"node_id": 11811730948.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.041403092443943,
@@ -204,7 +205,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_11811730955",
-				"node_id": 11811730955,
+				"node_id": 11811730955.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.0453190542757511,
@@ -228,7 +229,7 @@
 				"desviada": true,
 				"largo_aparato": 22.3213599094876,
 				"name": "CruceDiamante_C_11811730956",
-				"node_id": 11811730956,
+				"node_id": 11811730956.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.0453190542757511,
@@ -252,7 +253,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_11811730957",
-				"node_id": 11811730957,
+				"node_id": 11811730957.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.0445392541587353,
@@ -276,7 +277,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_12074365173",
-				"node_id": 12074365173,
+				"node_id": 12074365173.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.880953013896942,
@@ -300,7 +301,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_12074365176",
-				"node_id": 12074365176,
+				"node_id": 12074365176.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.887693583965302,
@@ -324,7 +325,7 @@
 				"desviada": false,
 				"largo_aparato": 81.84717,
 				"name": "Escape_Crossover_D_1525223357_1863527821",
-				"node_id": 1525223357,
+				"node_id": 1525223357.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.999671459197998,
@@ -348,7 +349,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1526687197",
-				"node_id": 1526687197,
+				"node_id": 1526687197.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.97625333070755,
@@ -372,7 +373,7 @@
 				"desviada": true,
 				"largo_aparato": 20.0,
 				"name": "CruceDiamante_C_1526687242",
-				"node_id": 1526687242,
+				"node_id": 1526687242.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.953750669956207,
@@ -396,7 +397,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1526687713",
-				"node_id": 1526687713,
+				"node_id": 1526687713.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.9958815574646,
@@ -420,7 +421,7 @@
 				"desviada": false,
 				"largo_aparato": 26.2254047393799,
 				"name": "Desvio_A_1526687774",
-				"node_id": 1526687774,
+				"node_id": 1526687774.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.999378144741058,
@@ -444,7 +445,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1526687777",
-				"node_id": 1526687777,
+				"node_id": 1526687777.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.943353831768036,
@@ -468,7 +469,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1526687809",
-				"node_id": 1526687809,
+				"node_id": 1526687809.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.847769677639008,
@@ -492,7 +493,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1526687836",
-				"node_id": 1526687836,
+				"node_id": 1526687836.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.975579738616943,
@@ -516,7 +517,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1527215665",
-				"node_id": 1527215665,
+				"node_id": 1527215665.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.99969893693924,
@@ -540,7 +541,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1549491611",
-				"node_id": 1549491611,
+				"node_id": 1549491611.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.941288232803345,
@@ -564,7 +565,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1549491937",
-				"node_id": 1549491937,
+				"node_id": 1549491937.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.990296900272369,
@@ -588,7 +589,7 @@
 				"desviada": false,
 				"largo_aparato": 30.6015704480045,
 				"name": "CruceDiamante_C_1549497970",
-				"node_id": 1549497970,
+				"node_id": 1549497970.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.992453217506409,
@@ -612,7 +613,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1642648772",
-				"node_id": 1642648772,
+				"node_id": 1642648772.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.994205415248871,
@@ -636,7 +637,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1720061153",
-				"node_id": 1720061153,
+				"node_id": 1720061153.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.995866000652313,
@@ -660,7 +661,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1720085942",
-				"node_id": 1720085942,
+				"node_id": 1720085942.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.998498022556305,
@@ -684,7 +685,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1720112350",
-				"node_id": 1720112350,
+				"node_id": 1720112350.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.987757444381714,
@@ -708,7 +709,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1720112358",
-				"node_id": 1720112358,
+				"node_id": 1720112358.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.998666644096375,
@@ -732,7 +733,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1720118692",
-				"node_id": 1720118692,
+				"node_id": 1720118692.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.99783718585968,
@@ -756,7 +757,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1720124782",
-				"node_id": 1720124782,
+				"node_id": 1720124782.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.939376294612885,
@@ -780,7 +781,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1720124784",
-				"node_id": 1720124784,
+				"node_id": 1720124784.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.999972820281982,
@@ -804,7 +805,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1720124791",
-				"node_id": 1720124791,
+				"node_id": 1720124791.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.996976792812347,
@@ -828,7 +829,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1721380869",
-				"node_id": 1721380869,
+				"node_id": 1721380869.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.97784811258316,
@@ -852,7 +853,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1862501554",
-				"node_id": 1862501554,
+				"node_id": 1862501554.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.983402252197266,
@@ -876,7 +877,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1862501571",
-				"node_id": 1862501571,
+				"node_id": 1862501571.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.936096251010895,
@@ -900,7 +901,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1862505121",
-				"node_id": 1862505121,
+				"node_id": 1862505121.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.890676558017731,
@@ -924,7 +925,7 @@
 				"desviada": true,
 				"largo_aparato": 20.0,
 				"name": "CruceDiamante_C_1862507362",
-				"node_id": 1862507362,
+				"node_id": 1862507362.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.804680526256561,
@@ -948,7 +949,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1862507375",
-				"node_id": 1862507375,
+				"node_id": 1862507375.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.930338978767395,
@@ -972,7 +973,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1862507377",
-				"node_id": 1862507377,
+				"node_id": 1862507377.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.992932379245758,
@@ -996,7 +997,7 @@
 				"desviada": false,
 				"largo_aparato": 14.0,
 				"name": "Desvio_B_1862507392",
-				"node_id": 1862507392,
+				"node_id": 1862507392.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.933542490005493,
@@ -1020,7 +1021,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1862507417",
-				"node_id": 1862507417,
+				"node_id": 1862507417.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.958516895771027,
@@ -1044,7 +1045,7 @@
 				"desviada": false,
 				"largo_aparato": 18.1388568878174,
 				"name": "Desvio_B_1862507424",
-				"node_id": 1862507424,
+				"node_id": 1862507424.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.930415213108063,
@@ -1068,7 +1069,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1862507445",
-				"node_id": 1862507445,
+				"node_id": 1862507445.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.994305849075317,
@@ -1092,7 +1093,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1863396832",
-				"node_id": 1863396832,
+				"node_id": 1863396832.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.900157272815704,
@@ -1116,7 +1117,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1863396893",
-				"node_id": 1863396893,
+				"node_id": 1863396893.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999997317790985,
@@ -1140,7 +1141,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1956182670",
-				"node_id": 1956182670,
+				"node_id": 1956182670.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999995470046997,
@@ -1164,7 +1165,7 @@
 				"desviada": false,
 				"largo_aparato": 29.3726456466132,
 				"name": "CruceDiamante_C_1957885509",
-				"node_id": 1957885509,
+				"node_id": 1957885509.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.999719381332397,
@@ -1188,16 +1189,16 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1957896612",
-				"node_id": 1957896612,
+				"node_id": 1957896612.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999999701976776,
 					0.0,
-					0.000763708958402276,
+					0.00076370895840227,
 					0.0,
 					1.0,
 					0.0,
-					-0.000763708958402276,
+					-0.00076370895840227,
 					0.0,
 					0.999999701976776,
 					152.404006958008,
@@ -1212,7 +1213,7 @@
 				"desviada": false,
 				"largo_aparato": 40.8232815092654,
 				"name": "CruceDiamante_C_1957896628",
-				"node_id": 1957896628,
+				"node_id": 1957896628.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.99991112947464,
@@ -1236,7 +1237,7 @@
 				"desviada": false,
 				"largo_aparato": 29.9135635364209,
 				"name": "CruceDiamante_C_1957896662",
-				"node_id": 1957896662,
+				"node_id": 1957896662.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.999998390674591,
@@ -1260,7 +1261,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1957896666",
-				"node_id": 1957896666,
+				"node_id": 1957896666.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.999920964241028,
@@ -1284,7 +1285,7 @@
 				"desviada": true,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1957897968",
-				"node_id": 1957897968,
+				"node_id": 1957897968.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.99296510219574,
@@ -1308,7 +1309,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_1957897971",
-				"node_id": 1957897971,
+				"node_id": 1957897971.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.938278079032898,
@@ -1332,7 +1333,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1978958743",
-				"node_id": 1978958743,
+				"node_id": 1978958743.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.990403652191162,
@@ -1356,7 +1357,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_1978958745",
-				"node_id": 1978958745,
+				"node_id": 1978958745.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999198019504547,
@@ -1380,7 +1381,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_216591542",
-				"node_id": 216591542,
+				"node_id": 216591542.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.966946482658386,
@@ -1404,7 +1405,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2278727201",
-				"node_id": 2278727201,
+				"node_id": 2278727201.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.928569734096527,
@@ -1428,7 +1429,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2320007067",
-				"node_id": 2320007067,
+				"node_id": 2320007067.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999485433101654,
@@ -1452,7 +1453,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2410258812",
-				"node_id": 2410258812,
+				"node_id": 2410258812.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.369504272937775,
@@ -1476,7 +1477,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_244464823",
-				"node_id": 244464823,
+				"node_id": 244464823.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.959343373775482,
@@ -1500,7 +1501,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2621609093",
-				"node_id": 2621609093,
+				"node_id": 2621609093.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.985757172107697,
@@ -1524,7 +1525,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2621609209",
-				"node_id": 2621609209,
+				"node_id": 2621609209.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.999935865402222,
@@ -1548,7 +1549,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2621609233",
-				"node_id": 2621609233,
+				"node_id": 2621609233.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999849855899811,
@@ -1572,7 +1573,7 @@
 				"desviada": false,
 				"largo_aparato": 25.2680637718939,
 				"name": "CruceDiamante_C_2621609357",
-				"node_id": 2621609357,
+				"node_id": 2621609357.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.999967515468597,
@@ -1596,7 +1597,7 @@
 				"desviada": true,
 				"largo_aparato": 33.3515432574994,
 				"name": "CruceDiamante_C_2621609431",
-				"node_id": 2621609431,
+				"node_id": 2621609431.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.991282939910889,
@@ -1620,7 +1621,7 @@
 				"desviada": false,
 				"largo_aparato": 29.0153222251151,
 				"name": "CruceDiamante_C_2621624836",
-				"node_id": 2621624836,
+				"node_id": 2621624836.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.999982833862305,
@@ -1644,7 +1645,7 @@
 				"desviada": true,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2621634159",
-				"node_id": 2621634159,
+				"node_id": 2621634159.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.999788105487823,
@@ -1668,7 +1669,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2621634216",
-				"node_id": 2621634216,
+				"node_id": 2621634216.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.99998676776886,
@@ -1692,7 +1693,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2658744721",
-				"node_id": 2658744721,
+				"node_id": 2658744721.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.0343681201338768,
@@ -1716,7 +1717,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2659599268",
-				"node_id": 2659599268,
+				"node_id": 2659599268.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.366401553153992,
@@ -1740,7 +1741,7 @@
 				"desviada": true,
 				"largo_aparato": 27.4399440324931,
 				"name": "CruceDiamante_C_2659599269",
-				"node_id": 2659599269,
+				"node_id": 2659599269.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.36288920044899,
@@ -1764,7 +1765,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2659599270",
-				"node_id": 2659599270,
+				"node_id": 2659599270.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.368695557117462,
@@ -1788,7 +1789,7 @@
 				"desviada": true,
 				"largo_aparato": 30.5485341709158,
 				"name": "CruceDiamante_C_2659599271",
-				"node_id": 2659599271,
+				"node_id": 2659599271.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.368695557117462,
@@ -1812,7 +1813,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2659599273",
-				"node_id": 2659599273,
+				"node_id": 2659599273.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.364104747772217,
@@ -1836,7 +1837,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2659641462",
-				"node_id": 2659641462,
+				"node_id": 2659641462.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.365591943264008,
@@ -1860,7 +1861,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2703205325",
-				"node_id": 2703205325,
+				"node_id": 2703205325.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.268777370452881,
@@ -1884,7 +1885,7 @@
 				"desviada": true,
 				"largo_aparato": 50.422363,
 				"name": "Escape_Crossover_D_2704746884_2703205335",
-				"node_id": 2704746884,
+				"node_id": 2704746884.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					0.258571147918701,
@@ -1908,7 +1909,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2792663569",
-				"node_id": 2792663569,
+				"node_id": 2792663569.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999350965023041,
@@ -1932,7 +1933,7 @@
 				"desviada": false,
 				"largo_aparato": 68.212036,
 				"name": "Escape_Crossover_D_2792663573_4341944748",
-				"node_id": 2792663573,
+				"node_id": 2792663573.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.999717950820923,
@@ -1956,7 +1957,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2792663574",
-				"node_id": 2792663574,
+				"node_id": 2792663574.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.98467230796814,
@@ -1980,7 +1981,7 @@
 				"desviada": true,
 				"largo_aparato": 44.0,
 				"name": "Escape_Crossover_D_2792663617_4334341678",
-				"node_id": 2792663617,
+				"node_id": 2792663617.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.957058548927307,
@@ -2004,7 +2005,7 @@
 				"desviada": true,
 				"largo_aparato": 20.0,
 				"name": "CruceDiamante_C_2792663653",
-				"node_id": 2792663653,
+				"node_id": 2792663653.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.995844960212708,
@@ -2028,7 +2029,7 @@
 				"desviada": true,
 				"largo_aparato": 20.0,
 				"name": "CruceDiamante_C_2792663654",
-				"node_id": 2792663654,
+				"node_id": 2792663654.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.995886325836182,
@@ -2052,7 +2053,7 @@
 				"desviada": true,
 				"largo_aparato": 97.156555,
 				"name": "Escape_Crossover_D_2931298146_2621634138",
-				"node_id": 2931298146,
+				"node_id": 2931298146.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					0.999949097633362,
@@ -2076,7 +2077,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2931298148",
-				"node_id": 2931298148,
+				"node_id": 2931298148.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.9998859167099,
@@ -2100,7 +2101,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2931298152",
-				"node_id": 2931298152,
+				"node_id": 2931298152.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.999980092048645,
@@ -2124,7 +2125,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_2931298153",
-				"node_id": 2931298153,
+				"node_id": 2931298153.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.994222521781921,
@@ -2148,7 +2149,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2931298156",
-				"node_id": 2931298156,
+				"node_id": 2931298156.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.9999640583992,
@@ -2172,7 +2173,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_2931298166",
-				"node_id": 2931298166,
+				"node_id": 2931298166.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999922335147858,
@@ -2196,7 +2197,7 @@
 				"desviada": false,
 				"largo_aparato": 69.99371,
 				"name": "Escape_Crossover_D_2931298168_2621615704",
-				"node_id": 2931298168,
+				"node_id": 2931298168.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.99990701675415,
@@ -2220,7 +2221,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_298867619",
-				"node_id": 298867619,
+				"node_id": 298867619.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.989846706390381,
@@ -2244,7 +2245,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_307748550",
-				"node_id": 307748550,
+				"node_id": 307748550.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999922573566437,
@@ -2268,7 +2269,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_308099210",
-				"node_id": 308099210,
+				"node_id": 308099210.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					-0.999984085559845,
@@ -2288,35 +2289,11 @@
 				"via_desviada_id": "seg_435",
 				"via_directa_id": "seg_469"
 			},
-			"310923081": {
-				"desviada": false,
-				"largo_aparato": 28.0,
-				"name": "Desvio_A_310923081",
-				"node_id": 310923081,
-				"tipo_aparato": "TIPO_A",
-				"transform": [
-					-0.267216622829437,
-					0.0,
-					0.963636517524719,
-					0.0,
-					1.0,
-					0.0,
-					-0.963636517524719,
-					0.0,
-					-0.267216622829437,
-					224.964004516602,
-					0.0,
-					18563.013671875
-				],
-				"via_comun_id": "seg_135",
-				"via_desviada_id": "seg_216",
-				"via_directa_id": "seg_136"
-			},
 			"3110405440": {
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_3110405440",
-				"node_id": 3110405440,
+				"node_id": 3110405440.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.999280869960785,
@@ -2340,7 +2317,7 @@
 				"desviada": false,
 				"largo_aparato": 26.465208,
 				"name": "Desvio_B_3473954947",
-				"node_id": 3473954947,
+				"node_id": 3473954947.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.962624251842499,
@@ -2364,7 +2341,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_3473954959",
-				"node_id": 3473954959,
+				"node_id": 3473954959.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.963660418987274,
@@ -2388,7 +2365,7 @@
 				"desviada": true,
 				"largo_aparato": 63.715942,
 				"name": "Escape_Crossover_D_3633442041_216591474",
-				"node_id": 3633442041,
+				"node_id": 3633442041.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					0.999822318553925,
@@ -2412,7 +2389,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_4039939150",
-				"node_id": 4039939150,
+				"node_id": 4039939150.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.999929368495941,
@@ -2436,7 +2413,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_4039940207",
-				"node_id": 4039940207,
+				"node_id": 4039940207.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.994590163230896,
@@ -2460,7 +2437,7 @@
 				"desviada": true,
 				"largo_aparato": 39.0512419295252,
 				"name": "CruceDiamante_C_4049606373",
-				"node_id": 4049606373,
+				"node_id": 4049606373.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					0.99693363904953,
@@ -2484,7 +2461,7 @@
 				"desviada": true,
 				"largo_aparato": 84.69336,
 				"name": "Escape_Crossover_D_4338768468_1547776622",
-				"node_id": 4338768468,
+				"node_id": 4338768468.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					-0.997738480567932,
@@ -2508,7 +2485,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_4339326425",
-				"node_id": 4339326425,
+				"node_id": 4339326425.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					-0.996415197849274,
@@ -2532,7 +2509,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_A_4339326437",
-				"node_id": 4339326437,
+				"node_id": 4339326437.0,
 				"tipo_aparato": "TIPO_A",
 				"transform": [
 					0.997234463691711,
@@ -2556,7 +2533,7 @@
 				"desviada": false,
 				"largo_aparato": 28.0,
 				"name": "Desvio_B_4339326443",
-				"node_id": 4339326443,
+				"node_id": 4339326443.0,
 				"tipo_aparato": "TIPO_B",
 				"transform": [
 					0.99672257900238,
@@ -2580,7 +2557,7 @@
 				"desviada": true,
 				"largo_aparato": 40.7591568245412,
 				"name": "CruceDiamante_C_4339326448",
-				"node_id": 4339326448,
+				"node_id": 4339326448.0,
 				"tipo_aparato": "TIPO_C",
 				"transform": [
 					-0.997642397880554,
@@ -2604,7 +2581,7 @@
 				"desviada": true,
 				"largo_aparato": 51.280273,
 				"name": "Escape_Crossover_D_4339326477_2759531424",
-				"node_id": 4339326477,
+				"node_id": 4339326477.0,
 				"tipo_aparato": "TIPO_D",
 				"transform": [
 					0.250769406557083,
@@ -2624,35 +2601,11 @@
 				"via_desviada_id": "",
 				"via_directa_id": ""
 			},
-			"5215454635": {
-				"desviada": false,
-				"largo_aparato": 28.0,
-				"name": "Desvio_A_5215454635",
-				"node_id": 5215454635,
-				"tipo_aparato": "TIPO_A",
-				"transform": [
-					-0.254680156707764,
-					0.0,
-					0.967025399208069,
-					0.0,
-					1.0,
-					0.0,
-					-0.967025399208069,
-					0.0,
-					-0.254680156707764,
-					466.023010253906,
-					0.0,
-					18636.9140625
-				],
-				"via_comun_id": "seg_211",
-				"via_desviada_id": "seg_135",
-				"via_directa_id": "seg_210"
-			},
 			"9993305211": {
 				"desviada": true,
 				"largo_aparato": 47.289063,
 				"name": "Tijera_Bretelle_E_9993305211",
-				"node_id": 9993305211,
+				"node_id": 9993305211.0,
 				"tipo_aparato": "TIPO_E",
 				"transform": [
 					0.367554396390915,
@@ -2722,7 +2675,9 @@
 			"2931298157",
 			"1642664390",
 			"2792663566",
-			"3633442039"
+			"3633442039",
+			"310923081",
+			"5215454635"
 		]
 	},
 	"total_ediciones": 0,

@@ -57,6 +57,15 @@ theme_override_font_sizes/font_size = 10
 theme_override_colors/font_color = Color(1, 0.756863, 0.278431, 1)
 text = "▶"
 
+[node name="BotonCerrar" type="Button" parent="Margen/Contenido/FilaSuperior"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Cerrar información del tren"
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_font_sizes/font_size = 12
+text = "✕"
+flat = true
+
 [node name="ValorVelocidad" type="Label" parent="Margen/Contenido"]
 unique_name_in_owner = true
 layout_mode = 2
