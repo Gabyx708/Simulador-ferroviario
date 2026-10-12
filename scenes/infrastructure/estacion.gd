@@ -15,6 +15,7 @@ signal edicion_guardada(estacion: Estacion)
 signal reseteada(estacion: Estacion)
 signal pasajeros_actualizados(estacion: Estacion)
 signal seleccionada(estacion: Estacion)
+signal abordaje_cambiado(activo: bool)
 
 enum DestinoAnden { CONSTITUCION, BOSQUES, AMBOS }
 
@@ -277,6 +278,32 @@ var _datos_originales: Dictionary = {}
 			_configurar_pasajeros_por_anden()
 			pasajeros_actualizados.emit(self)
 
+## Permite excluir AndenB de la generación, el render y el embarque de pasajeros.
+@export var incluir_anden_b_pasajeros: bool = true:
+	set(v):
+		if incluir_anden_b_pasajeros == v:
+			return
+		incluir_anden_b_pasajeros = v
+		if is_inside_tree():
+			_actualizar_area_seleccion()
+			_configurar_pasajeros_por_anden()
+			_reubicar_pasajeros_visuales()
+			pasajeros_actualizados.emit(self)
+
+## Ajuste vertical de las figuras del AndenA para integrarlas con plataformas existentes.
+@export_range(-5.0, 5.0, 0.01, "suffix:m") var desfasaje_vertical_pasajeros_anden_a: float = 0.0:
+	set(v):
+		desfasaje_vertical_pasajeros_anden_a = v
+		if is_inside_tree():
+			_sincronizar_pasajeros_visuales()
+
+## Ajuste lateral de las figuras del AndenA sin desplazar la parada del tren.
+@export_range(-30.0, 30.0, 0.1, "suffix:m") var ajuste_lateral_pasajeros_anden_a: float = 0.0:
+	set(v):
+		ajuste_lateral_pasajeros_anden_a = v
+		if is_inside_tree():
+			_sincronizar_pasajeros_visuales()
+
 @export_range(0.0, 1000.0, 0.01) var tasa_generacion_pasajeros: float = 0.75
 ## Limite de figuras visibles por estacion; el contador conserva la cantidad real.
 @export_range(0, 150, 1) var maximo_pasajeros_visibles: int = 150
@@ -325,6 +352,7 @@ var pasajeros_subidos_total: int = 0
 var pasajeros_bajados_total: int = 0
 var _reloj_pasajeros: float = 0.0
 var _salidas_pasajeros_pendientes: Array[Dictionary] = []
+var _trenes_abordando: Dictionary = {}
 var _mallas_pasajeros: Array[Mesh] = []
 var _transformaciones_mallas_pasajeros: Array[Transform3D] = []
 var _bounds_mallas_pasajeros: Array[AABB] = []
@@ -355,6 +383,7 @@ func _ready() -> void:
 		_reloj_pasajeros = 0.0
 		_proximo_sorteo_demanda = 0.0
 		_salidas_pasajeros_pendientes.clear()
+		_trenes_abordando.clear()
 	_conectar_postes()
 	_actualizar_dimensiones_anden()
 	_actualizar_visibilidad_estructura()
@@ -581,7 +610,10 @@ func _sincronizar_pasajeros_visuales() -> void:
 
 func _obtener_andenes_pasajeros() -> Array[MeshInstance3D]:
 	var andenes: Array[MeshInstance3D] = []
-	for nombre: String in ["AndenA", "AndenB"]:
+	var nombres: Array[String] = ["AndenA"]
+	if incluir_anden_b_pasajeros:
+		nombres.append("AndenB")
+	for nombre: String in nombres:
 		var anden: MeshInstance3D = get_node_or_null(nombre) as MeshInstance3D
 		if anden != null and anden.mesh != null and not anden.is_queued_for_deletion():
 			andenes.append(anden)
@@ -650,6 +682,21 @@ func obtener_pasajeros_por_anden() -> Array[int]:
 	for pasajeros: int in _esperando_por_anden:
 		resultado.append(pasajeros)
 	return resultado
+
+
+func registrar_abordaje_tren(id_tren: int, activo: bool) -> void:
+	var habia_abordaje: bool = not _trenes_abordando.is_empty()
+	if activo:
+		_trenes_abordando[id_tren] = true
+	else:
+		_trenes_abordando.erase(id_tren)
+	var hay_abordaje: bool = not _trenes_abordando.is_empty()
+	if habia_abordaje != hay_abordaje:
+		abordaje_cambiado.emit(hay_abordaje)
+
+
+func hay_tren_abordando() -> bool:
+	return not _trenes_abordando.is_empty()
 
 
 func _destino_del_anden(id_anden: String) -> int:
@@ -733,7 +780,10 @@ func _transformacion_pasajero_visual(anden: MeshInstance3D, puesto: int, cantida
 	var x: float = clampf(float(anillo) * separacion * direccion, -largo_util * 0.5, largo_util * 0.5)
 	# El andén ya incorpora la separación y los ajustes laterales del Inspector.
 	var centro_anden: Vector3 = bounds_anden.get_center()
-	var posicion: Vector3 = transformacion_anden * Vector3(centro_anden.x + x, bounds_anden.end.y + 0.02, centro_anden.z)
+	var ajuste_vertical: float = desfasaje_vertical_pasajeros_anden_a if anden == get_node_or_null("AndenA") else 0.0
+	var ajuste_lateral: float = ajuste_lateral_pasajeros_anden_a if anden == get_node_or_null("AndenA") else 0.0
+	var posicion_local: Vector3 = Vector3(centro_anden.x + x, bounds_anden.end.y + 0.02 + ajuste_vertical, centro_anden.z + ajuste_lateral)
+	var posicion: Vector3 = transformacion_anden * posicion_local
 
 	var bounds: AABB = _bounds_mallas_pasajeros[indice_variante]
 	var transformacion_modelo: Transform3D = _transformaciones_mallas_pasajeros[indice_variante]
@@ -1097,10 +1147,9 @@ func _actualizar_area_seleccion() -> void:
 	if caja == null:
 		return
 	var mitad: float = separacion_vias * 0.5
-	var posiciones: Array[float] = [
-		-mitad + ajuste_lateral_anden_ida,
-		mitad + ajuste_lateral_anden_vuelta,
-	]
+	var posiciones: Array[float] = [-mitad + ajuste_lateral_anden_ida]
+	if incluir_anden_b_pasajeros:
+		posiciones.append(mitad + ajuste_lateral_anden_vuelta)
 	if cantidad_andenes_centrales >= 1:
 		posiciones.append(posicion_lateral_anden_central_1)
 	if cantidad_andenes_centrales >= 2:

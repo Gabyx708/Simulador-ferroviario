@@ -2434,17 +2434,18 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 	if id_anden.is_empty():
 		id_anden = _resolver_anden_embarque(estacion)
 	var intervalo_seguro: float = maxf(intervalo, INTERVALO_PASAJEROS_MINIMO)
+	var abordaje_informado: bool = false
 	while true:
 		if not (await _intercambio_habilitado()):
-			return
+			break
 		if _eliminado or not is_instance_valid(self):
-			return
+			break
 		if not is_instance_valid(estacion):
-			return
+			break
 
 		var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
 		if lugar_disponible <= 0:
-			return
+			break
 
 		var cantidad_tanda: int = mini(lugar_disponible, maxi(1, cantidad_pasajeros_por_tanda))
 		var suben: int = mini(cantidad_tanda, _embarcar_pasajeros_del_anden(estacion, cantidad_tanda, id_anden))
@@ -2452,14 +2453,21 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 			pasajeros_actuales += mini(suben, lugar_disponible)
 			_ultimo_suben += suben
 			pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, true)
+			if not abordaje_informado:
+				if estacion.has_method("registrar_abordaje_tren"):
+					estacion.call("registrar_abordaje_tren", get_instance_id(), true)
+				abordaje_informado = true
 
 		if suben <= 0 and _espera <= 0.0:
-			return
+			break
 		var tiempo_entre_intentos: float = intervalo_seguro
 		if suben <= 0:
 			tiempo_entre_intentos = maxf(intervalo_seguro, 0.15)
 		var demora: float = minf(tiempo_entre_intentos, _espera) if _espera > 0.0 else tiempo_entre_intentos
 		await get_tree().create_timer(demora).timeout
+	if abordaje_informado and is_instance_valid(estacion):
+		if estacion.has_method("registrar_abordaje_tren"):
+			estacion.call("registrar_abordaje_tren", get_instance_id(), false)
 
 
 ## Calcula el intervalo entre tandas para que todo el intercambio entre

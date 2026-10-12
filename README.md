@@ -126,10 +126,12 @@ siguen disponibles para el HUD y las estadísticas.
 Al hacer clic sobre una estación o su icono «ℹ», se abre una ventana en el HUD
 con el mismo fondo oscuro y borde ámbar del panel del tren. Muestra el nombre,
 el total en estación (quienes esperan y quienes acaban de bajar), la capacidad,
-el histórico y los totales de subida y bajada. La sección «En espera por andén» incluye
+el histórico y los totales de subida y bajada. La sección «Andenes de abordaje» incluye
 una fila `Andén 1: ... pasajeros`, `Andén 2: ... pasajeros`, etc. Se numeran
 primero los andenes laterales y después los centrales. Los valores se actualizan
 mediante las señales de pasajeros de la estación seleccionada.
+Cuando un tren embarca pasajeros, «En espera» cambia a «Abordando» hasta que
+termina esa operación.
 
 La ventana ocupa el lugar del panel del tren: seleccionar otra estación cambia
 sus datos y seleccionar un tren vuelve a mostrar su tablero. Se cierra con «✕»
@@ -143,7 +145,9 @@ laterales. Al cambiar la geometría se actualizan sus posiciones y el volumen
 usado para renderizarlos.
 En estaciones integradas a una terminal existente se puede ocultar la estructura
 genérica con `mostrar_estructura_andenes`, manteniendo visibles el icono y los
-pasajeros.
+pasajeros. En Plaza Constitución, `desfasaje_vertical_pasajeros_anden_a` y
+`ajuste_lateral_pasajeros_anden_a` colocan las figuras del andén A sobre la
+plataforma integrada a la terminal sin alterar la parada del tren.
 
 | Estación | Capacidad de pasajeros en espera |
 | :------- | ------------------------------: |

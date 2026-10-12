@@ -12,6 +12,7 @@ class_name InformacionEstacion
 @onready var _boton_cerrar: Button = %BotonCerrar
 
 var _estacion: Estacion
+var _abordaje_activo: bool = false
 
 
 func _ready() -> void:
@@ -24,7 +25,9 @@ func mostrar_estacion(estacion: Estacion) -> void:
 		return
 	_estacion = estacion
 	_estacion.pasajeros_actualizados.connect(_on_pasajeros_actualizados)
+	_estacion.abordaje_cambiado.connect(_on_abordaje_cambiado)
 	_estacion.tree_exiting.connect(cerrar)
+	_abordaje_activo = _estacion.hay_tren_abordando()
 	_actualizar_informacion()
 	visible = true
 
@@ -33,9 +36,12 @@ func cerrar() -> void:
 	if is_instance_valid(_estacion):
 		if _estacion.pasajeros_actualizados.is_connected(_on_pasajeros_actualizados):
 			_estacion.pasajeros_actualizados.disconnect(_on_pasajeros_actualizados)
+		if _estacion.abordaje_cambiado.is_connected(_on_abordaje_cambiado):
+			_estacion.abordaje_cambiado.disconnect(_on_abordaje_cambiado)
 		if _estacion.tree_exiting.is_connected(cerrar):
 			_estacion.tree_exiting.disconnect(cerrar)
 	_estacion = null
+	_abordaje_activo = false
 	hide()
 
 
@@ -49,13 +55,19 @@ func _on_pasajeros_actualizados(_origen: Estacion) -> void:
 	_actualizar_informacion()
 
 
+func _on_abordaje_cambiado(activo: bool) -> void:
+	_abordaje_activo = activo
+	_actualizar_informacion()
+
+
 func _actualizar_informacion() -> void:
 	if not is_instance_valid(_estacion):
 		cerrar()
 		return
 	_titulo.text = _estacion.nombre_estacion
 	var pasajeros_en_estacion: int = _estacion.pasajeros_esperando + _estacion.pasajeros_saliendo
-	_esperando.text = "En espera: %d / %d" % [pasajeros_en_estacion, _estacion.capacidad_maxima_espera]
+	var estado_fila: String = "Abordando" if _abordaje_activo else "En espera"
+	_esperando.text = "%s: %d / %d" % [estado_fila, pasajeros_en_estacion, _estacion.capacidad_maxima_espera]
 	_barra_ocupacion.max_value = maxi(1, _estacion.capacidad_maxima_espera)
 	_barra_ocupacion.value = pasajeros_en_estacion
 	_historico.text = "Histórico: %d pasajeros" % _estacion.pasajeros_totales_historicos
