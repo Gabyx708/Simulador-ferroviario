@@ -95,6 +95,15 @@ func _estilo_boton_minimalista(hover: bool, presionado: bool = false, deshabilit
 	return estilo
 
 
+## Mismo identificador en toda la UI (paneles viejos, panel de control y
+## métricas): "Tren %d" por id operativo, que es lo único realmente único
+## entre trenes -- el nombre del nodo (p.ej. "TrenCSR_02") no lo es tanto
+## y varía según cómo se haya instanciado cada formación.
+func _identificador_tren(tren: Tren) -> String:
+	var id: int = tren.obtener_id_operativo()
+	return "Tren %d" % id if id > 0 else tren.name
+
+
 func _construir_lista() -> void:
 	for hijo: Node in _lista.get_children():
 		hijo.queue_free()
@@ -103,13 +112,13 @@ func _construir_lista() -> void:
 		if nodo is Tren:
 			var tren := nodo as Tren
 			var boton := Button.new()
-			boton.text = tren.name
+			boton.text = _identificador_tren(tren)
 			boton.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			boton.add_theme_font_size_override("font_size", 10)
 			boton.add_theme_stylebox_override("normal", _estilo_boton_minimalista(false))
 			boton.add_theme_stylebox_override("hover", _estilo_boton_minimalista(true))
 			boton.add_theme_stylebox_override("pressed", _estilo_boton_minimalista(true, true))
-			boton.tooltip_text = "Seleccionar %s" % tren.name
+			boton.tooltip_text = "Seleccionar %s" % _identificador_tren(tren)
 			boton.pressed.connect(_seleccionar_tren.bind(tren))
 			_lista.add_child(boton)
 			_botones[tren] = boton
@@ -137,7 +146,7 @@ func _marcar_seleccion(tren: Tren) -> void:
 	for candidato: Tren in _botones.keys():
 		var boton := _botones[candidato] as Button
 		if is_instance_valid(boton):
-			boton.text = ("▶ " if candidato == tren else "") + candidato.name
+			boton.text = ("▶ " if candidato == tren else "") + _identificador_tren(candidato)
 	if bool(_paneles_abiertos.get("pruebas", false)):
 		_actualizar_panel_pruebas()
 	if tren != null and is_instance_valid(tren):
@@ -161,7 +170,7 @@ func _actualizar_panel_pruebas() -> void:
 		return
 	_demora_salida.editable = true
 	_espera_estaciones.editable = true
-	_tren_pruebas.text = _tren_seleccionado.name
+	_tren_pruebas.text = _identificador_tren(_tren_seleccionado)
 	_demora_salida.set_value_no_signal(_tren_seleccionado.demora_salida_inicial)
 	_espera_estaciones.set_value_no_signal(_tren_seleccionado.tiempo_parada_servicio)
 	var factores: Dictionary = _tren_seleccionado.factores_prueba()
