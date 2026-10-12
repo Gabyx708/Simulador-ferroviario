@@ -9933,6 +9933,7 @@ separacion_vias = 30.0
 ajuste_lateral_anden_ida = -20.0
 ajuste_lateral_anden_vuelta = 20.0
 nombre_estacion = "Plaza Constitución"
+capacidad_maxima_espera = 3000
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -9943,6 +9944,7 @@ progreso_en_via = 751.3000000000001
 ajuste_lateral_anden_ida = -0.1999999999999993
 ajuste_lateral_anden_vuelta = 12.75
 nombre_estacion = "Hipólito Yrigoyen"
+capacidad_maxima_espera = 1000
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -9955,6 +9957,7 @@ ajuste_lateral_anden_vuelta = 20.0
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.9
 nombre_estacion = "Darío Santillán y Maximiliano Kosteki"
+capacidad_maxima_espera = 2300
 tiempo_espera = 3.0
 
 [node name="EstacionGerli" parent="." unique_id=141049135 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9978,6 +9981,7 @@ ajuste_lateral_anden_vuelta = 17.15
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.25
 nombre_estacion = "Lanús"
+capacidad_maxima_espera = 2500
 tiempo_espera = 3.0
 
 [node name="EstacionRemediosDeEscalada" parent="." unique_id=141049137 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10002,6 +10006,7 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 8.25
 posicion_lateral_anden_central_2 = 13.200000000000005
 nombre_estacion = "Banfield"
+capacidad_maxima_espera = 1900
 tiempo_espera = 3.0
 
 [node name="EstacionLomasDeZamora" parent="." unique_id=141049139 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10015,6 +10020,7 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 9.35
 posicion_lateral_anden_central_2 = 15.400000000000006
 nombre_estacion = "Lomas de Zamora"
+capacidad_maxima_espera = 2200
 tiempo_espera = 3.0
 
 [node name="EstacionTemperley" parent="." unique_id=141049140 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10025,6 +10031,7 @@ invertir_sentido = true
 ajuste_lateral_anden_ida = -5.5
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "Temperley"
+capacidad_maxima_espera = 2400
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -10035,6 +10042,7 @@ progreso_en_via = 156.6
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "José Mármol"
+capacidad_maxima_espera = 1100
 tiempo_espera = 3.0
 
 [node name="EstacionRafaelCalzada" parent="." unique_id=141049142 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10043,6 +10051,7 @@ traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley
 progreso_en_via = 1584.8
 ajuste_lateral_anden_vuelta = 7.449999999999999
 nombre_estacion = "Rafael Calzada"
+capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 
 [node name="EstacionClaypole" parent="." unique_id=141049143 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10052,6 +10061,7 @@ progreso_en_via = 235.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Claypole"
+capacidad_maxima_espera = 1600
 tiempo_espera = 3.0
 
 [node name="EstacionDanteArdigo" parent="." unique_id=141049144 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10061,6 +10071,7 @@ progreso_en_via = 872.9
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 3.1000000000000014
 nombre_estacion = "Ing. Dante Ardigó"
+capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 
 [node name="EstacionFlorencioVarela" parent="." unique_id=141049145 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10070,6 +10081,7 @@ progreso_en_via = 342.0
 ajuste_lateral_anden_ida = -0.4499999999999993
 ajuste_lateral_anden_vuelta = 5.050000000000001
 nombre_estacion = "Florencio Varela"
+capacidad_maxima_espera = 1500
 tiempo_espera = 3.0
 
 [node name="EstacionZeballos" parent="." unique_id=141049146 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10079,6 +10091,7 @@ progreso_en_via = 1462.1
 ajuste_lateral_anden_ida = -1.1000000000000014
 ajuste_lateral_anden_vuelta = 5.25
 nombre_estacion = "Estanislao S. Zeballos"
+capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -10089,6 +10102,7 @@ progreso_en_via = 221.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Bosques"
+capacidad_maxima_espera = 1400
 tiempo_espera = 3.0
 
 [node name="HUD" parent="." unique_id=1717866822 instance=ExtResource("18_hud")]

@@ -97,31 +97,63 @@ Cada andén es una parada independiente: para vías distintas de ida y vuelta ag
 
 Una `Estacion` puede cubrir varias vías paralelas sin duplicar el nodo: ajustá `ancho_cobertura_vias` en el Inspector. El tren proyecta el poste de parada sobre cada vía que atraviesa ese corredor y, si ya circula por una de ellas, frena allí sin buscar el `Path3D` usado como ancla visual de la estación.
 
+### Capacidad de pasajeros por estación
+
+La propiedad `capacidad_maxima_espera` de cada estación fija el máximo de pasajeros
+esperando para subir. La cantidad de figuras visibles se regula por separado con
+`maximo_pasajeros_visibles`.
+
+Los modelos de pasajeros se reparten entre `AndenA`, `AndenB` y los andenes
+centrales habilitados con `cantidad_andenes_centrales`. Se colocan sobre la
+superficie real de cada andén, respetando su posición, altura y ajustes
+laterales. Al cambiar la geometría se actualizan sus posiciones y el volumen
+usado para renderizarlos.
+
+| Estación | Capacidad de pasajeros en espera |
+| :------- | ------------------------------: |
+| Plaza Constitución | 3.000 |
+| Hipólito Yrigoyen | 1.000 |
+| Darío Santillán y Maximiliano Kosteki | 2.300 |
+| Lanús | 2.500 |
+| Banfield | 1.900 |
+| Lomas de Zamora | 2.200 |
+| Temperley | 2.400 |
+| José Mármol | 1.100 |
+| Rafael Calzada | 1.200 |
+| Claypole | 1.600 |
+| Ingeniero Dante Ardigó | 1.200 |
+| Florencio Varela | 1.500 |
+| Estanislao S. Zeballos | 1.200 |
+| Bosques | 1.400 |
+
+Bosques y Constitución también usan estas capacidades en el nivel alternativo
+`levels/ramal_roca/ramal_roca.tscn`.
+
 ### Pruebas headless
 
 Al pedirle pruebas a un agente, incluí siempre la ruta exacta del ejecutable de
 Godot; no asumas que está disponible en el `PATH`. En este equipo:
 
 ```text
-C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe
+F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe
 ```
 
 Ejecutá desde la raíz del repositorio:
 
 ```powershell
 # Carga rápida de la escena de inicio
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . --quit-after 150
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . --quit-after 150
 
 # Servicio, estados y terminal
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_recorrido_completo.gd
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_finalizacion_bosques.gd
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_ruta_invalida_ida.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_recorrido_completo.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_finalizacion_bosques.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_ruta_invalida_ida.gd
 
 # Controlador, comandos, HUD y velocidad operativa
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_simulacion_controller.gd
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_comandos_simulacion.gd
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_hud_velocidad_simulacion.gd
-& 'C:\Program Files (x86)\Godot\Oficial\Godot4\GD\Godot_v4.7.2\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_velocidad_operativa.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_simulacion_controller.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_comandos_simulacion.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_hud_velocidad_simulacion.gd
+& 'F:\descargas\godot\Godot_v4.7.2-stable_win64_console.exe' --headless --path . -s res://tools/test_velocidad_operativa.gd
 
 ```
 

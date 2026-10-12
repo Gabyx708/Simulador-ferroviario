@@ -499,7 +499,6 @@ func _crear_multimeshes_pasajeros() -> void:
 		var multimesh: MultiMesh = MultiMesh.new()
 		multimesh.transform_format = MultiMesh.TRANSFORM_3D
 		multimesh.mesh = _mallas_pasajeros[indice_variante]
-		multimesh.custom_aabb = _aabb_multimesh_pasajeros()
 
 		var nodo_multimesh: MultiMeshInstance3D = MultiMeshInstance3D.new()
 		nodo_multimesh.name = "PasajerosMultimesh%02d" % indice_variante
@@ -508,13 +507,6 @@ func _crear_multimeshes_pasajeros() -> void:
 		add_child(nodo_multimesh)
 		_multimeshes_pasajeros.append(multimesh)
 	_reubicar_pasajeros_visuales()
-
-
-func _aabb_multimesh_pasajeros() -> AABB:
-	return AABB(
-		Vector3(-longitud_anden * 0.5 - 2.0, 0.0, -6.0),
-		Vector3(longitud_anden + 4.0, 3.0, 12.0)
-	)
 
 
 func _sincronizar_pasajeros_visuales() -> void:
@@ -534,25 +526,51 @@ func _sincronizar_pasajeros_visuales() -> void:
 		_multimeshes_pasajeros[indice_variante].visible_instance_count = cantidad_por_variante[indice_variante]
 
 
+func _obtener_andenes_pasajeros() -> Array[MeshInstance3D]:
+	var andenes: Array[MeshInstance3D] = []
+	for nombre: String in ["AndenA", "AndenB"]:
+		var anden: MeshInstance3D = get_node_or_null(nombre) as MeshInstance3D
+		if anden != null and anden.mesh != null and not anden.is_queued_for_deletion():
+			andenes.append(anden)
+	for indice: int in range(cantidad_andenes_centrales):
+		var ruta: String = "AndenesCentrales/Central%d/Anden" % (indice + 1)
+		var anden: MeshInstance3D = get_node_or_null(ruta) as MeshInstance3D
+		if anden != null and anden.mesh != null and not anden.is_queued_for_deletion():
+			andenes.append(anden)
+	return andenes
+
+
 func _limite_pasajeros_visibles() -> int:
 	var largo_util: float = maxf(0.0, longitud_anden * 0.9)
 	var posiciones_por_anden: int = maxi(1, int(floor(largo_util / 1.2)) + 1)
-	return mini(maxi(0, maximo_pasajeros_visibles), posiciones_por_anden * 2)
+	var cantidad_andenes: int = _obtener_andenes_pasajeros().size()
+	return mini(maxi(0, maximo_pasajeros_visibles), posiciones_por_anden * cantidad_andenes)
 
 
-func _transformacion_pasajero_visual(indice: int, cantidad_total: int) -> Transform3D:
-	var cantidad_por_anden: int = maxi(1, int(ceil(float(cantidad_total) / 2.0)))
-	var puesto: int = int(indice / 2)
-	var margen: float = minf(5.0, longitud_anden * 0.05)
-	var largo_util: float = maxf(0.0, longitud_anden - margen * 2.0)
+func _transformacion_pasajero_visual(indice: int, cantidad_total: int, andenes: Array[MeshInstance3D]) -> Transform3D:
+	var cantidad_andenes: int = andenes.size()
+	var anden: MeshInstance3D = andenes[indice % cantidad_andenes]
+	# Los andenes centrales están anidados: incluir la transformada de sus padres.
+	var transformacion_anden: Transform3D = anden.transform
+	var ancestro: Node = anden.get_parent()
+	while ancestro != null and ancestro != self:
+		if ancestro is Node3D:
+			transformacion_anden = (ancestro as Node3D).transform * transformacion_anden
+		ancestro = ancestro.get_parent()
+	var bounds_anden: AABB = anden.mesh.get_aabb()
+	var cantidad_por_anden: int = maxi(1, int(ceil(float(cantidad_total) / float(cantidad_andenes))))
+	var puesto: int = int(indice / cantidad_andenes)
+	var margen: float = minf(5.0, bounds_anden.size.x * 0.05)
+	var largo_util: float = maxf(0.0, bounds_anden.size.x - margen * 2.0)
 	var separacion: float = 8.0
 	if cantidad_por_anden > 1:
 		separacion = clampf(largo_util / float(cantidad_por_anden - 1), 1.2, 8.0)
 	var anillo: int = int(ceil(float(puesto) / 2.0))
 	var direccion: float = -1.0 if puesto % 2 == 1 else 1.0
-	var x: float = float(anillo) * separacion * direccion
-	var z: float = -3.75 if indice % 2 == 0 else 3.75
-	var posicion: Vector3 = Vector3(x, 0.52, z)
+	var x: float = clampf(float(anillo) * separacion * direccion, -largo_util * 0.5, largo_util * 0.5)
+	# El andén ya incorpora la separación y los ajustes laterales del Inspector.
+	var centro_anden: Vector3 = bounds_anden.get_center()
+	var posicion: Vector3 = transformacion_anden * Vector3(centro_anden.x + x, bounds_anden.end.y + 0.02, centro_anden.z)
 
 	var indice_variante: int = indice % _mallas_pasajeros.size()
 	var bounds: AABB = _bounds_mallas_pasajeros[indice_variante]
@@ -560,7 +578,7 @@ func _transformacion_pasajero_visual(indice: int, cantidad_total: int) -> Transf
 	var centro: Vector3 = bounds.get_center()
 	transformacion_modelo.origin -= Vector3(centro.x, bounds.position.y, centro.z)
 	var escala: float = 1.65 / bounds.size.y
-	var transformacion_raiz: Transform3D = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * escala), posicion)
+	var transformacion_raiz: Transform3D = Transform3D(transformacion_anden.basis.orthonormalized().scaled(Vector3.ONE * escala), posicion)
 	return transformacion_raiz * transformacion_modelo
 
 
@@ -568,23 +586,36 @@ func _reubicar_pasajeros_visuales() -> void:
 	if _multimeshes_pasajeros.is_empty():
 		return
 
+	var andenes: Array[MeshInstance3D] = _obtener_andenes_pasajeros()
 	var capacidad_visual: int = _limite_pasajeros_visibles()
 	var instancias_por_variante: int = int(ceil(float(capacidad_visual) / float(_multimeshes_pasajeros.size())))
 	var cantidad_por_variante: Array[int] = []
+	var bounds_por_variante: Array[AABB] = []
 	for multimesh: MultiMesh in _multimeshes_pasajeros:
 		multimesh.instance_count = instancias_por_variante
 		multimesh.visible_instance_count = 0
-		multimesh.custom_aabb = _aabb_multimesh_pasajeros()
 		cantidad_por_variante.append(0)
+		bounds_por_variante.append(AABB())
 
 	for indice: int in range(capacidad_visual):
 		var indice_variante: int = indice % _multimeshes_pasajeros.size()
 		var indice_instancia: int = cantidad_por_variante[indice_variante]
+		var multimesh: MultiMesh = _multimeshes_pasajeros[indice_variante]
+		var transformacion: Transform3D = _transformacion_pasajero_visual(indice, capacidad_visual, andenes)
 		_multimeshes_pasajeros[indice_variante].set_instance_transform(
 			indice_instancia,
-			_transformacion_pasajero_visual(indice, capacidad_visual)
+			transformacion
+		)
+		var bounds_instancia: AABB = transformacion * multimesh.mesh.get_aabb()
+		bounds_por_variante[indice_variante] = (
+			bounds_instancia if indice_instancia == 0
+			else bounds_por_variante[indice_variante].merge(bounds_instancia)
 		)
 		cantidad_por_variante[indice_variante] += 1
+
+	for indice_variante: int in range(_multimeshes_pasajeros.size()):
+		var multimesh: MultiMesh = _multimeshes_pasajeros[indice_variante]
+		multimesh.custom_aabb = bounds_por_variante[indice_variante]
 
 	_sincronizar_pasajeros_visuales()
 
@@ -794,8 +825,6 @@ func _actualizar_disposicion_transversal() -> void:
 		_poste_ida.position.z = -mitad_separacion + 1.75 + ajuste_lateral_anden_ida
 	if _poste_vuelta != null:
 		_poste_vuelta.position.z = mitad_separacion - 1.75 + ajuste_lateral_anden_vuelta
-	for multimesh: MultiMesh in _multimeshes_pasajeros:
-		multimesh.custom_aabb = _aabb_multimesh_pasajeros()
 	_sincronizar_andenes_centrales()
 	_actualizar_area_seleccion()
 	_reubicar_pasajeros_visuales()
