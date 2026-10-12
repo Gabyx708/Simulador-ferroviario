@@ -101,20 +101,50 @@ Una `Estacion` puede cubrir varias vías paralelas sin duplicar el nodo: ajustá
 
 La propiedad `capacidad_maxima_espera` de cada estación fija el máximo de pasajeros
 esperando para subir. La cantidad de figuras visibles se regula por separado con
-`maximo_pasajeros_visibles`.
+`maximo_pasajeros_visibles`. Cuando ese límite se alcanza, las figuras se reparten
+proporcionalmente a las cantidades reales de cada andén.
+
+La capacidad se reparte equitativamente entre los
+andenes disponibles, incluidos los centrales. Cada andén conserva su propia
+fila de pasajeros: por ejemplo, una estación de 1.200 pasajeros con tres
+andenes admite 400 en espera por andén. Si la capacidad no es divisible, los
+pasajeros restantes se reparten de a uno para conservar el total.
+
+Cada fila distingue pasajeros a Constitución y a Bosques. El destino de cada
+andén se ajusta en «Demanda por destino» del Inspector: por defecto, `AndenA`
+sirve a Bosques, `AndenB` a Constitución y los centrales sirven ambos destinos,
+compartiendo su capacidad. Un tren toma solo pasajeros de su destino dentro
+del andén donde se detiene.
+
+El tren embarca únicamente desde el andén más cercano a la vía por la que
+se detiene; el sentido de servicio desempata entre los andenes laterales.
+La bajada conserva el contador general de la estación y su visualización
+temporal; esos pasajeros no se incorporan a las filas de embarque.
+El render refleja las cantidades de cada fila y los totales de la estación
+siguen disponibles para el HUD y las estadísticas.
+
+El cartel de cada estación muestra una sección «En espera por andén», con
+una fila `Andén 1: ... pasajeros`, `Andén 2: ... pasajeros`, etc. Se numeran
+primero los andenes laterales y después los centrales. Los valores se actualizan
+al generarse o embarcarse pasajeros, y el fondo se adapta al tamaño del texto.
 
 Los modelos de pasajeros se reparten entre `AndenA`, `AndenB` y los andenes
 centrales habilitados con `cantidad_andenes_centrales`. Se colocan sobre la
 superficie real de cada andén, respetando su posición, altura y ajustes
 laterales. Al cambiar la geometría se actualizan sus posiciones y el volumen
 usado para renderizarlos.
+En estaciones integradas a una terminal existente se puede ocultar la estructura
+genérica con `mostrar_estructura_andenes`, manteniendo visibles el cartel y los
+pasajeros.
 
 | Estación | Capacidad de pasajeros en espera |
 | :------- | ------------------------------: |
 | Plaza Constitución | 3.000 |
 | Hipólito Yrigoyen | 1.000 |
 | Darío Santillán y Maximiliano Kosteki | 2.300 |
+| Gerli | 1.200 |
 | Lanús | 2.500 |
+| Remedios de Escalada | 1.600 |
 | Banfield | 1.900 |
 | Lomas de Zamora | 2.200 |
 | Temperley | 2.400 |
@@ -128,6 +158,54 @@ usado para renderizarlos.
 
 Bosques y Constitución también usan estas capacidades en el nivel alternativo
 `levels/ramal_roca/ramal_roca.tscn`.
+
+Gerli tiene dos andenes y admite 600 pasajeros en cada uno. Remedios de Escalada
+tiene también un andén central habilitado; sus 1.600 lugares se reparten entre
+las tres filas como 534, 533 y 533 pasajeros.
+
+### Demanda por estación y destino
+
+Las 16 estaciones de la tabla usan perfiles `DemandaEstacion` en
+`resources/passengers/`, vinculados mediante `demanda_pasajeros`. Los valores
+son pasajeros promedio por formación; entre paréntesis se conserva la estimación
+diaria proporcionada como referencia.
+
+| Estación | Suben a Constitución | Bajan a Constitución | Suben a Bosques | Bajan a Bosques |
+| :------- | -------------------: | -------------------: | --------------: | --------------: |
+| Plaza Constitución | 10 (500/día) | 1.420 (71.000/día) | 1.420 (71.000/día) | 12 (600/día) |
+| Hipólito Yrigoyen | 15 (750/día) | 40 (2.000/día) | 40 (2.000/día) | 15 (750/día) |
+| Darío Santillán y Maximiliano Kosteki | 90 (4.500/día) | 120 (6.000/día) | 125 (6.200/día) | 90 (4.500/día) |
+| Gerli | 55 (2.750/día) | 15 (750/día) | 18 (900/día) | 55 (2.750/día) |
+| Lanús | 240 (12.000/día) | 110 (5.500/día) | 120 (6.000/día) | 240 (12.000/día) |
+| Remedios de Escalada | 80 (4.000/día) | 45 (2.250/día) | 50 (2.500/día) | 80 (4.000/día) |
+| Banfield | 140 (7.000/día) | 60 (3.000/día) | 65 (3.200/día) | 140 (7.000/día) |
+| Lomas de Zamora | 210 (10.500/día) | 80 (4.000/día) | 90 (4.500/día) | 210 (10.500/día) |
+| Temperley | 280 (14.000/día) | 130 (6.500/día) | 150 (7.500/día) | 280 (14.000/día) |
+| José Mármol | 72 (3.600/día) | 12 (600/día) | 14 (700/día) | 74 (3.700/día) |
+| Rafael Calzada | 98 (4.900/día) | 10 (500/día) | 12 (600/día) | 100 (5.000/día) |
+| Claypole | 220 (11.000/día) | 30 (1.500/día) | 35 (1.800/día) | 225 (11.300/día) |
+| Ingeniero Dante Ardigó | 105 (5.200/día) | 6 (300/día) | 8 (400/día) | 105 (5.300/día) |
+| Florencio Varela | 270 (13.500/día) | 24 (1.200/día) | 28 (1.400/día) | 270 (13.700/día) |
+| Estanislao S. Zeballos | 95 (4.800/día) | 6 (300/día) | 8 (400/día) | 95 (4.900/día) |
+| Bosques | 130 (6.500/día) | 8 (400/día) | 10 (500/día) | 130 (6.600/día) |
+
+La simulación usa una variación aleatoria de ±15 % alrededor de los promedios,
+redondeada a pasajeros enteros. La generación continua usa un intervalo de
+referencia de **12 segundos de simulación**, la mitad de la tasa original de
+generación; se puede editar junto con la variación en cada perfil. Las estaciones
+sin perfil usan una tasa base de 0,75 en lugar de 1,5 pasajeros por segundo.
+La tasa de cada destino se reparte entre los andenes que lo sirven. Los
+andenes completos dejan de generar. Los promedios de subida regulan únicamente
+la generación de pasajeros: al llegar un tren suben todos los que esperan en
+su andén y destino, hasta completar la capacidad libre de la formación.
+Si hace falta, la parada se prolonga hasta terminar ese embarque. Los pasajeros
+que no entran en el tren permanecen en su fila para la próxima formación.
+
+La bajada intermedia usa el promedio del destino correspondiente, limitado por
+los pasajeros a bordo. En la terminal de finalización siguen bajando todos.
+El tren conserva a los pasajeros embarcados en su contador `pasajeros_actuales`
+hasta que desciendan en una parada. La capacidad actual de la formación es 500.
+Las estaciones sin perfil conservan el porcentaje de bajada anterior.
 
 ### Pruebas headless
 

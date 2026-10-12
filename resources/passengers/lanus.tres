@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DemandaEstacion" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/infrastructure/demanda_estacion.gd" id="1_demanda"]
+
+[resource]
+script = ExtResource("1_demanda")
+suben_a_constitucion = 240
+bajan_a_constitucion = 110
+suben_a_bosques = 120
+bajan_a_bosques = 240
+

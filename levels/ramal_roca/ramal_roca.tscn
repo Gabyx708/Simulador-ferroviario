@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" uid="uid://ch3056n8l7qtf" path="res://assets/models/train/csr_roca_coche_remolcado.glb" id="19_stcbo"]
 [ext_resource type="PackedScene" uid="uid://di24cfwbrvy3b" path="res://vias.tscn" id="24_hail4"]
 [ext_resource type="PackedScene" path="res://ui/screens/hud.tscn" id="20_hud"]
+[ext_resource type="Resource" path="res://resources/passengers/bosques.tres" id="demanda_bosques"]
+[ext_resource type="Resource" path="res://resources/passengers/plaza_constitucion.tres" id="demanda_plaza_constitucion"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("9_tfjle")
@@ -233,6 +235,7 @@ progreso_en_via = 369.40000000000003
 desfasaje_parada_ida = 100.0
 desfasaje_parada_vuelta = -100.0
 nombre_estacion = "Bosques"
+demanda_pasajeros = ExtResource("demanda_bosques")
 capacidad_maxima_espera = 1400
 es_terminal = true
 
@@ -243,6 +246,7 @@ progreso_en_via = 1794.8000000000002
 desfasaje_parada_ida = 80.0
 desfasaje_parada_vuelta = -80.0
 nombre_estacion = "Constitución"
+demanda_pasajeros = ExtResource("demanda_plaza_constitucion")
 capacidad_maxima_espera = 3000
 
 [node name="Formaciones" type="Node3D" parent="." unique_id=421076639]

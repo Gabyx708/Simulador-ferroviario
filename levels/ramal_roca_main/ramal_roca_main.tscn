@@ -30,6 +30,22 @@
 [ext_resource type="Script" path="res://scenes/simulation/estadisticas_retraso.gd" id="27_estadisticas_retraso"]
 [ext_resource type="Script" path="res://scenes/simulation/gestor_eventos.gd" id="28_gestor_eventos"]
 [ext_resource type="Script" path="res://scenes/simulation/indicador_eventos.gd" id="29_indicador_eventos"]
+[ext_resource type="Resource" path="res://resources/passengers/bosques.tres" id="demanda_bosques"]
+[ext_resource type="Resource" path="res://resources/passengers/zeballos.tres" id="demanda_zeballos"]
+[ext_resource type="Resource" path="res://resources/passengers/florencio_varela.tres" id="demanda_florencio_varela"]
+[ext_resource type="Resource" path="res://resources/passengers/dante_ardigo.tres" id="demanda_dante_ardigo"]
+[ext_resource type="Resource" path="res://resources/passengers/claypole.tres" id="demanda_claypole"]
+[ext_resource type="Resource" path="res://resources/passengers/rafael_calzada.tres" id="demanda_rafael_calzada"]
+[ext_resource type="Resource" path="res://resources/passengers/jose_marmol.tres" id="demanda_jose_marmol"]
+[ext_resource type="Resource" path="res://resources/passengers/temperley.tres" id="demanda_temperley"]
+[ext_resource type="Resource" path="res://resources/passengers/lomas_de_zamora.tres" id="demanda_lomas_de_zamora"]
+[ext_resource type="Resource" path="res://resources/passengers/banfield.tres" id="demanda_banfield"]
+[ext_resource type="Resource" path="res://resources/passengers/lanus.tres" id="demanda_lanus"]
+[ext_resource type="Resource" path="res://resources/passengers/dario_santillan_kosteki.tres" id="demanda_dario_santillan_kosteki"]
+[ext_resource type="Resource" path="res://resources/passengers/hipolito_yrigoyen.tres" id="demanda_hipolito_yrigoyen"]
+[ext_resource type="Resource" path="res://resources/passengers/plaza_constitucion.tres" id="demanda_plaza_constitucion"]
+[ext_resource type="Resource" path="res://resources/passengers/gerli.tres" id="demanda_gerli"]
+[ext_resource type="Resource" path="res://resources/passengers/remedios_de_escalada.tres" id="demanda_remedios_de_escalada"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_12tge"]
 shader = ExtResource("2_3uoor")
@@ -9926,14 +9942,15 @@ seguir_al_inicio = false
 
 [node name="EstacionPlazaConstitucion" parent="." unique_id=141049132 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
 transform = Transform3D(0.01258717, 0, -0.99992085, 0, 1, 0, 0.99992085, 0, 0.01258717, 155.96533, 0, 160.30585)
-visible = false
 traza = NodePath("../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_472")
 progreso_en_via = 67.8
 separacion_vias = 30.0
 ajuste_lateral_anden_ida = -20.0
 ajuste_lateral_anden_vuelta = 20.0
 nombre_estacion = "Plaza Constitución"
+demanda_pasajeros = ExtResource("demanda_plaza_constitucion")
 capacidad_maxima_espera = 3000
+mostrar_estructura_andenes = false
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -9944,6 +9961,7 @@ progreso_en_via = 751.3000000000001
 ajuste_lateral_anden_ida = -0.1999999999999993
 ajuste_lateral_anden_vuelta = 12.75
 nombre_estacion = "Hipólito Yrigoyen"
+demanda_pasajeros = ExtResource("demanda_hipolito_yrigoyen")
 capacidad_maxima_espera = 1000
 tiempo_espera = 3.0
 esta_editada = true
@@ -9957,6 +9975,7 @@ ajuste_lateral_anden_vuelta = 20.0
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.9
 nombre_estacion = "Darío Santillán y Maximiliano Kosteki"
+demanda_pasajeros = ExtResource("demanda_dario_santillan_kosteki")
 capacidad_maxima_espera = 2300
 tiempo_espera = 3.0
 
@@ -9969,6 +9988,8 @@ ajuste_lateral_anden_ida = -5.949999999999999
 ajuste_lateral_anden_vuelta = 13.65
 posicion_lateral_anden_central_1 = 5.5
 nombre_estacion = "Gerli"
+demanda_pasajeros = ExtResource("demanda_gerli")
+capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 esta_editada = true
 
@@ -9981,6 +10002,7 @@ ajuste_lateral_anden_vuelta = 17.15
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.25
 nombre_estacion = "Lanús"
+demanda_pasajeros = ExtResource("demanda_lanus")
 capacidad_maxima_espera = 2500
 tiempo_espera = 3.0
 
@@ -9993,6 +10015,8 @@ ajuste_lateral_anden_vuelta = 4.199999999999999
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = -3.8500000000000014
 nombre_estacion = "Remedios de Escalada"
+demanda_pasajeros = ExtResource("demanda_remedios_de_escalada")
+capacidad_maxima_espera = 1600
 tiempo_espera = 3.0
 
 [node name="EstacionBanfield" parent="." unique_id=141049138 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -10006,6 +10030,7 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 8.25
 posicion_lateral_anden_central_2 = 13.200000000000005
 nombre_estacion = "Banfield"
+demanda_pasajeros = ExtResource("demanda_banfield")
 capacidad_maxima_espera = 1900
 tiempo_espera = 3.0
 
@@ -10020,6 +10045,7 @@ cantidad_andenes_centrales = 2
 posicion_lateral_anden_central_1 = 9.35
 posicion_lateral_anden_central_2 = 15.400000000000006
 nombre_estacion = "Lomas de Zamora"
+demanda_pasajeros = ExtResource("demanda_lomas_de_zamora")
 capacidad_maxima_espera = 2200
 tiempo_espera = 3.0
 
@@ -10031,6 +10057,7 @@ invertir_sentido = true
 ajuste_lateral_anden_ida = -5.5
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "Temperley"
+demanda_pasajeros = ExtResource("demanda_temperley")
 capacidad_maxima_espera = 2400
 tiempo_espera = 3.0
 esta_editada = true
@@ -10042,6 +10069,7 @@ progreso_en_via = 156.6
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 6.600000000000001
 nombre_estacion = "José Mármol"
+demanda_pasajeros = ExtResource("demanda_jose_marmol")
 capacidad_maxima_espera = 1100
 tiempo_espera = 3.0
 
@@ -10051,6 +10079,7 @@ traza = NodePath("../TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley
 progreso_en_via = 1584.8
 ajuste_lateral_anden_vuelta = 7.449999999999999
 nombre_estacion = "Rafael Calzada"
+demanda_pasajeros = ExtResource("demanda_rafael_calzada")
 capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 
@@ -10061,6 +10090,7 @@ progreso_en_via = 235.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Claypole"
+demanda_pasajeros = ExtResource("demanda_claypole")
 capacidad_maxima_espera = 1600
 tiempo_espera = 3.0
 
@@ -10071,6 +10101,7 @@ progreso_en_via = 872.9
 ajuste_lateral_anden_ida = -0.6499999999999986
 ajuste_lateral_anden_vuelta = 3.1000000000000014
 nombre_estacion = "Ing. Dante Ardigó"
+demanda_pasajeros = ExtResource("demanda_dante_ardigo")
 capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 
@@ -10081,6 +10112,7 @@ progreso_en_via = 342.0
 ajuste_lateral_anden_ida = -0.4499999999999993
 ajuste_lateral_anden_vuelta = 5.050000000000001
 nombre_estacion = "Florencio Varela"
+demanda_pasajeros = ExtResource("demanda_florencio_varela")
 capacidad_maxima_espera = 1500
 tiempo_espera = 3.0
 
@@ -10091,6 +10123,7 @@ progreso_en_via = 1462.1
 ajuste_lateral_anden_ida = -1.1000000000000014
 ajuste_lateral_anden_vuelta = 5.25
 nombre_estacion = "Estanislao S. Zeballos"
+demanda_pasajeros = ExtResource("demanda_zeballos")
 capacidad_maxima_espera = 1200
 tiempo_espera = 3.0
 esta_editada = true
@@ -10102,6 +10135,7 @@ progreso_en_via = 221.0
 ajuste_lateral_anden_ida = -1.3000000000000007
 ajuste_lateral_anden_vuelta = 5.949999999999999
 nombre_estacion = "Bosques"
+demanda_pasajeros = ExtResource("demanda_bosques")
 capacidad_maxima_espera = 1400
 tiempo_espera = 3.0
 

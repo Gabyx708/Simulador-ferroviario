@@ -2352,10 +2352,9 @@ const MARGEN_TIEMPO_PASAJEROS: float = 0.85
 ## bajan (todos, si es terminal; un % sorteado según el sentido si no), y
 ## recién cuando termina de bajar toda esa gente, sube lo que entre según
 ## el lugar libre. El ritmo (`intervalo`) se ajusta solo según cuánta gente
-## hay y cuánto tiempo de parada real hay disponible -- en la vida real el
-## tren no espera a que baje el último, el tiempo de parada es fijo y el
-## flujo de gente tiene que entrar ahí. `_procesando_pasajeros` queda como
-## red de seguridad para el caso raro en que no alcance.
+## hay y cuánto tiempo de parada real hay disponible. Si el embarque no termina
+## dentro de ese tiempo, `_procesando_pasajeros` mantiene la formación detenida
+## hasta vaciar su fila o completar la capacidad del tren.
 ## `estacion` se pasa como Node genérico a propósito: no depende de que la
 ## clase Estacion esté disponible en esta rama, solo de que tenga los
 ## métodos `embarcar_pasajeros`/`desembarcar_pasajeros` (acordado con el
@@ -2364,6 +2363,28 @@ func _intercambio_habilitado() -> bool:
 	while _estado_operacion == EstadoOperacion.DETENIDO_POR_EVENTO and not _eliminado:
 		await get_tree().process_frame
 	return not _eliminado and not _ruta_invalida and not _servicio_finalizado
+
+
+func _viaja_hacia_constitucion() -> bool:
+	# El servicio ordena Constitución -> Bosques; la curva puede cambiar su sentido.
+	return _direccion_servicio < 0 if _usa_servicio() else invertir_sentido
+
+
+func _resolver_anden_embarque(estacion: Node) -> String:
+	if estacion == null or not is_instance_valid(estacion) or not estacion.has_method("resolver_anden_pasajeros"):
+		return ""
+	# El nodo raíz no sigue a los coches: usar la posición actual sobre la vía.
+	var punto_via: Vector3 = global_position
+	if traza != null and is_instance_valid(traza) and traza.curve != null:
+		punto_via = traza.to_global(traza.curve.sample_baked(_avance, true))
+	var sentido_ida: bool = not _viaja_hacia_constitucion()
+	return str(estacion.call("resolver_anden_pasajeros", punto_via, sentido_ida))
+
+
+func _embarcar_pasajeros_del_anden(estacion: Node, cantidad: int, id_anden: String) -> int:
+	if estacion.has_method("resolver_anden_pasajeros"):
+		return maxi(0, int(estacion.call("embarcar_pasajeros", cantidad, id_anden, _viaja_hacia_constitucion())))
+	return maxi(0, int(estacion.call("embarcar_pasajeros", cantidad)))
 
 
 func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direccion: float, tiempo_disponible: float) -> void:
@@ -2375,6 +2396,7 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 	_ultimo_bajan = 0
 	pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, 0, 0, true)
 
+	var id_anden: String = _resolver_anden_embarque(estacion)
 	var bajan: int = pasajeros_actuales if es_terminal_actual else _calcular_bajan(estacion, direccion)
 	var lugar_estimado: int = maxi(0, capacidad_pasajeros - (pasajeros_actuales - bajan))
 	var cantidad_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
@@ -2394,23 +2416,25 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 		pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
 		return
 
-	await _embarcar_mientras_en_parada(estacion, intervalo)
+	await _embarcar_mientras_en_parada(estacion, intervalo, id_anden)
 
 	_procesando_pasajeros = false
 	pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
 
 
-## Sigue intentando embarcar durante el tiempo restante de parada. Si el andén
-## se queda momentáneamente vacío, espera un poco y vuelve a comprobarlo para
-## recoger a quienes lleguen antes de que el tren reanude la marcha.
-func _embarcar_mientras_en_parada(estacion: Node, intervalo: float) -> void:
+## Embarca la fila del andén y destino correspondiente hasta completar el tren.
+## Durante la espera nominal también recoge nuevos pasajeros; al vencerla,
+## termina de embarcar la fila pendiente antes de permitir la salida.
+func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: String = "") -> void:
 	if estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("embarcar_pasajeros"):
 		return
 
+	if id_anden.is_empty():
+		id_anden = _resolver_anden_embarque(estacion)
 	var intervalo_seguro: float = maxf(intervalo, INTERVALO_PASAJEROS_MINIMO)
-	while _espera > 0.0:
+	while true:
 		if not (await _intercambio_habilitado()):
 			return
 		if _eliminado or not is_instance_valid(self):
@@ -2423,19 +2447,18 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float) -> void:
 			return
 
 		var cantidad_tanda: int = mini(lugar_disponible, maxi(1, cantidad_pasajeros_por_tanda))
-		var suben: int = mini(cantidad_tanda, maxi(0, int(estacion.call("embarcar_pasajeros", cantidad_tanda))))
+		var suben: int = mini(cantidad_tanda, _embarcar_pasajeros_del_anden(estacion, cantidad_tanda, id_anden))
 		if suben > 0:
 			pasajeros_actuales += mini(suben, lugar_disponible)
 			_ultimo_suben += suben
 			pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, true)
 
+		if suben <= 0 and _espera <= 0.0:
+			return
 		var tiempo_entre_intentos: float = intervalo_seguro
 		if suben <= 0:
 			tiempo_entre_intentos = maxf(intervalo_seguro, 0.15)
-		var tiempo_restante: float = maxf(0.0, _espera)
-		var demora: float = minf(tiempo_entre_intentos, tiempo_restante)
-		if demora <= 0.0:
-			return
+		var demora: float = minf(tiempo_entre_intentos, _espera) if _espera > 0.0 else tiempo_entre_intentos
 		await get_tree().create_timer(demora).timeout
 
 
@@ -2451,12 +2474,16 @@ func _calcular_intervalo_pasajeros(total_pasos: int, tiempo_disponible: float) -
 	return clampf(intervalo_ajustado, INTERVALO_PASAJEROS_MINIMO, intervalo_pasajeros)
 
 
-## Sortea qué porcentaje de los pasajeros a bordo baja en una parada
-## intermedia (no terminal), según el sentido de circulación y un factor
+## Usa el promedio por destino cuando la estación tiene un perfil de demanda.
+## Sin perfil, sortea el porcentaje de pasajeros que baja según el sentido y un factor
 ## propio de la estación (`factor_bajada`, ej. para nodos de combinación
 ## con otras líneas como Lanús o Temperley). Duck-typed: si la estación no
 ## tiene `factor_bajada`, usa 1.0 sin romper nada.
 func _calcular_bajan(estacion: Node, direccion: float) -> int:
+	if estacion.has_method("calcular_bajada_pasajeros"):
+		var objetivo: int = int(estacion.call("calcular_bajada_pasajeros", _viaja_hacia_constitucion()))
+		if objetivo >= 0:
+			return mini(pasajeros_actuales, objetivo)
 	var minimo: float = porcentaje_bajada_inverso_min if direccion < 0.0 else porcentaje_bajada_directo_min
 	var maximo: float = porcentaje_bajada_inverso_max if direccion < 0.0 else porcentaje_bajada_directo_max
 	var porcentaje: float = randf_range(minimo, maximo)
@@ -2498,12 +2525,14 @@ func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 ## Sube hasta `cantidad` pasajeros en tandas de tamaño configurable (limitado
 ## por la capacidad libre y por cuánta gente le entregue la estación), separadas
 ## por `intervalo` segundos. Fire-and-forget: no hace falta esperarla.
-func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
+func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15, id_anden: String = "") -> void:
 	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("embarcar_pasajeros"):
 		return
 
+	if id_anden.is_empty():
+		id_anden = _resolver_anden_embarque(estacion)
 	var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
 	var restante: int = mini(cantidad, lugar_disponible)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
@@ -2518,7 +2547,7 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 		var cantidad_tanda: int = mini(restante, mini(lugar_disponible, maximo_por_tanda))
 		if cantidad_tanda <= 0:
 			return
-		var suben: int = mini(cantidad_tanda, maxi(0, int(estacion.call("embarcar_pasajeros", cantidad_tanda))))
+		var suben: int = mini(cantidad_tanda, _embarcar_pasajeros_del_anden(estacion, cantidad_tanda, id_anden))
 		if suben <= 0:
 			return
 		pasajeros_actuales += suben

@@ -15,6 +15,8 @@ signal edicion_guardada(estacion: Estacion)
 signal reseteada(estacion: Estacion)
 signal pasajeros_actualizados(estacion: Estacion)
 
+enum DestinoAnden { CONSTITUCION, BOSQUES, AMBOS }
+
 const PACK_MODELOS_PASAJEROS: PackedScene = preload("res://assets/models/passengers/free_pack_-_lowpoly_people.glb")
 const ESCALA_ELEMENTOS_INFORMACION: float = 5.0
 const NOMBRES_VARIANTES_PASAJERO: Array[String] = [
@@ -270,19 +272,56 @@ var _datos_originales: Dictionary = {}
 @export_range(0, 100000, 1) var capacidad_maxima_espera: int = 150:
 	set(v):
 		capacidad_maxima_espera = maxi(0, v)
+		if is_inside_tree():
+			_configurar_pasajeros_por_anden()
+			pasajeros_actualizados.emit(self)
 
-@export_range(0.0, 1000.0, 0.1) var tasa_generacion_pasajeros: float = 1.5
+@export_range(0.0, 1000.0, 0.01) var tasa_generacion_pasajeros: float = 0.75
 ## Limite de figuras visibles por estacion; el contador conserva la cantidad real.
 @export_range(0, 150, 1) var maximo_pasajeros_visibles: int = 150
 ## Segundos que los pasajeros desembarcados permanecen visibles antes de salir.
 @export_range(0.0, 60.0, 0.1) var tiempo_salida_pasajeros: float = 3.0
 
-var pasajeros_esperando: int = 0
+@export_group("Visualización")
+## Permite ocultar andenes y postes genéricos sin ocultar cartel ni pasajeros.
+@export var mostrar_estructura_andenes: bool = true:
+	set(v):
+		mostrar_estructura_andenes = v
+		if is_inside_tree():
+			_actualizar_visibilidad_estructura()
+
+@export_group("Demanda por destino")
+@export var demanda_pasajeros: DemandaEstacion:
+	set(v):
+		demanda_pasajeros = v
+		_proximo_sorteo_demanda = 0.0
+## El andén A sirve el recorrido actual Constitución -> Bosques.
+@export_enum("A Constitución", "A Bosques", "Ambos") var destino_anden_a: int = DestinoAnden.BOSQUES
+@export_enum("A Constitución", "A Bosques", "Ambos") var destino_anden_b: int = DestinoAnden.CONSTITUCION
+@export_enum("A Constitución", "A Bosques", "Ambos") var destino_anden_central_1: int = DestinoAnden.AMBOS
+@export_enum("A Constitución", "A Bosques", "Ambos") var destino_anden_central_2: int = DestinoAnden.AMBOS
+
+var _andenes_pasajeros: Array[MeshInstance3D] = []
+var _ids_andenes_pasajeros: Array[String] = []
+var _capacidades_por_anden: Array[int] = []
+var _esperando_por_anden: Array[int] = []
+## X espera a Constitución; Y espera a Bosques. La capacidad es compartida.
+var _esperando_por_destino: Array[Vector2i] = []
+var _pendientes_por_anden: Array[Vector2] = []
+var _demanda_por_ciclo: Vector2i = Vector2i.ZERO
+var _proximo_sorteo_demanda: float = 0.0
+var _cantidades_visibles_por_anden: Array[int] = []
+
+## Totales para HUD y estadísticas; la población se almacena por andén.
+var pasajeros_esperando: int:
+	get:
+		return _sumar_pasajeros(_esperando_por_anden)
+	set(v):
+		_repartir_pasajeros_esperando(maxi(0, v))
 var pasajeros_saliendo: int = 0
 var pasajeros_totales_historicos: int = 0
 var pasajeros_subidos_total: int = 0
 var pasajeros_bajados_total: int = 0
-var _pasajeros_pendientes: float = 0.0
 var _reloj_pasajeros: float = 0.0
 var _salidas_pasajeros_pendientes: Array[Dictionary] = []
 var _mallas_pasajeros: Array[Mesh] = []
@@ -306,16 +345,20 @@ var _icono_informacion: Label3D
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
-		pasajeros_esperando = 0
+		_ids_andenes_pasajeros.clear()
+		_esperando_por_anden.clear()
+		_esperando_por_destino.clear()
 		pasajeros_saliendo = 0
+		_pendientes_por_anden.clear()
 		pasajeros_totales_historicos = 0
 		pasajeros_subidos_total = 0
 		pasajeros_bajados_total = 0
-		_pasajeros_pendientes = 0.0
 		_reloj_pasajeros = 0.0
+		_proximo_sorteo_demanda = 0.0
 		_salidas_pasajeros_pendientes.clear()
 	_conectar_postes()
 	_actualizar_dimensiones_anden()
+	_actualizar_visibilidad_estructura()
 	_actualizar_posicion_postes()
 	_configurar_cartel_informacion()
 	if not Engine.is_editor_hint() and maximo_pasajeros_visibles > 0:
@@ -415,6 +458,14 @@ func _configurar_cartel_informacion() -> void:
 	_area_icono_informacion.input_ray_pickable = true
 
 
+func _actualizar_visibilidad_estructura() -> void:
+	for hijo: Node in get_children():
+		if hijo is MeshInstance3D:
+			(hijo as MeshInstance3D).visible = mostrar_estructura_andenes
+		elif hijo is Node3D and (hijo.name == "AndenesCentrales" or String(hijo.name).begins_with("PosteParada")):
+			(hijo as Node3D).visible = mostrar_estructura_andenes
+
+
 func _on_area_input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if _cartel_informacion == null:
@@ -431,7 +482,29 @@ func _actualizar_cartel_informacion() -> void:
 	if _cartel_informacion == null:
 		return
 	var presentes: int = pasajeros_esperando + pasajeros_saliendo
-	_cartel_informacion.text = "%s\nEn estación: %d / %d\nHistórico: %d\nSubieron: %d  Bajaron: %d" % [nombre_estacion, presentes, capacidad_maxima_espera, pasajeros_totales_historicos, pasajeros_subidos_total, pasajeros_bajados_total]
+	var lineas: PackedStringArray = PackedStringArray([
+		"%s\nEn estación: %d / %d\nHistórico: %d\nSubieron: %d  Bajaron: %d" % [nombre_estacion, presentes, capacidad_maxima_espera, pasajeros_totales_historicos, pasajeros_subidos_total, pasajeros_bajados_total],
+		"",
+		"En espera por andén:",
+	])
+	var pasajeros_por_anden: Array[int] = obtener_pasajeros_por_anden()
+	for indice: int in range(pasajeros_por_anden.size()):
+		lineas.append("Andén %d: %d pasajeros" % [indice + 1, pasajeros_por_anden[indice]])
+	_cartel_informacion.text = "\n".join(lineas)
+	# Label3D recompone el texto de forma diferida antes de medir el fondo.
+	call_deferred("_actualizar_fondo_cartel")
+
+
+func _actualizar_fondo_cartel() -> void:
+	if _cartel_informacion == null or _fondo_cartel == null:
+		return
+	var fondo: QuadMesh = _fondo_cartel.mesh as QuadMesh
+	if fondo == null:
+		return
+	var bounds: AABB = _cartel_informacion.get_aabb()
+	fondo.size = Vector2(maxf(90.0, bounds.size.x + 6.0), maxf(30.0, bounds.size.y + 6.0))
+	var centro: Vector3 = bounds.get_center()
+	_fondo_cartel.position = Vector3(centro.x, centro.y, 0.15)
 
 
 func _on_pasajeros_actualizados(_estacion: Estacion) -> void:
@@ -513,16 +586,65 @@ func _sincronizar_pasajeros_visuales() -> void:
 	if _multimeshes_pasajeros.is_empty():
 		return
 
-	var presentes: int = pasajeros_esperando + pasajeros_saliendo
-	var cantidad_objetivo: int = mini(maxi(0, presentes), _limite_pasajeros_visibles())
+	# Distribuir las figuras según el tamaño real de cada fila para que el límite
+	# visual no haga parecer iguales andenes con cantidades distintas.
+	var cantidades: Array[int] = []
+	var disponibles: Array[int] = []
+	var pesos: Array[int] = []
+	var posiciones_por_anden: int = _posiciones_pasajeros_por_anden()
+	var cantidad_andenes: int = maxi(1, _andenes_pasajeros.size())
+	var total_disponible: int = 0
+	for indice: int in range(_andenes_pasajeros.size()):
+		cantidades.append(0)
+		# La bajada es un contador general; solo la fila de espera pertenece al andén.
+		var saliendo: int = int(pasajeros_saliendo / cantidad_andenes) + (1 if indice < pasajeros_saliendo % cantidad_andenes else 0)
+		var poblacion: int = _esperando_por_anden[indice] + saliendo
+		pesos.append(poblacion)
+		var lugares_visibles: int = mini(poblacion, posiciones_por_anden)
+		disponibles.append(lugares_visibles)
+		total_disponible += lugares_visibles
+	var restantes: int = mini(_limite_pasajeros_visibles(), total_disponible)
+	while restantes > 0:
+		var elegido: int = -1
+		var mayor_prioridad: float = -1.0
+		for indice: int in range(cantidades.size()):
+			if cantidades[indice] >= disponibles[indice] or pesos[indice] <= 0:
+				continue
+			var prioridad: float = float(pesos[indice]) / float(cantidades[indice] + 1)
+			if prioridad > mayor_prioridad:
+				mayor_prioridad = prioridad
+				elegido = indice
+		if elegido < 0:
+			break
+		cantidades[elegido] += 1
+		restantes -= 1
+	if cantidades == _cantidades_visibles_por_anden:
+		return
+	_cantidades_visibles_por_anden = cantidades.duplicate()
+
 	var cantidad_por_variante: Array[int] = []
+	var bounds_por_variante: Array[AABB] = []
 	for multimesh: MultiMesh in _multimeshes_pasajeros:
 		cantidad_por_variante.append(0)
+		bounds_por_variante.append(AABB())
 
-	for indice: int in range(cantidad_objetivo):
-		cantidad_por_variante[indice % _multimeshes_pasajeros.size()] += 1
+	var indice_visual: int = 0
+	for indice_anden: int in range(_andenes_pasajeros.size()):
+		for puesto: int in range(cantidades[indice_anden]):
+			var variante: int = indice_visual % _multimeshes_pasajeros.size()
+			var multimesh: MultiMesh = _multimeshes_pasajeros[variante]
+			var instancia: int = cantidad_por_variante[variante]
+			var transformacion: Transform3D = _transformacion_pasajero_visual(
+				_andenes_pasajeros[indice_anden], puesto, cantidades[indice_anden], variante
+			)
+			multimesh.set_instance_transform(instancia, transformacion)
+			var bounds: AABB = transformacion * multimesh.mesh.get_aabb()
+			bounds_por_variante[variante] = bounds if instancia == 0 else bounds_por_variante[variante].merge(bounds)
+			cantidad_por_variante[variante] += 1
+			indice_visual += 1
 
 	for indice_variante: int in range(_multimeshes_pasajeros.size()):
+		_multimeshes_pasajeros[indice_variante].custom_aabb = bounds_por_variante[indice_variante]
 		_multimeshes_pasajeros[indice_variante].visible_instance_count = cantidad_por_variante[indice_variante]
 
 
@@ -540,16 +662,128 @@ func _obtener_andenes_pasajeros() -> Array[MeshInstance3D]:
 	return andenes
 
 
-func _limite_pasajeros_visibles() -> int:
+func _configurar_pasajeros_por_anden() -> void:
+	var andenes: Array[MeshInstance3D] = _obtener_andenes_pasajeros()
+	var ids: Array[String] = []
+	var capacidades: Array[int] = []
+	var esperando: Array[int] = []
+	var por_destino: Array[Vector2i] = []
+	var pendientes: Array[Vector2] = []
+	var cantidad: int = andenes.size()
+	for indice: int in range(cantidad):
+		var id: String = str(get_path_to(andenes[indice]))
+		var capacidad: int = int(capacidad_maxima_espera / cantidad)
+		if indice < capacidad_maxima_espera % cantidad:
+			capacidad += 1
+		var anterior: int = _ids_andenes_pasajeros.find(id)
+		ids.append(id)
+		capacidades.append(capacidad)
+		var fila: Vector2i = _esperando_por_destino[anterior] if anterior >= 0 else Vector2i.ZERO
+		var total: int = fila.x + fila.y
+		if total > capacidad:
+			var a_constitucion: int = roundi(float(capacidad) * float(fila.x) / float(total))
+			fila = Vector2i(a_constitucion, capacidad - a_constitucion)
+		esperando.append(fila.x + fila.y)
+		por_destino.append(fila)
+		pendientes.append(_pendientes_por_anden[anterior] if anterior >= 0 else Vector2.ZERO)
+	_andenes_pasajeros = andenes
+	_ids_andenes_pasajeros = ids
+	_capacidades_por_anden = capacidades
+	_esperando_por_anden = esperando
+	_esperando_por_destino = por_destino
+	_pendientes_por_anden = pendientes
+
+
+func _sumar_pasajeros(cantidades: Array[int]) -> int:
+	var total: int = 0
+	for cantidad: int in cantidades:
+		total += cantidad
+	return total
+
+
+## Conserva la asignación del total usada por herramientas y reparte la demanda.
+func _repartir_pasajeros_esperando(cantidad: int) -> void:
+	var andenes: int = _esperando_por_anden.size()
+	if andenes == 0:
+		return
+	var total: int = mini(cantidad, _sumar_pasajeros(_capacidades_por_anden))
+	for indice: int in range(andenes):
+		_esperando_por_anden[indice] = int(total / andenes) + (1 if indice < total % andenes else 0)
+		_esperando_por_destino[indice] = _repartir_por_destino(_esperando_por_anden[indice], _ids_andenes_pasajeros[indice])
+	if is_inside_tree():
+		pasajeros_actualizados.emit(self)
+
+
+func obtener_pasajeros_por_anden() -> Array[int]:
+	var resultado: Array[int] = []
+	for pasajeros: int in _esperando_por_anden:
+		resultado.append(pasajeros)
+	return resultado
+
+
+func _destino_del_anden(id_anden: String) -> int:
+	match id_anden:
+		"AndenA":
+			return destino_anden_a
+		"AndenB":
+			return destino_anden_b
+		"AndenesCentrales/Central1/Anden":
+			return destino_anden_central_1
+		"AndenesCentrales/Central2/Anden":
+			return destino_anden_central_2
+	return DestinoAnden.AMBOS
+
+
+func _repartir_por_destino(cantidad: int, id_anden: String) -> Vector2i:
+	var destino: int = _destino_del_anden(id_anden)
+	if destino == DestinoAnden.CONSTITUCION:
+		return Vector2i(cantidad, 0)
+	if destino == DestinoAnden.BOSQUES:
+		return Vector2i(0, cantidad)
+	var proporcion: float = 0.5
+	if demanda_pasajeros != null:
+		var total: int = demanda_pasajeros.suben_a_constitucion + demanda_pasajeros.suben_a_bosques
+		if total > 0:
+			proporcion = float(demanda_pasajeros.suben_a_constitucion) / float(total)
+	var a_constitucion: int = roundi(float(cantidad) * proporcion)
+	return Vector2i(a_constitucion, cantidad - a_constitucion)
+
+
+func calcular_bajada_pasajeros(hacia_constitucion: bool) -> int:
+	return demanda_pasajeros.sortear_bajada(hacia_constitucion) if demanda_pasajeros != null else -1
+
+
+## Selecciona la superficie junto a la vía; el sentido desempata entre laterales.
+func resolver_anden_pasajeros(punto_via: Vector3, sentido_ida: bool = true) -> String:
+	var elegido: int = -1
+	var mejor_distancia: float = INF
+	var preferido: String = "AndenA" if sentido_ida else "AndenB"
+	for indice: int in range(_andenes_pasajeros.size()):
+		var anden: MeshInstance3D = _andenes_pasajeros[indice]
+		var bounds: AABB = anden.mesh.get_aabb()
+		var punto: Vector3 = anden.to_local(punto_via)
+		var cercano: Vector3 = Vector3(
+			clampf(punto.x, bounds.position.x, bounds.end.x),
+			punto.y,
+			clampf(punto.z, bounds.position.z, bounds.end.z)
+		)
+		var distancia: float = anden.to_global(cercano).distance_squared_to(punto_via)
+		if distancia < mejor_distancia - 0.001 or (absf(distancia - mejor_distancia) <= 0.001 and _ids_andenes_pasajeros[indice] == preferido):
+			mejor_distancia = distancia
+			elegido = indice
+	return _ids_andenes_pasajeros[elegido] if elegido >= 0 else ""
+
+
+func _posiciones_pasajeros_por_anden() -> int:
 	var largo_util: float = maxf(0.0, longitud_anden * 0.9)
-	var posiciones_por_anden: int = maxi(1, int(floor(largo_util / 1.2)) + 1)
-	var cantidad_andenes: int = _obtener_andenes_pasajeros().size()
-	return mini(maxi(0, maximo_pasajeros_visibles), posiciones_por_anden * cantidad_andenes)
+	return maxi(1, int(floor(largo_util / 1.2)) + 1)
 
 
-func _transformacion_pasajero_visual(indice: int, cantidad_total: int, andenes: Array[MeshInstance3D]) -> Transform3D:
-	var cantidad_andenes: int = andenes.size()
-	var anden: MeshInstance3D = andenes[indice % cantidad_andenes]
+func _limite_pasajeros_visibles() -> int:
+	return mini(maxi(0, maximo_pasajeros_visibles), _posiciones_pasajeros_por_anden() * _andenes_pasajeros.size())
+
+
+func _transformacion_pasajero_visual(anden: MeshInstance3D, puesto: int, cantidad_por_anden: int, indice_variante: int) -> Transform3D:
 	# Los andenes centrales están anidados: incluir la transformada de sus padres.
 	var transformacion_anden: Transform3D = anden.transform
 	var ancestro: Node = anden.get_parent()
@@ -558,8 +792,6 @@ func _transformacion_pasajero_visual(indice: int, cantidad_total: int, andenes: 
 			transformacion_anden = (ancestro as Node3D).transform * transformacion_anden
 		ancestro = ancestro.get_parent()
 	var bounds_anden: AABB = anden.mesh.get_aabb()
-	var cantidad_por_anden: int = maxi(1, int(ceil(float(cantidad_total) / float(cantidad_andenes))))
-	var puesto: int = int(indice / cantidad_andenes)
 	var margen: float = minf(5.0, bounds_anden.size.x * 0.05)
 	var largo_util: float = maxf(0.0, bounds_anden.size.x - margen * 2.0)
 	var separacion: float = 8.0
@@ -572,7 +804,6 @@ func _transformacion_pasajero_visual(indice: int, cantidad_total: int, andenes: 
 	var centro_anden: Vector3 = bounds_anden.get_center()
 	var posicion: Vector3 = transformacion_anden * Vector3(centro_anden.x + x, bounds_anden.end.y + 0.02, centro_anden.z)
 
-	var indice_variante: int = indice % _mallas_pasajeros.size()
 	var bounds: AABB = _bounds_mallas_pasajeros[indice_variante]
 	var transformacion_modelo: Transform3D = _transformaciones_mallas_pasajeros[indice_variante]
 	var centro: Vector3 = bounds.get_center()
@@ -586,37 +817,13 @@ func _reubicar_pasajeros_visuales() -> void:
 	if _multimeshes_pasajeros.is_empty():
 		return
 
-	var andenes: Array[MeshInstance3D] = _obtener_andenes_pasajeros()
 	var capacidad_visual: int = _limite_pasajeros_visibles()
 	var instancias_por_variante: int = int(ceil(float(capacidad_visual) / float(_multimeshes_pasajeros.size())))
-	var cantidad_por_variante: Array[int] = []
-	var bounds_por_variante: Array[AABB] = []
 	for multimesh: MultiMesh in _multimeshes_pasajeros:
 		multimesh.instance_count = instancias_por_variante
 		multimesh.visible_instance_count = 0
-		cantidad_por_variante.append(0)
-		bounds_por_variante.append(AABB())
-
-	for indice: int in range(capacidad_visual):
-		var indice_variante: int = indice % _multimeshes_pasajeros.size()
-		var indice_instancia: int = cantidad_por_variante[indice_variante]
-		var multimesh: MultiMesh = _multimeshes_pasajeros[indice_variante]
-		var transformacion: Transform3D = _transformacion_pasajero_visual(indice, capacidad_visual, andenes)
-		_multimeshes_pasajeros[indice_variante].set_instance_transform(
-			indice_instancia,
-			transformacion
-		)
-		var bounds_instancia: AABB = transformacion * multimesh.mesh.get_aabb()
-		bounds_por_variante[indice_variante] = (
-			bounds_instancia if indice_instancia == 0
-			else bounds_por_variante[indice_variante].merge(bounds_instancia)
-		)
-		cantidad_por_variante[indice_variante] += 1
-
-	for indice_variante: int in range(_multimeshes_pasajeros.size()):
-		var multimesh: MultiMesh = _multimeshes_pasajeros[indice_variante]
-		multimesh.custom_aabb = bounds_por_variante[indice_variante]
-
+		multimesh.custom_aabb = AABB()
+	_cantidades_visibles_por_anden.clear()
 	_sincronizar_pasajeros_visuales()
 
 
@@ -640,18 +847,59 @@ func _process(_delta: float) -> void:
 
 
 func _generar_pasajeros(delta: float) -> void:
-	if not activa or pasajeros_esperando >= capacidad_maxima_espera or tasa_generacion_pasajeros <= 0.0:
+	if not activa or _andenes_pasajeros.is_empty():
+		return
+	if demanda_pasajeros == null and tasa_generacion_pasajeros <= 0.0:
 		return
 
-	_pasajeros_pendientes += tasa_generacion_pasajeros * delta
-	var nuevos: int = mini(int(floor(_pasajeros_pendientes)), capacidad_maxima_espera - pasajeros_esperando)
-	if nuevos <= 0:
-		return
-
-	_pasajeros_pendientes -= nuevos
-	pasajeros_esperando += nuevos
-	pasajeros_totales_historicos += nuevos
-	pasajeros_actualizados.emit(self)
+	var tasas: Vector2 = Vector2.ZERO
+	var andenes_constitucion: int = 0
+	var andenes_bosques: int = 0
+	for id_anden: String in _ids_andenes_pasajeros:
+		var destino: int = _destino_del_anden(id_anden)
+		if destino != DestinoAnden.BOSQUES:
+			andenes_constitucion += 1
+		if destino != DestinoAnden.CONSTITUCION:
+			andenes_bosques += 1
+	if demanda_pasajeros != null:
+		var intervalo: float = maxf(0.1, demanda_pasajeros.intervalo_formaciones)
+		if _reloj_pasajeros >= _proximo_sorteo_demanda:
+			_demanda_por_ciclo = Vector2i(demanda_pasajeros.sortear_generacion(true), demanda_pasajeros.sortear_generacion(false))
+			_proximo_sorteo_demanda = _reloj_pasajeros + intervalo
+		tasas = Vector2(_demanda_por_ciclo) / intervalo
+		tasas.x /= float(maxi(1, andenes_constitucion))
+		tasas.y /= float(maxi(1, andenes_bosques))
+	var tasa_por_anden: float = tasa_generacion_pasajeros / float(_andenes_pasajeros.size())
+	var generados: int = 0
+	for indice: int in range(_andenes_pasajeros.size()):
+		var lugar: int = maxi(0, _capacidades_por_anden[indice] - _esperando_por_anden[indice])
+		if lugar <= 0:
+			_pendientes_por_anden[indice] = Vector2.ZERO
+			continue
+		var destino: int = _destino_del_anden(_ids_andenes_pasajeros[indice])
+		var tasa: Vector2 = tasas
+		if demanda_pasajeros == null:
+			tasa = Vector2.ONE * tasa_por_anden * 0.5 if destino == DestinoAnden.AMBOS else Vector2.ONE * tasa_por_anden
+		if destino == DestinoAnden.CONSTITUCION:
+			tasa.y = 0.0
+		elif destino == DestinoAnden.BOSQUES:
+			tasa.x = 0.0
+		var pendientes: Vector2 = _pendientes_por_anden[indice] + tasa * delta
+		var posibles: Vector2i = Vector2i(floori(pendientes.x), floori(pendientes.y))
+		var total: int = posibles.x + posibles.y
+		if total <= 0:
+			_pendientes_por_anden[indice] = pendientes
+			continue
+		var nuevos: int = mini(total, lugar)
+		var a_constitucion: int = clampi(roundi(float(nuevos) * float(posibles.x) / float(total)), maxi(0, nuevos - posibles.y), mini(nuevos, posibles.x))
+		var reparto: Vector2i = Vector2i(a_constitucion, nuevos - a_constitucion)
+		_esperando_por_destino[indice] += reparto
+		_esperando_por_anden[indice] += nuevos
+		_pendientes_por_anden[indice] = Vector2.ZERO if nuevos == lugar else pendientes - Vector2(reparto)
+		generados += nuevos
+	if generados > 0:
+		pasajeros_totales_historicos += generados
+		pasajeros_actualizados.emit(self)
 
 
 ## Registra pasajeros que bajan. Se muestran temporalmente en la estación,
@@ -687,11 +935,21 @@ func _actualizar_pasajeros_saliendo() -> void:
 
 
 ## Embarca pasajeros inmediatamente. Puede llamarse con cantidad=1 desde un escalonador.
-func embarcar_pasajeros(cantidad: int) -> int:
-	var pasajeros: int = mini(maxi(0, cantidad), pasajeros_esperando)
+func embarcar_pasajeros(cantidad: int, id_anden: String = "", hacia_constitucion: bool = false) -> int:
+	var indice: int = _ids_andenes_pasajeros.find(id_anden) if not id_anden.is_empty() else 0
+	if indice < 0 or indice >= _esperando_por_anden.size():
+		return 0
+	var fila: Vector2i = _esperando_por_destino[indice]
+	var disponibles: int = fila.x if hacia_constitucion else fila.y
+	var pasajeros: int = mini(maxi(0, cantidad), disponibles)
 	if pasajeros <= 0:
 		return 0
-	pasajeros_esperando -= pasajeros
+	_esperando_por_anden[indice] -= pasajeros
+	if hacia_constitucion:
+		fila.x -= pasajeros
+	else:
+		fila.y -= pasajeros
+	_esperando_por_destino[indice] = fila
 	pasajeros_subidos_total += pasajeros
 	pasajeros_actualizados.emit(self)
 	return pasajeros
@@ -827,6 +1085,7 @@ func _actualizar_disposicion_transversal() -> void:
 		_poste_vuelta.position.z = mitad_separacion - 1.75 + ajuste_lateral_anden_vuelta
 	_sincronizar_andenes_centrales()
 	_actualizar_area_seleccion()
+	_configurar_pasajeros_por_anden()
 	_reubicar_pasajeros_visuales()
 
 
