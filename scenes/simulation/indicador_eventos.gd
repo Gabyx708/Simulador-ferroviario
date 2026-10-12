@@ -1,33 +1,44 @@
 extends Node
 class_name IndicadorEventos
-## Efecto visual mínimo para los 3 eventos de GestorEventos -- pensado para
-## probar a ojo mientras no existe el panel de Persona 2. No modifica `Tren`
-## ni `Estacion`: sólo les cuelga un `GPUParticles3D` como hijo visual,
-## usando sus grupos públicos ("trenes"/"estaciones") para encontrarlos, el
-## mismo patrón de lectura que ya usan los otros módulos de esta carpeta.
+## Efecto visual para los 3 eventos de GestorEventos, pensado para que se
+## note desde la cámara normal (no sólo de cerca). No modifica `Tren` ni
+## `Estacion`: sólo les cuelga nodos visuales como hijos, usando sus grupos
+## públicos ("trenes"/"estaciones") para encontrarlos, el mismo patrón de
+## lectura que ya usan los otros módulos de esta carpeta.
 ##
 ## Ubicación de cada efecto (pensada para que se note la diferencia, no
-## sólo el color):
-## - Falla eléctrica: chispas arriba del tren afectado, simulando el
-##   pantógrafo arqueando contra la catenaria. Por tren: aparece cuando ESE
-##   tren entra a la zona, desaparece cuando reanuda.
-## - Piquete: humo negro/naranja en la estación afectada, no en un tren
-##   puntual -- el piquete bloquea el andén, no depende de quién esté ahí.
-##   Dura mientras la zona esté activa.
-## - Desperfecto mecánico: humo gris saliendo del tren roto. Permanente,
-##   como el evento mismo (se va solo si el tren se elimina del todo).
+## sólo el color) -- los tres llevan una etiqueta flotante (Label3D) con el
+## tipo y el tiempo restante, y desaparecen apenas termina el evento:
+## - Falla eléctrica: chispas + luz amarilla arriba del tren afectado,
+##   simulando el pantógrafo arqueando contra la catenaria. Por tren:
+##   aparece cuando ESE tren entra a la zona, desaparece cuando reanuda.
+##   Además, una baliza amarilla sobre la estación de origen del tramo
+##   afectado (el tramo en sí no es un nodo navegable desde acá -- ver
+##   docs/reporte_final.md -- así que se marca el punto de partida, visible
+##   "a lo largo de la vía" porque el tren que pasa por ahí también se
+##   enciende).
+## - Piquete: humo + baliza naranja intermitente en la estación afectada,
+##   no en un tren puntual -- el piquete bloquea el andén, no depende de
+##   quién esté ahí. Dura mientras la zona esté activa.
+## - Desperfecto mecánico: humo gris + baliza roja intermitente sobre el
+##   tren roto. Permanente, como el evento mismo (se va solo si el tren se
+##   elimina del todo); la etiqueta muestra "Definitivo" en vez de un
+##   tiempo restante.
 
 var _gestor: GestorEventos
+var _reloj: RelojSimulacion
 var _controlador: SimulacionController
 var _trenes: Dictionary = {}  ## id -> Tren
 var _estaciones: Dictionary = {}  ## nombre -> Estacion
-var _efectos_tren: Dictionary = {}  ## id_tren -> GPUParticles3D
-var _efectos_estacion: Dictionary = {}  ## nombre_estacion -> GPUParticles3D
+var _efectos_tren: Dictionary = {}  ## id_tren -> {"contenedor": Node3D, "etiqueta": Label3D, "id_evento": int}
+var _efectos_estacion: Dictionary = {}  ## nombre_estacion -> {"contenedor": Node3D, "etiqueta": Label3D, "id_evento": int}
+var _efectos_origen_tramo: Dictionary = {}  ## nombre_estacion_origen -> {"contenedor": Node3D, "etiqueta": Label3D, "id_evento": int}
 
 
 func _ready() -> void:
 	var nivel: Node = get_parent()
 	_gestor = nivel.get_node_or_null("GestorEventos") as GestorEventos
+	_reloj = nivel.get_node_or_null("RelojSimulacion") as RelojSimulacion
 	_controlador = nivel.get_node_or_null("SimulacionController") as SimulacionController
 	if _gestor == null or _controlador == null:
 		return
@@ -74,21 +85,33 @@ func _registrar_tren(tren: Tren) -> void:
 ## --- Reacciones a eventos ---
 
 func _on_evento_disparado(datos: Dictionary) -> void:
+	var id_evento: int = int(datos.get("id", -1))
 	match int(datos.get("tipo", -1)):
+		GestorEventos.TipoEvento.FALLA_ELECTRICA:
+			_agregar_efecto_origen_tramo(str(datos.get("clave", "")), id_evento)
 		GestorEventos.TipoEvento.PIQUETE:
-			_agregar_efecto_estacion(str(datos.get("clave", "")))
+			_agregar_efecto_estacion(str(datos.get("clave", "")), id_evento)
 		GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
-			_agregar_efecto_tren(int(datos.get("id_tren", -1)), false, Color(0.45, 0.45, 0.45, 0.75))
+			_agregar_efecto_tren(int(datos.get("id_tren", -1)), TipoEfecto.AVERIA, id_evento)
 
 
 func _on_evento_finalizado(datos: Dictionary) -> void:
-	if int(datos.get("tipo", -1)) == GestorEventos.TipoEvento.PIQUETE:
-		_quitar_efecto_estacion(str(datos.get("clave", "")))
+	match int(datos.get("tipo", -1)):
+		GestorEventos.TipoEvento.PIQUETE:
+			_quitar_efecto_estacion(str(datos.get("clave", "")))
+		GestorEventos.TipoEvento.FALLA_ELECTRICA:
+			_quitar_efecto_origen_tramo(str(datos.get("clave", "")))
 
 
 func _on_tren_afectado(id_tren: int, tipo: int) -> void:
-	if tipo == GestorEventos.TipoEvento.FALLA_ELECTRICA:
-		_agregar_efecto_tren(id_tren, true, GestorEventos.COLOR_FALLA_ELECTRICA)
+	if tipo != GestorEventos.TipoEvento.FALLA_ELECTRICA:
+		return
+	var id_evento: int = -1
+	for e: Dictionary in _gestor.obtener_zonas_activas():
+		if int(e.get("tipo", -1)) == GestorEventos.TipoEvento.FALLA_ELECTRICA and (e.get("trenes_afectados", {}) as Dictionary).has(id_tren):
+			id_evento = int(e["id"])
+			break
+	_agregar_efecto_tren(id_tren, TipoEfecto.FALLA_ELECTRICA, id_evento)
 
 
 func _on_tren_reanudo(id_tren: int) -> void:
@@ -100,33 +123,73 @@ func _on_tren_eliminado(id_tren: int) -> void:
 	_trenes.erase(id_tren)
 
 
+## --- Etiquetas: se actualizan en vivo con el tiempo restante ---
+
+func _process(_delta: float) -> void:
+	if _gestor == null or _reloj == null:
+		return
+	var ahora: float = _reloj.tiempo_simulado_s()
+	for registro: Dictionary in _efectos_tren.values():
+		_actualizar_etiqueta(registro, ahora)
+	for registro: Dictionary in _efectos_estacion.values():
+		_actualizar_etiqueta(registro, ahora)
+	for registro: Dictionary in _efectos_origen_tramo.values():
+		_actualizar_etiqueta(registro, ahora)
+
+
+func _actualizar_etiqueta(registro: Dictionary, ahora: float) -> void:
+	var etiqueta: Label3D = registro.get("etiqueta") as Label3D
+	if etiqueta == null or not is_instance_valid(etiqueta):
+		return
+	var id_evento: int = int(registro.get("id_evento", -1))
+	var evento: Dictionary = {}
+	for e: Dictionary in _gestor.obtener_historial():
+		if int(e.get("id", -1)) == id_evento:
+			evento = e
+			break
+	if evento.is_empty():
+		return
+	var tipo: int = int(evento.get("tipo", -1))
+	if tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
+		etiqueta.text = "%s · definitivo" % GestorEventos.nombre_tipo(tipo)
+		return
+	var restante: int = maxi(0, roundi(float(evento.get("fin_s", 0.0)) - ahora))
+	etiqueta.text = "%s · %ds restantes" % [GestorEventos.nombre_tipo(tipo), restante]
+
+
 ## --- Alta/baja de efectos ---
 
-func _agregar_efecto_tren(id_tren: int, es_chispa: bool, color: Color) -> void:
+enum TipoEfecto { FALLA_ELECTRICA, AVERIA }
+
+func _agregar_efecto_tren(id_tren: int, tipo_efecto: TipoEfecto, id_evento: int) -> void:
 	if id_tren <= 0 or _efectos_tren.has(id_tren):
 		return
 	var tren: Tren = _trenes.get(id_tren) as Tren
 	if tren == null or not is_instance_valid(tren):
 		return
+	var es_chispa: bool = tipo_efecto == TipoEfecto.FALLA_ELECTRICA
+	var color: Color = GestorEventos.COLOR_FALLA_ELECTRICA if es_chispa else GestorEventos.COLOR_DESPERFECTO_MECANICO
+	var altura_particulas: float = 3.5 if es_chispa else 1.5
 	var contenedor: Node3D = Node3D.new()
-	contenedor.position = Vector3(0.0, 3.5, 0.0) if es_chispa else Vector3(0.0, 1.5, 0.0)
+	contenedor.position = Vector3(0.0, altura_particulas, 0.0)
 	tren.add_child(contenedor)
-	contenedor.add_child(_crear_particulas(color, es_chispa))
-	if es_chispa:
-		# Las partículas solas pueden perderse a distancia; una luz
-		# parpadeante no, por eso se usa para la falla eléctrica.
-		contenedor.add_child(_crear_luz_chispa(color))
-	_efectos_tren[id_tren] = contenedor
+	contenedor.add_child(_crear_particulas(color if es_chispa else Color(0.45, 0.45, 0.45, 0.75), es_chispa))
+	contenedor.add_child(_crear_luz_parpadeante(color))
+	var etiqueta: Label3D = _crear_etiqueta()
+	etiqueta.position = Vector3(0.0, altura_particulas + 1.6, 0.0)
+	contenedor.add_child(etiqueta)
+	_efectos_tren[id_tren] = {"contenedor": contenedor, "etiqueta": etiqueta, "id_evento": id_evento}
 
 
 func _quitar_efecto_tren(id_tren: int) -> void:
-	var contenedor: Node3D = _efectos_tren.get(id_tren) as Node3D
+	var registro: Dictionary = _efectos_tren.get(id_tren, {})
+	var contenedor: Node3D = registro.get("contenedor") as Node3D
 	if contenedor != null and is_instance_valid(contenedor):
 		contenedor.queue_free()
 	_efectos_tren.erase(id_tren)
 
 
-func _agregar_efecto_estacion(nombre: String) -> void:
+func _agregar_efecto_estacion(nombre: String, id_evento: int) -> void:
 	if nombre.is_empty() or _efectos_estacion.has(nombre):
 		return
 	var estacion: Estacion = _estaciones.get(nombre) as Estacion
@@ -136,17 +199,51 @@ func _agregar_efecto_estacion(nombre: String) -> void:
 	contenedor.position = Vector3(0.0, 2.0, 0.0)
 	estacion.add_child(contenedor)
 	contenedor.add_child(_crear_particulas(Color(0.22, 0.13, 0.08, 0.9), false))
-	_efectos_estacion[nombre] = contenedor
+	contenedor.add_child(_crear_luz_parpadeante(GestorEventos.COLOR_PIQUETE))
+	var etiqueta: Label3D = _crear_etiqueta()
+	etiqueta.position = Vector3(0.0, 3.6, 0.0)
+	contenedor.add_child(etiqueta)
+	_efectos_estacion[nombre] = {"contenedor": contenedor, "etiqueta": etiqueta, "id_evento": id_evento}
 
 
 func _quitar_efecto_estacion(nombre: String) -> void:
-	var contenedor: Node3D = _efectos_estacion.get(nombre) as Node3D
+	var registro: Dictionary = _efectos_estacion.get(nombre, {})
+	var contenedor: Node3D = registro.get("contenedor") as Node3D
 	if contenedor != null and is_instance_valid(contenedor):
 		contenedor.queue_free()
 	_efectos_estacion.erase(nombre)
 
 
-## --- Partículas y luz procedurales, sin assets externos ---
+## Falla eléctrica es una zona de TRAMO, no de estación -- no hay forma
+## barata de resolver el segmento de vía real desde acá (ver cabecera del
+## archivo), así que se marca la estación de origen del tramo con una
+## baliza propia (distinta de la del piquete: sin humo, sólo luz) para que
+## se note "desde dónde" arranca la zona afectada.
+func _agregar_efecto_origen_tramo(nombre: String, id_evento: int) -> void:
+	if nombre.is_empty() or _efectos_origen_tramo.has(nombre):
+		return
+	var estacion: Estacion = _estaciones.get(nombre) as Estacion
+	if estacion == null or not is_instance_valid(estacion):
+		return
+	var contenedor: Node3D = Node3D.new()
+	contenedor.position = Vector3(0.0, 2.0, 0.0)
+	estacion.add_child(contenedor)
+	contenedor.add_child(_crear_luz_parpadeante(GestorEventos.COLOR_FALLA_ELECTRICA))
+	var etiqueta: Label3D = _crear_etiqueta()
+	etiqueta.position = Vector3(0.0, 1.6, 0.0)
+	contenedor.add_child(etiqueta)
+	_efectos_origen_tramo[nombre] = {"contenedor": contenedor, "etiqueta": etiqueta, "id_evento": id_evento}
+
+
+func _quitar_efecto_origen_tramo(nombre: String) -> void:
+	var registro: Dictionary = _efectos_origen_tramo.get(nombre, {})
+	var contenedor: Node3D = registro.get("contenedor") as Node3D
+	if contenedor != null and is_instance_valid(contenedor):
+		contenedor.queue_free()
+	_efectos_origen_tramo.erase(nombre)
+
+
+## --- Partículas, luz y etiqueta procedurales, sin assets externos ---
 
 ## El AABB por defecto que Godot calcula para un GPUParticles3D creado por
 ## código puede quedar más chico que el recorrido real de las partículas
@@ -194,18 +291,36 @@ func _crear_particulas(color: Color, es_chispa: bool) -> GPUParticles3D:
 	return particulas
 
 
-## Luz parpadeante para la falla eléctrica: una partícula de 0.5m a 50m de
-## distancia se pierde fácil, una luz prendida/apagada no.
-func _crear_luz_chispa(color: Color) -> OmniLight3D:
+## Luz parpadeante del color del evento: a distancia (cámara normal, no
+## pegada al modelo) una luz prendida/apagada se nota mucho más que una
+## partícula chica. Se usa en los 3 tipos de evento, no sólo en la falla
+## eléctrica como antes.
+func _crear_luz_parpadeante(color: Color) -> OmniLight3D:
 	var luz: OmniLight3D = OmniLight3D.new()
 	luz.light_color = color
 	luz.light_energy = 6.0
-	luz.omni_range = 8.0
+	luz.omni_range = 10.0
 	# `self` (IndicadorEventos) ya está en el árbol; `luz` todavía no en el
 	# momento en que se llama esta función, así que create_tween() tiene
 	# que pedirse desde acá, no desde `luz`.
 	var tween: Tween = create_tween()
 	tween.set_loops()
-	tween.tween_property(luz, "light_energy", 1.0, 0.08)
-	tween.tween_property(luz, "light_energy", 6.0, 0.08)
+	tween.tween_property(luz, "light_energy", 1.0, 0.35)
+	tween.tween_property(luz, "light_energy", 6.0, 0.35)
 	return luz
+
+
+## Etiqueta flotante con el tipo de evento y el tiempo restante (o
+## "definitivo" para una avería) -- se actualiza en vivo desde _process().
+## Billboard para que siempre mire a la cámara, sin importar el ángulo.
+func _crear_etiqueta() -> Label3D:
+	var etiqueta := Label3D.new()
+	etiqueta.name = "EtiquetaIndicadorEvento"
+	etiqueta.text = "..."
+	etiqueta.font_size = 56
+	etiqueta.outline_size = 12
+	etiqueta.modulate = Color(1, 1, 1, 1)
+	etiqueta.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	etiqueta.no_depth_test = true
+	etiqueta.pixel_size = 0.01
+	return etiqueta
