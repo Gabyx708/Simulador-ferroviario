@@ -142,6 +142,9 @@ static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 	var activos: int = 0
 	var suma_retraso: float = 0.0
 	var cantidad_con_retraso_medido: int = 0
+	var suma_retraso_demorados: float = 0.0
+	var demora_maxima_s: float = 0.0
+	var id_tren_demora_maxima: int = -1
 	var pasajeros_totales: int = 0
 	var pasajeros_afectados: int = 0
 	for tren: Dictionary in trenes:
@@ -157,6 +160,9 @@ static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 		suma_retraso += retraso
 		cantidad_con_retraso_medido += 1
 		pasajeros_totales += pasajeros
+		if retraso > demora_maxima_s:
+			demora_maxima_s = retraso
+			id_tren_demora_maxima = int(tren.get("id", -1))
 		var bloqueado: bool = estado in [Tren.EstadoOperacion.DETENIDO_POR_EVENTO, Tren.EstadoOperacion.ESPERANDO_RESERVA]
 		if bloqueado:
 			detenidos += 1
@@ -164,14 +170,20 @@ static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 		elif retraso > 0.0:
 			retrasados += 1
 			pasajeros_afectados += pasajeros
+			suma_retraso_demorados += retraso
 		else:
 			a_tiempo += 1
 	var demora_promedio: float = (suma_retraso / cantidad_con_retraso_medido) if cantidad_con_retraso_medido > 0 else 0.0
+	var retraso_promedio_demorados: float = (suma_retraso_demorados / retrasados) if retrasados > 0 else 0.0
+	var puntualidad_pct: float = (100.0 * a_tiempo / activos) if activos > 0 else 100.0
 	var pct_afectados: float = (100.0 * pasajeros_afectados / pasajeros_totales) if pasajeros_totales > 0 else 0.0
 	return {
 		"activos": activos, "a_tiempo": a_tiempo, "retrasados": retrasados,
 		"detenidos": detenidos, "incompletos": incompletos,
 		"demora_promedio_s": demora_promedio,
+		"retraso_promedio_demorados_s": retraso_promedio_demorados,
+		"puntualidad_pct": puntualidad_pct,
+		"demora_maxima_s": demora_maxima_s, "id_tren_demora_maxima": id_tren_demora_maxima,
 		"pasajeros_totales": pasajeros_totales, "pasajeros_afectados": pasajeros_afectados,
 		"pct_pasajeros_afectados": pct_afectados,
 	}
@@ -180,18 +192,25 @@ static func _calcular_kpis(trenes: Array[Dictionary]) -> Dictionary:
 ## --- KPIs: tarjetas grandes arriba ---
 
 func _construir_kpis(padre: VBoxContainer) -> void:
-	var fila := HBoxContainer.new()
-	fila.add_theme_constant_override("separation", 12)
-	padre.add_child(fila)
-	_agregar_tarjeta_kpi(fila, "demora", "DEMORA PROMEDIO")
-	_agregar_tarjeta_kpi(fila, "flota", "FLOTA")
-	_agregar_tarjeta_kpi(fila, "pasajeros", "PASAJEROS AFECTADOS")
-	_agregar_tarjeta_kpi(fila, "eventos", "EVENTOS OCURRIDOS")
+	var fila1 := HBoxContainer.new()
+	fila1.add_theme_constant_override("separation", 12)
+	padre.add_child(fila1)
+	_agregar_tarjeta_kpi(fila1, "puntualidad", "PUNTUALIDAD", "Trenes a tiempo / trenes activos (sin incompletos ni finalizados). 100% si no hay ninguno activo todavía.")
+	_agregar_tarjeta_kpi(fila1, "retraso_demorados", "RETRASO PROMEDIO (demorados)", "Promedio de retraso_s sólo entre los trenes que SÍ tienen retraso medido > 0 -- no se diluye con los que están a tiempo.")
+	_agregar_tarjeta_kpi(fila1, "demora_maxima", "DEMORA MÁXIMA", "El mayor retraso_s medido ahora mismo entre los trenes activos, con cuál tren lo tiene.")
+
+	var fila2 := HBoxContainer.new()
+	fila2.add_theme_constant_override("separation", 12)
+	padre.add_child(fila2)
+	_agregar_tarjeta_kpi(fila2, "incompletos", "INCOMPLETOS", "Trenes que quedaron con el servicio interrumpido (avería o ruta sin continuación) y no van a completar su recorrido.")
+	_agregar_tarjeta_kpi(fila2, "pasajeros", "PASAJEROS AFECTADOS", "Pasajeros a bordo de trenes retrasados o detenidos (por evento o esperando vía), sobre el total de pasajeros en viaje ahora.")
+	_agregar_tarjeta_kpi(fila2, "eventos", "EVENTOS OCURRIDOS", "Cantidad total de eventos disparados hasta ahora, desglosados por tipo (falla eléctrica · piquete · avería).")
 
 
-func _agregar_tarjeta_kpi(fila: HBoxContainer, clave: String, titulo_texto: String) -> void:
+func _agregar_tarjeta_kpi(fila: HBoxContainer, clave: String, titulo_texto: String, tooltip: String) -> void:
 	var tarjeta := PanelContainer.new()
 	tarjeta.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tarjeta.tooltip_text = tooltip
 	var estilo := StyleBoxFlat.new()
 	estilo.bg_color = COLOR_FILA_FONDO
 	estilo.set_corner_radius_all(8)
@@ -210,6 +229,7 @@ func _agregar_tarjeta_kpi(fila: HBoxContainer, clave: String, titulo_texto: Stri
 	titulo.text = titulo_texto
 	titulo.add_theme_font_size_override("font_size", 10)
 	titulo.add_theme_color_override("font_color", COLOR_TEXTO_SUAVE)
+	titulo.autowrap_mode = TextServer.AUTOWRAP_WORD
 	columna.add_child(titulo)
 
 	var valor := Label.new()
@@ -222,12 +242,20 @@ func _agregar_tarjeta_kpi(fila: HBoxContainer, clave: String, titulo_texto: Stri
 
 
 func _actualizar_kpis(kpis: Dictionary) -> void:
-	if not _tarjetas_kpi.has("demora"):
+	if not _tarjetas_kpi.has("puntualidad"):
 		return
-	(_tarjetas_kpi["demora"] as Label).text = _formatear_duracion(float(kpis.get("demora_promedio_s", 0.0)))
-	(_tarjetas_kpi["flota"] as Label).text = "%d a tiempo · %d retrasados\n%d detenidos · %d incompletos" % [
-		int(kpis.get("a_tiempo", 0)), int(kpis.get("retrasados", 0)), int(kpis.get("detenidos", 0)), int(kpis.get("incompletos", 0)),
+	(_tarjetas_kpi["puntualidad"] as Label).text = "%.0f%% (%d/%d)" % [
+		float(kpis.get("puntualidad_pct", 100.0)), int(kpis.get("a_tiempo", 0)), int(kpis.get("activos", 0)),
 	]
+	var retrasados: int = int(kpis.get("retrasados", 0))
+	(_tarjetas_kpi["retraso_demorados"] as Label).text = "%s (%d tren%s)" % [
+		_formatear_duracion(float(kpis.get("retraso_promedio_demorados_s", 0.0))), retrasados, "" if retrasados == 1 else "es",
+	] if retrasados > 0 else "— (0 demorados)"
+	var demora_maxima: float = float(kpis.get("demora_maxima_s", 0.0))
+	var id_demora_maxima: int = int(kpis.get("id_tren_demora_maxima", -1))
+	(_tarjetas_kpi["demora_maxima"] as Label).text = "%s (Tren %d)" % [_formatear_duracion(demora_maxima), id_demora_maxima] if demora_maxima > 0.0 else "—"
+	(_tarjetas_kpi["incompletos"] as Label).text = str(int(kpis.get("incompletos", 0)))
+
 	var pasajeros_afectados: int = int(kpis.get("pasajeros_afectados", 0))
 	var pasajeros_totales: int = int(kpis.get("pasajeros_totales", 0))
 	(_tarjetas_kpi["pasajeros"] as Label).text = "%d de %d (%.0f%%)" % [pasajeros_afectados, pasajeros_totales, float(kpis.get("pct_pasajeros_afectados", 0.0))]
@@ -248,7 +276,9 @@ func _actualizar_kpis(kpis: Dictionary) -> void:
 ## --- Comparación de eventos: barras horizontales por tipo ---
 
 func _construir_comparacion_eventos(padre: VBoxContainer) -> void:
-	padre.add_child(_crear_titulo_seccion("COMPARACIÓN DE EVENTOS (retraso total generado, por tipo)"))
+	var titulo := _crear_titulo_seccion("COMPARACIÓN DE EVENTOS (pasajeros·minuto perdidos, por tipo)")
+	titulo.tooltip_text = "Pasajeros·minuto perdidos = pasajeros a bordo × minutos de retraso que ese evento les generó. Para una avería: pasajeros a bordo × minutos estimados que les faltaban de viaje (estimación gruesa, no exacta). Trenes afectados y retraso total en segundos van como dato secundario junto a cada barra."
+	padre.add_child(titulo)
 	_grafico_barras = GraficoBarras.new()
 	_grafico_barras.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	padre.add_child(_grafico_barras)
@@ -257,10 +287,11 @@ func _construir_comparacion_eventos(padre: VBoxContainer) -> void:
 func _actualizar_comparacion_eventos() -> void:
 	if _grafico_barras == null or _gestor == null:
 		return
-	var por_tipo: Dictionary = {}  ## tipo -> {"retraso": float, "trenes": Dictionary}
+	var por_tipo: Dictionary = {}  ## tipo -> {"pasajeros_minuto": float, "retraso": float, "trenes": Dictionary}
 	for evento: Dictionary in _gestor.obtener_historial():
 		var tipo: int = int(evento.get("tipo", -1))
-		var entrada: Dictionary = por_tipo.get(tipo, {"retraso": 0.0, "trenes": {}})
+		var entrada: Dictionary = por_tipo.get(tipo, {"pasajeros_minuto": 0.0, "retraso": 0.0, "trenes": {}})
+		entrada["pasajeros_minuto"] = float(entrada["pasajeros_minuto"]) + float(evento.get("pasajeros_minuto_perdidos", 0.0))
 		entrada["retraso"] = float(entrada["retraso"]) + float(evento.get("retraso_total_s", 0.0))
 		for id_tren: int in (evento.get("trenes_afectados", {}) as Dictionary):
 			(entrada["trenes"] as Dictionary)[id_tren] = true
@@ -268,12 +299,13 @@ func _actualizar_comparacion_eventos() -> void:
 
 	var datos: Array[Dictionary] = []
 	for tipo: int in [GestorEventos.TipoEvento.FALLA_ELECTRICA, GestorEventos.TipoEvento.PIQUETE, GestorEventos.TipoEvento.DESPERFECTO_MECANICO]:
-		var entrada: Dictionary = por_tipo.get(tipo, {"retraso": 0.0, "trenes": {}})
+		var entrada: Dictionary = por_tipo.get(tipo, {"pasajeros_minuto": 0.0, "retraso": 0.0, "trenes": {}})
 		datos.append({
 			"label": GestorEventos.nombre_tipo(tipo),
-			"valor": float(entrada["retraso"]),
+			"valor": float(entrada["pasajeros_minuto"]),
 			"color": _color_tipo_evento(tipo),
 			"trenes": (entrada["trenes"] as Dictionary).size(),
+			"retraso_total_s": float(entrada["retraso"]),
 		})
 	_grafico_barras.establecer_datos(datos)
 
@@ -514,7 +546,7 @@ func _hora_simulada_en(tiempo_s: float) -> String:
 ## Barras horizontales: una por tipo de evento, largo proporcional al
 ## retraso total que generó ese tipo.
 class GraficoBarras extends Control:
-	var datos: Array[Dictionary] = []  ## [{label, valor, color, trenes}]
+	var datos: Array[Dictionary] = []  ## [{label, valor, color, trenes, retraso_total_s}]
 	const ALTURA_BARRA: float = 28.0
 	const SEPARACION: float = 10.0
 	const ANCHO_ETIQUETA: float = 140.0
@@ -531,20 +563,21 @@ class GraficoBarras extends Control:
 		var max_valor: float = 1.0
 		for d: Dictionary in datos:
 			max_valor = maxf(max_valor, float(d.get("valor", 0.0)))
-		var ancho_disponible: float = maxf(40.0, size.x - ANCHO_ETIQUETA - 140.0)
+		var ancho_disponible: float = maxf(40.0, size.x - ANCHO_ETIQUETA - 190.0)
 		var y: float = 0.0
 		for d: Dictionary in datos:
 			var etiqueta: String = str(d.get("label", ""))
 			var valor: float = float(d.get("valor", 0.0))
 			var color: Color = d.get("color", Color.GRAY) as Color
 			var trenes: int = int(d.get("trenes", 0))
+			var retraso_total_s: float = float(d.get("retraso_total_s", 0.0))
 			draw_string(fuente, Vector2(0.0, y + ALTURA_BARRA * 0.62), etiqueta, HORIZONTAL_ALIGNMENT_LEFT, ANCHO_ETIQUETA - 6.0, 12, PanelMetricas.COLOR_TEXTO)
 			draw_rect(Rect2(ANCHO_ETIQUETA, y + 4.0, ancho_disponible, ALTURA_BARRA - 8.0), Color(1, 1, 1, 0.06), true)
 			var largo: float = (valor / max_valor) * ancho_disponible
 			if largo > 0.5:
 				draw_rect(Rect2(ANCHO_ETIQUETA, y + 4.0, largo, ALTURA_BARRA - 8.0), color, true)
-			var texto_valor: String = "%s · %d tren%s" % [PanelMetricas._formatear_duracion(valor), trenes, "" if trenes == 1 else "es"]
-			draw_string(fuente, Vector2(ANCHO_ETIQUETA + largo + 8.0, y + ALTURA_BARRA * 0.62), texto_valor, HORIZONTAL_ALIGNMENT_LEFT, 130.0, 11, PanelMetricas.COLOR_TEXTO_SUAVE)
+			var texto_valor: String = "%.0f pax·min · %d tren%s · %s retraso" % [valor, trenes, "" if trenes == 1 else "es", PanelMetricas._formatear_duracion(retraso_total_s)]
+			draw_string(fuente, Vector2(ANCHO_ETIQUETA + largo + 8.0, y + ALTURA_BARRA * 0.62), texto_valor, HORIZONTAL_ALIGNMENT_LEFT, 180.0, 11, PanelMetricas.COLOR_TEXTO_SUAVE)
 			y += ALTURA_BARRA + SEPARACION
 
 

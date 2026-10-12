@@ -49,7 +49,7 @@ func _run() -> void:
 	assert(gestor.disparar_desperfecto_mecanico(id_tren), "La avería debe aplicarse")
 	panel._actualizar()
 
-	assert((panel._tarjetas_kpi["flota"] as Label).text.contains("1 incompletos"), "El KPI de flota debe reflejar 1 incompleto")
+	assert((panel._tarjetas_kpi["incompletos"] as Label).text == "1", "El KPI de incompletos debe reflejar la avería recién disparada")
 	assert((panel._tarjetas_kpi["eventos"] as Label).text.begins_with("1 "), "El KPI de eventos debe reflejar la avería recién disparada")
 	var fila_tren: String = _fila_por_indice(panel._tabla_trenes, columnas_tren, rango_tren)
 	assert(fila_tren.contains("Incompleto"), "La fila del tren averiado (rango %d) debe mostrar el badge 'Incompleto': '%s'" % [rango_tren, fila_tren])
@@ -57,6 +57,35 @@ func _run() -> void:
 	assert(fila_evento != "" and fila_evento.contains("Tren %d" % id_tren) and fila_evento.contains("Definitivo"),
 		"La tabla de eventos debe mostrar la avería como definitiva: '%s'" % fila_evento)
 	print("OK: una avería real se refleja en los KPIs y en ambas tablas")
+
+	# --- Consistencia (punto 2): el KPI de incompletos debe coincidir con la
+	# cantidad de filas con badge "Incompleto" en la tabla por tren, Y con la
+	# cantidad de eventos de tipo Avería en el historial (cada avería produce
+	# exactamente 1 tren incompleto, nunca más ni menos). ---
+	var kpi_incompletos: int = int((panel._tarjetas_kpi["incompletos"] as Label).text)
+	var incompletos_en_tabla: int = 0
+	for fila: int in range(cantidad_trenes):
+		if _fila_por_indice(panel._tabla_trenes, columnas_tren, fila).contains("Incompleto"):
+			incompletos_en_tabla += 1
+	var averias_en_historial: int = 0
+	for e: Dictionary in gestor.obtener_historial():
+		if int(e.get("tipo", -1)) == GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
+			averias_en_historial += 1
+	assert(kpi_incompletos == incompletos_en_tabla, "El KPI de incompletos (%d) debe coincidir con las filas 'Incompleto' de la tabla por tren (%d)" % [kpi_incompletos, incompletos_en_tabla])
+	assert(kpi_incompletos == averias_en_historial, "El KPI de incompletos (%d) debe coincidir con la cantidad de averías en el historial (%d)" % [kpi_incompletos, averias_en_historial])
+	print("OK: incompletos es consistente entre el KPI, la tabla por tren y el historial de eventos")
+
+	# --- Consistencia (punto 2): el KPI de pasajeros afectados mostrado en
+	# el panel debe coincidir con lo que _calcular_kpis() calcula de forma
+	# independiente sobre el mismo snapshot en vivo (no sólo con datos a
+	# mano, como en _test_calcular_kpis_puro). ---
+	var kpis_independientes: Dictionary = PanelMetricas._calcular_kpis(controlador.obtener_trenes())
+	var texto_pasajeros_esperado: String = "%d de %d (%.0f%%)" % [
+		int(kpis_independientes["pasajeros_afectados"]), int(kpis_independientes["pasajeros_totales"]), float(kpis_independientes["pct_pasajeros_afectados"]),
+	]
+	assert((panel._tarjetas_kpi["pasajeros"] as Label).text == texto_pasajeros_esperado,
+		"El KPI de pasajeros afectados mostrado ('%s') debe coincidir con el cálculo independiente sobre el mismo snapshot ('%s')" % [(panel._tarjetas_kpi["pasajeros"] as Label).text, texto_pasajeros_esperado])
+	print("OK: pasajeros afectados es consistente entre el panel y el cálculo independiente")
 
 	# --- Falla eléctrica + piquete: esperar impacto real y verificar la
 	# comparación de eventos (gráfico de barras) contra el historial crudo ---
@@ -97,10 +126,12 @@ func _run() -> void:
 
 	panel._actualizar()
 	var retraso_piquete_historial: float = 0.0
+	var pasajeros_minuto_piquete_historial: float = 0.0
 	var trenes_piquete_historial: Dictionary = {}
 	for e: Dictionary in gestor.obtener_historial():
 		if int(e.get("tipo", -1)) == GestorEventos.TipoEvento.PIQUETE:
 			retraso_piquete_historial += float(e.get("retraso_total_s", 0.0))
+			pasajeros_minuto_piquete_historial += float(e.get("pasajeros_minuto_perdidos", 0.0))
 			for id_t: int in (e.get("trenes_afectados", {}) as Dictionary):
 				trenes_piquete_historial[id_t] = true
 
@@ -110,8 +141,11 @@ func _run() -> void:
 			datos_barra_piquete = d
 			break
 	assert(not datos_barra_piquete.is_empty(), "El gráfico de barras debe tener una entrada para Piquete")
-	assert(is_equal_approx(float(datos_barra_piquete.get("valor", -1.0)), retraso_piquete_historial),
-		"El retraso de la barra de Piquete (%.2f) debe coincidir con la suma del historial (%.2f)" % [float(datos_barra_piquete.get("valor", -1.0)), retraso_piquete_historial])
+	assert(is_equal_approx(float(datos_barra_piquete.get("valor", -1.0)), pasajeros_minuto_piquete_historial),
+		"Los pasajeros·minuto de la barra de Piquete (%.2f) deben coincidir con la suma del historial (%.2f)" % [float(datos_barra_piquete.get("valor", -1.0)), pasajeros_minuto_piquete_historial])
+	assert(is_equal_approx(float(datos_barra_piquete.get("retraso_total_s", -1.0)), retraso_piquete_historial),
+		"El retraso total (dato secundario) de la barra de Piquete (%.2f) debe coincidir con la suma del historial (%.2f)" % [float(datos_barra_piquete.get("retraso_total_s", -1.0)), retraso_piquete_historial])
+	assert(pasajeros_minuto_piquete_historial > 0.0, "Un piquete con pasajeros a bordo debe generar pasajeros·minuto perdidos medibles")
 	assert(int(datos_barra_piquete.get("trenes", -1)) == trenes_piquete_historial.size(),
 		"La cantidad de trenes de la barra de Piquete debe coincidir con el historial")
 	assert(retraso_piquete_historial > 0.0, "Un piquete de 500s debe generar retraso medible")

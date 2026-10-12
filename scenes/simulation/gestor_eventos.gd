@@ -245,7 +245,8 @@ func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: 
 	var evento: Dictionary = {
 		"id": id_evento, "tipo": tipo, "clave": clave, "motivo": motivo,
 		"inicio_s": ahora, "fin_s": ahora + duracion_s, "duracion_s": duracion_s,
-		"id_tren": -1, "trenes_afectados": {}, "retraso_total_s": 0.0, "activo": true,
+		"id_tren": -1, "trenes_afectados": {}, "retraso_total_s": 0.0,
+		"pasajeros_minuto_perdidos": 0.0, "activo": true,
 	}
 	_eventos[id_evento] = evento
 	zonas[clave] = id_evento
@@ -257,20 +258,36 @@ func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: 
 ## retraso adicional (el viaje termina ahí), así que su impacto es siempre
 ## "1 tren afectado, 0 de retraso" -- se registra igual para que aparezca
 ## en el historial y se pueda comparar cantidad de averías contra las otras.
+## Estimación gruesa de cuánto falta del recorrido cuando no hay forma barata
+## de calcular la distancia real restante hasta destino: estaciones que le
+## quedan (según el total de la red, no del servicio puntual) por una
+## duración típica de tramo. No pretende ser exacta -- es la base del
+## indicador secundario "pasajeros·minuto perdidos" de una avería, pensado
+## para comparar el ORDEN DE MAGNITUD del impacto entre eventos, no para
+## medir tiempos reales. Ver docs/reporte_final.md.
+const DURACION_PROMEDIO_TRAMO_S: float = 240.0
+
 func disparar_desperfecto_mecanico(id_tren: int, motivo: String = "Desperfecto mecánico") -> bool:
 	if _controlador == null:
 		return false
+	var datos_antes: Dictionary = _controlador.obtener_tren(id_tren)
+	var pasajeros: int = int(datos_antes.get("pasajeros", 0))
 	var ok: bool = _controlador.finalizar_tren_incompleto(id_tren, motivo)
 	if ok:
 		_tipo_activo_por_tren[id_tren] = TipoEvento.DESPERFECTO_MECANICO
 		var id_evento: int = _siguiente_evento_id
 		_siguiente_evento_id += 1
+		var estaciones_totales: int = _controlador.obtener_estaciones().size()
+		var estaciones_recorridas: int = _estadisticas.obtener_estaciones_recorridas(id_tren) if _estadisticas != null else 0
+		var estaciones_restantes: int = maxi(1, estaciones_totales - estaciones_recorridas)
+		var minutos_restantes_estimados: float = (estaciones_restantes * DURACION_PROMEDIO_TRAMO_S) / 60.0
 		var evento: Dictionary = {
 			"id": id_evento, "tipo": TipoEvento.DESPERFECTO_MECANICO,
 			"clave": "tren_%d" % id_tren, "motivo": motivo,
 			"inicio_s": _reloj.tiempo_simulado_s() if _reloj != null else 0.0,
 			"fin_s": -1.0, "duracion_s": 0.0, "id_tren": id_tren,
-			"trenes_afectados": {id_tren: true}, "retraso_total_s": 0.0, "activo": false,
+			"trenes_afectados": {id_tren: true}, "retraso_total_s": 0.0,
+			"pasajeros_minuto_perdidos": float(pasajeros) * minutos_restantes_estimados, "activo": false,
 		}
 		_eventos[id_evento] = evento
 		evento_disparado.emit(evento)
@@ -401,6 +418,9 @@ func _on_retraso_tramo_sumado(id_tren: int, aporte_s: float) -> void:
 	if _eventos.has(id_evento):
 		var evento: Dictionary = _eventos[id_evento]
 		evento["retraso_total_s"] = float(evento["retraso_total_s"]) + aporte_s
+		if aporte_s > 0.0 and _controlador != null:
+			var pasajeros: int = int(_controlador.obtener_tren(id_tren).get("pasajeros", 0))
+			evento["pasajeros_minuto_perdidos"] = float(evento.get("pasajeros_minuto_perdidos", 0.0)) + (float(pasajeros) * aporte_s / 60.0)
 
 
 func _on_tren_eliminado(id: int) -> void:
