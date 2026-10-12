@@ -38,9 +38,18 @@ func _run() -> void:
 		if int(datos.get("estado", -1)) == Tren.EstadoOperacion.INCOMPLETO:
 			cambios_incompleto.append(1)
 	)
-	tren.call("_actualizar_ruta_servicio")
+	# _actualizar_ruta_servicio ahora reintenta unas cuantas veces antes de
+	# invalidar (una falla de ruteo real en producción suele ser una aguja
+	# momentáneamente ocupada por otro tren, no una desconexión permanente --
+	# ver docs/reporte_final.md). Para un override roto a propósito como este,
+	# los reintentos nunca van a resolver nada: hay que agotarlos a mano
+	# llamando la función varias veces, igual que haría _process() real.
+	for _i: int in range(25):
+		tren.call("_actualizar_ruta_servicio")
+		if tren.ruta_invalida():
+			break
 
-	assert(tren.ruta_invalida(), "Un override imposible debe marcar ruta inválida")
+	assert(tren.ruta_invalida(), "Un override imposible debe marcar ruta inválida (agotados los reintentos)")
 	assert(tren.esta_detenido(), "Un override imposible debe inmovilizar el tren")
 	assert(tren.proxima_estacion_nombre() == "Hipólito Yrigoyen", "El diagnóstico debe conservar la estación pendiente")
 	assert(tren.invertir_sentido == sentido_inicial, "Un servicio sólo ida no puede invertir el sentido operativo")

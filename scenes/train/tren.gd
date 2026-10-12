@@ -304,6 +304,13 @@ var _factor_aceleracion_prueba: float = 1.0
 var _factor_frenado_prueba: float = 1.0
 var _parada_servicio_activa: bool = false
 var _ruta_invalida: bool = false
+## Reintentos de _actualizar_ruta_servicio() cuando no encuentra vía
+## transitable al partir: casi siempre es una aguja momentáneamente ocupada
+## por otro tren, no una desconexión real -- ver docs/reporte_final.md.
+var _reintentos_ruta_servicio: int = 0
+var _tiempo_hasta_reintento_ruta: float = 0.0
+const MAX_REINTENTOS_RUTA_SERVICIO: int = 20
+const INTERVALO_REINTENTO_RUTA_S: float = 0.5
 ## Cierre terminal de un servicio sólo ida. No equivale a eliminar el nodo:
 ## queda disponible para métricas, pero no vuelve a planificar ni reservar vías.
 var _servicio_finalizado: bool = false
@@ -1425,8 +1432,18 @@ func _actualizar_ruta_servicio() -> void:
 			var inversos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, _direccion_servicio < 0)
 			eleccion = _mejor_ruta_a_candidatos_desde(red, inversos, traza.name, _avance, not invertir_sentido, override, _desvios_switch)
 		if eleccion.is_empty():
+			if _reintentos_ruta_servicio < MAX_REINTENTOS_RUTA_SERVICIO:
+				# Casi siempre transitorio (una aguja que otro tren tiene
+				# ocupada en este instante), no una desconexión real de la
+				# red -- ver docs/reporte_final.md. Mismo patrón que la
+				# reserva de salida unas líneas más arriba: reintentar en
+				# vez de matar el servicio a la primera.
+				_reintentos_ruta_servicio += 1
+				_tiempo_hasta_reintento_ruta = INTERVALO_REINTENTO_RUTA_S
+				return
 			_detener_por_ruta_invalida("No existe vía de parada transitable para %s." % str(estacion.get("nombre_estacion")))
 			return
+		_reintentos_ruta_servicio = 0
 		ruta = eleccion["ruta"] as Dictionary
 		var candidato_elegido: Dictionary = eleccion["candidato"] as Dictionary
 		objetivo = _objetivo_desde_candidato(estacion, candidato_elegido)
@@ -1747,6 +1764,13 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 
 func _process(delta: float) -> void:
 	if _eliminado or _servicio_finalizado:
+		return
+	if _tiempo_hasta_reintento_ruta > 0.0 and not Engine.is_editor_hint():
+		_tiempo_hasta_reintento_ruta -= delta
+		_vel = 0.0
+		velocidad_cambiada.emit(0.0)
+		if _tiempo_hasta_reintento_ruta <= 0.0:
+			_actualizar_ruta_servicio()
 		return
 	if not Engine.is_editor_hint() and delta <= 0.0:
 		return

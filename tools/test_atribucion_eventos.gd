@@ -1,7 +1,7 @@
 extends SceneTree
 ## Verifica que el retraso_total_s atribuido a un evento por GestorEventos
-## coincide con el retraso real que EstadisticasRetraso le midió al tren
-## afectado en el tramo que generó esa demora.
+## coincide con la suma real que EstadisticasRetraso midió para todos los
+## trenes que afectó ese evento.
 ## Godot --headless --path . -s res://tools/test_atribucion_eventos.gd
 
 const MAX_FRAMES: int = 3000
@@ -19,13 +19,40 @@ func _run() -> void:
 	var estadisticas: EstadisticasRetraso = nivel.get_node("EstadisticasRetraso")
 	controlador.establecer_velocidad_simulacion(40.0)
 
-	# Verdad de referencia: capturo yo mismo cada aporte_s por tramo, para
-	# TODOS los trenes, sin pasar por GestorEventos.
-	var aportes_reales: Dictionary = {}  # id_tren -> Array[float], en orden
+	# Verdad de referencia: reproduzco acá, de forma independiente, el mismo
+	# mecanismo de atribución que usa GestorEventos internamente (marcar
+	# "pendiente" al afectar a un tren, cerrarlo con su próximo aporte medido)
+	# en vez de asumir que un único tren concreto es el único afectado -- con
+	# varios trenes iniciales convergiendo en la misma zona, más de uno puede
+	# quedar atrapado por el mismo piquete antes de que el primero complete
+	# su próximo tramo, y la suma real debe incluirlos a todos.
+	#
+	# `estado` es un Dictionary (no variables sueltas) a propósito: los
+	# lambdas de GDScript no comparten por referencia una variable local
+	# primitiva (float/int/bool) con la función que los declara -- mutarla
+	# adentro del lambda no se propaga afuera. Un Dictionary sí es por
+	# referencia. Ver también la nota equivalente en otros tools/diag_*.gd
+	# de esta misma sesión.
+	var estado: Dictionary = {"pendiente": {}, "confirmados": {}, "aporte_real": 0.0}
+	gestor.tren_afectado_por_evento.connect(func(id_tren: int, tipo: int) -> void:
+		if tipo == GestorEventos.TipoEvento.PIQUETE:
+			(estado["pendiente"] as Dictionary)[id_tren] = true
+	)
 	estadisticas.retraso_tramo_sumado.connect(func(id_tren: int, aporte_s: float) -> void:
-		var lista: Array = aportes_reales.get(id_tren, [])
-		lista.append(aporte_s)
-		aportes_reales[id_tren] = lista
+		var pendiente: Dictionary = estado["pendiente"]
+		if pendiente.has(id_tren):
+			pendiente.erase(id_tren)
+			estado["aporte_real"] = float(estado["aporte_real"]) + aporte_s
+			(estado["confirmados"] as Dictionary)[id_tren] = true
+	)
+	# Si un tren marcado queda incompleto en vez de completar su tramo
+	# siguiente (puede pasar por causas ajenas al piquete -- ver
+	# docs/reporte_final.md), su atribución nunca se va a resolver: sin esto,
+	# el test colgaría hasta el tope de frames en vez de fallar claro.
+	controlador.tren_finalizo.connect(func(id_tren: int, resultado: String) -> void:
+		var pendiente: Dictionary = estado["pendiente"]
+		if pendiente.has(id_tren) and resultado != "completo":
+			pendiente.erase(id_tren)
 	)
 
 	# Piquete en Hipólito Yrigoyen (la primera parada real, a la que los 4
@@ -43,23 +70,23 @@ func _run() -> void:
 			break
 	assert(id_evento_piquete > 0, "El evento recién disparado debe aparecer en el historial")
 
-	var llegado: Dictionary = {}
-	controlador.tren_llego_estacion.connect(func(id_tren: int, datos_est: Dictionary) -> void:
-		if str(datos_est.get("nombre", "")) == "Hipólito Yrigoyen" and llegado.is_empty():
-			llegado["id"] = id_tren
-	)
-	if not await _esperar_hasta(func() -> bool: return not llegado.is_empty(), "algún tren llega a Hipólito Yrigoyen"):
-		quit(1); return
-	var id: int = int(llegado["id"])
-
-	# Esperar a que ESE mismo tren complete su próximo tramo (el que arrancó
-	# parado por el piquete) para que EstadisticasRetraso mida el aporte.
-	var muestras_antes: int = (aportes_reales.get(id, []) as Array).size()
-	if not await _esperar_hasta(func() -> bool: return (aportes_reales.get(id, []) as Array).size() > muestras_antes, "el tren afectado completa el tramo siguiente"):
+	if not await _esperar_hasta(func() -> bool: return (estado["confirmados"] as Dictionary).size() > 0, "algún tren afectado completa su tramo siguiente"):
 		quit(1); return
 
-	var lista_aportes: Array = aportes_reales.get(id, [])
-	var aporte_real_tramo_piquete: float = float(lista_aportes[lista_aportes.size() - 1])
+	# Esperar a que la zona termine Y no quede ningún tren con atribución
+	# pendiente: mientras el piquete sigue activo, puede seguir atrapando
+	# trenes nuevos, y cada uno recién aporta su medición real al completar
+	# SU propio tramo siguiente (no necesariamente en el mismo frame que los
+	# demás).
+	if not await _esperar_hasta(func() -> bool:
+		if not (estado["pendiente"] as Dictionary).is_empty():
+			return false
+		for e: Dictionary in gestor.obtener_historial():
+			if int(e.get("id", -1)) == id_evento_piquete:
+				return not bool(e.get("activo", true))
+		return false
+	, "la zona del piquete finaliza y se resuelven todas las atribuciones pendientes"):
+		quit(1); return
 
 	var evento_final: Dictionary = {}
 	for e: Dictionary in gestor.obtener_historial():
@@ -68,14 +95,19 @@ func _run() -> void:
 			break
 	assert(not evento_final.is_empty(), "El evento debe seguir en el historial")
 	var retraso_atribuido: float = float(evento_final.get("retraso_total_s", -1.0))
-	var trenes_afectados: Dictionary = evento_final.get("trenes_afectados", {})
+	var aporte_acumulado_real: float = float(estado["aporte_real"])
+	var confirmados: Dictionary = estado["confirmados"]
 
-	assert(trenes_afectados.has(id), "El tren debe figurar como afectado por el evento")
-	assert(absf(retraso_atribuido - aporte_real_tramo_piquete) < 0.01,
-		"El retraso atribuido al evento (%.3f) debe coincidir con el que EstadisticasRetraso midió para ese tramo (%.3f)" % [retraso_atribuido, aporte_real_tramo_piquete])
-	assert(retraso_atribuido > 0.0, "Un piquete de 280s debe generar retraso medible en el tramo afectado")
+	# No se compara trenes_afectados.size() contra confirmados.size(): un tren
+	# marcado afectado que termina incompleto (por una causa ajena al
+	# piquete) sigue contando como "afectado" en el evento pero nunca aporta
+	# una medición real -- ninguno de los dos lados lo suma, así que no rompe
+	# la comparación de abajo, que es la que realmente importa.
+	assert(absf(retraso_atribuido - aporte_acumulado_real) < 0.01,
+		"El retraso atribuido al evento (%.3f) debe coincidir con la suma real medida para sus %d tren(es) afectados (%.3f)" % [retraso_atribuido, confirmados.size(), aporte_acumulado_real])
+	assert(retraso_atribuido > 0.0, "Un piquete de 280s debe generar retraso medible")
 
-	print("OK: retraso atribuido al evento (%.1fs) coincide con el retraso real medido (%.1fs)" % [retraso_atribuido, aporte_real_tramo_piquete])
+	print("OK: retraso atribuido al evento (%.1fs, %d trenes) coincide con la suma real medida (%.1fs)" % [retraso_atribuido, confirmados.size(), aporte_acumulado_real])
 
 	nivel.queue_free()
 	await process_frame
