@@ -98,8 +98,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.40218827, 0.40218827)
-shader_parameter/cirrus_position2 = Vector2(0.40218827, 0.40218827)
+shader_parameter/cirrus_position1 = Vector2(0.25543952, 0.25543952)
+shader_parameter/cirrus_position2 = Vector2(0.25543952, 0.25543952)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -109,7 +109,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(27.085058, 27.085058)
+shader_parameter/cumulus_position = Vector2(46.427536, 46.427536)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -5480,9 +5480,9 @@ longitud_metros = 333.07883
 
 [node name="seg_667" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1851964380]
 curve = SubResource("Curve3D_5ygih")
-debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
+debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
 script = ExtResource("4_7yiem")
-uso_direccion = 2
+uso_direccion = 1
 segment_id = "seg_667"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -5745,8 +5745,9 @@ longitud_metros = 779.02954
 
 [node name="seg_763" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=343746053]
 curve = SubResource("Curve3D_ixr5v")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 1
 segment_id = "seg_763"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "05_Gerli_Lanus"
@@ -5756,8 +5757,9 @@ longitud_metros = 10.227661
 
 [node name="seg_764" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=1461074389]
 curve = SubResource("Curve3D_nmupa")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 1
 segment_id = "seg_764"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "05_Gerli_Lanus"
@@ -5864,8 +5866,9 @@ longitud_metros = 103.613174
 
 [node name="seg_152" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1235034774]
 curve = SubResource("Curve3D_6hqhl")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 1
 segment_id = "seg_152"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
 tramo_nombre = "04_Avellaneda_Gerli"
@@ -6287,9 +6290,9 @@ longitud_metros = 51.58938
 
 [node name="seg_85" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=387074521]
 curve = SubResource("Curve3D_7pdk5")
-debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
-uso_direccion = 1
+uso_direccion = 2
 segment_id = "seg_85"
 sector_nombre = "Sector_03_Lanus_Temperley"
 tramo_nombre = "09_Lomas_Temperley"
@@ -6911,7 +6914,6 @@ estado_edicion = "Modificado"
 longitud_metros = 137.34877
 
 [node name="seg_316" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/06_Lanus_Escalada" unique_id=916024752]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5406.8867, 3358.9287, -275.3994)
 curve = SubResource("Curve3D_of51i")
 debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
 script = ExtResource("4_7yiem")
@@ -7574,9 +7576,9 @@ longitud_metros = 2291.409
 
 [node name="seg_237" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/12_Calzada_Claypole" unique_id=1461325091]
 curve = SubResource("Curve3D_vjhqu")
-debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
-uso_direccion = 1
+uso_direccion = 2
 segment_id = "seg_237"
 sector_nombre = "Sector_04_Temperley_Claypole"
 tramo_nombre = "12_Calzada_Claypole"
@@ -7613,8 +7615,9 @@ longitud_metros = 40.77832
 
 [node name="seg_16" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=23070457]
 curve = SubResource("Curve3D_xkip8")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_16"
 sector_nombre = "Sector_05_Claypole_Bosques"
 tramo_nombre = "16_Zeballos_Bosques"
@@ -8030,9 +8033,9 @@ longitud_metros = 349.2288
 
 [node name="seg_634" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1908744748]
 curve = SubResource("Curve3D_usfrk")
-debug_custom_color = Color(0.15294118, 0.7254902, 1, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
-uso_direccion = 1
+uso_direccion = 2
 segment_id = "seg_634"
 sector_nombre = "Sector_05_Claypole_Bosques"
 tramo_nombre = "13_Claypole_Ardigo"
@@ -8122,9 +8125,8 @@ longitud_metros = 466.85278
 
 [node name="seg_711" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1704435042]
 curve = SubResource("Curve3D_dvjs2")
-debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
+debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
 script = ExtResource("4_7yiem")
-uso_direccion = 2
 segment_id = "seg_711"
 sector_nombre = "Sector_05_Claypole_Bosques"
 tramo_nombre = "13_Claypole_Ardigo"
@@ -9111,7 +9113,7 @@ conservar_al_regenerar = true
 transform = Transform3D(-0.20945628, 0, -0.9778181, 0, 1, 0, 0.9778181, 0, -0.20945628, 3815.8928, 0, 19502.553)
 curva_desviada = SubResource("Curve3D_7onok")
 node_id = 11811730945
-via_comun_id = "seg_74"
+via_comun_id = "seg_75"
 via_directa_id = "seg_73"
 via_desviada_id = "seg_709"
 tipo_aparato_override = "TIPO_B"
@@ -9237,6 +9239,7 @@ distancia_maxima_via = 1.0
 [node name="ServicioConstitucionBosques" type="Node" parent="." unique_id=406195018]
 script = ExtResource("19_servicio")
 paradas = Array[NodePath]([NodePath("../EstacionPlazaConstitucion"), NodePath("../EstacionYrigoyen"), NodePath("../EstacionDarioSantillanKosteki"), NodePath("../EstacionGerli"), NodePath("../EstacionLanus"), NodePath("../EstacionRemediosDeEscalada"), NodePath("../EstacionBanfield"), NodePath("../EstacionLomasDeZamora"), NodePath("../EstacionTemperley"), NodePath("../EstacionJoseMarmol"), NodePath("../EstacionRafaelCalzada"), NodePath("../EstacionClaypole"), NodePath("../EstacionDanteArdigo"), NodePath("../EstacionFlorencioVarela"), NodePath("../EstacionZeballos"), NodePath("../EstacionBosques")])
+separar_vias_por_sentido = true
 tiempos_tramos_ida_s = PackedFloat32Array()
 tiempos_tramos_vuelta_s = PackedFloat32Array()
 
@@ -9275,6 +9278,7 @@ ajuste_lateral_anden_ida = -0.1999999999999993
 ajuste_lateral_anden_vuelta = 18.65
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.450000000000005
+ancho_cobertura_vias = 67.0
 nombre_estacion = "Hipólito Yrigoyen"
 tiempo_espera = 3.0
 esta_editada = true
@@ -9304,6 +9308,7 @@ ajuste_lateral_anden_ida = -3.1000000000000014
 ajuste_lateral_anden_vuelta = 15.9
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 4.850000000000001
+ancho_cobertura_vias = 47.0
 nombre_estacion = "Gerli"
 tiempo_espera = 3.0
 esta_editada = true
@@ -9318,6 +9323,7 @@ ajuste_lateral_anden_ida = -2.3999999999999986
 ajuste_lateral_anden_vuelta = 17.15
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.25
+ancho_cobertura_vias = 47.0
 nombre_estacion = "Lanús"
 tiempo_espera = 3.0
 esta_editada = true

@@ -95,23 +95,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 1900,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 1900.0,
 				"demanda_pasajeros": "res://resources/passengers/banfield.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Banfield",
 				"posicion_lateral_anden_central_1": 8.9,
@@ -147,23 +147,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1400,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1400.0,
 				"demanda_pasajeros": "res://resources/passengers/bosques.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": true,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Bosques",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -199,23 +199,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1600,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1600.0,
 				"demanda_pasajeros": "res://resources/passengers/claypole.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Claypole",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -251,23 +251,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1200,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/dante_ardigo.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Ing. Dante Ardigó",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -303,23 +303,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 2300,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 2300.0,
 				"demanda_pasajeros": "res://resources/passengers/dario_santillan_kosteki.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Darío Santillán y Maximiliano Kosteki",
 				"posicion_lateral_anden_central_1": 9.9,
@@ -355,23 +355,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1500,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1500.0,
 				"demanda_pasajeros": "res://resources/passengers/florencio_varela.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Florencio Varela",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -406,24 +406,24 @@
 				"ajuste_lateral_anden_vuelta": 15.9,
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
-				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 1200,
+				"ancho_cobertura_vias": 47.0,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/gerli.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": true,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Gerli",
 				"posicion_lateral_anden_central_1": 4.85,
@@ -459,23 +459,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1100,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1100.0,
 				"demanda_pasajeros": "res://resources/passengers/jose_marmol.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "José Mármol",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -510,24 +510,24 @@
 				"ajuste_lateral_anden_vuelta": 17.15,
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
-				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 2500,
+				"ancho_cobertura_vias": 47.0,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 2500.0,
 				"demanda_pasajeros": "res://resources/passengers/lanus.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Lanús",
 				"posicion_lateral_anden_central_1": 8.25,
@@ -542,13 +542,13 @@
 				"tiempo_salida_pasajeros": 3.0,
 				"transform": [
 					-0.253227025270462,
-					0.0000000000054212979591628,
+					0.00000000000542129,
 					0.967406868934631,
-					0.000412162975408137,
+					0.00041216297540813,
 					0.999999940395355,
-					0.000107887179183308,
+					0.0001078871791833,
 					-0.967406809329987,
-					0.000426049227826297,
+					0.00042604922782629,
 					-0.25322699546814,
 					-803.702392578125,
 					0.0,
@@ -563,23 +563,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 2200,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 2200.0,
 				"demanda_pasajeros": "res://resources/passengers/lomas_de_zamora.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Lomas de Zamora",
 				"posicion_lateral_anden_central_1": 9.35,
@@ -615,23 +615,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 9.5,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 3000,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 3000.0,
 				"demanda_pasajeros": "res://resources/passengers/plaza_constitucion.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.74,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": true,
 				"incluir_anden_b_pasajeros": false,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": false,
 				"nombre_estacion": "Plaza Constitución",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -667,23 +667,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1200,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/rafael_calzada.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Rafael Calzada",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -719,23 +719,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 1600,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 1600.0,
 				"demanda_pasajeros": "res://resources/passengers/remedios_de_escalada.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Remedios de Escalada",
 				"posicion_lateral_anden_central_1": -3.85,
@@ -771,23 +771,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 2400,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 2400.0,
 				"demanda_pasajeros": "res://resources/passengers/temperley.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": true,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Temperley",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -822,24 +822,24 @@
 				"ajuste_lateral_anden_vuelta": 18.65,
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
-				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 1,
-				"capacidad_maxima_espera": 1000,
+				"ancho_cobertura_vias": 67.0,
+				"cantidad_andenes_centrales": 1.0,
+				"capacidad_maxima_espera": 1000.0,
 				"demanda_pasajeros": "res://resources/passengers/hipolito_yrigoyen.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Hipólito Yrigoyen",
 				"posicion_lateral_anden_central_1": 9.45,
@@ -875,23 +875,23 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
-				"cantidad_andenes_centrales": 0,
-				"capacidad_maxima_espera": 1200,
+				"cantidad_andenes_centrales": 0.0,
+				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/zeballos.tres",
 				"desfasaje_lateral": 0.0,
 				"desfasaje_parada_ida": 99.5,
 				"desfasaje_parada_vuelta": -97.2,
 				"desfasaje_vertical": 0.0,
 				"desfasaje_vertical_pasajeros_anden_a": 0.0,
-				"destino_anden_a": 1,
-				"destino_anden_b": 0,
-				"destino_anden_central_1": 2,
-				"destino_anden_central_2": 2,
+				"destino_anden_a": 1.0,
+				"destino_anden_b": 0.0,
+				"destino_anden_central_1": 2.0,
+				"destino_anden_central_2": 2.0,
 				"es_terminal": false,
 				"incluir_anden_b_pasajeros": true,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
-				"maximo_pasajeros_visibles": 150,
+				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": true,
 				"nombre_estacion": "Estanislao S. Zeballos",
 				"posicion_lateral_anden_central_1": 0.0,
@@ -1698,7 +1698,7 @@
 					0.0,
 					19502.552734375
 				],
-				"via_comun_id": "seg_74",
+				"via_comun_id": "seg_75",
 				"via_desviada_id": "seg_709",
 				"via_directa_id": "seg_73"
 			},
@@ -13777,7 +13777,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_10": {
 			"anular_recorte_switch": false,
@@ -13894,7 +13894,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_100": {
 			"anular_recorte_switch": false,
@@ -13993,7 +13993,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_101": {
 			"anular_recorte_switch": false,
@@ -14074,7 +14074,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_107": {
 			"anular_recorte_switch": false,
@@ -14155,7 +14155,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_108": {
 			"anular_recorte_switch": false,
@@ -14236,7 +14236,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_109": {
 			"anular_recorte_switch": false,
@@ -14317,7 +14317,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_110": {
 			"anular_recorte_switch": false,
@@ -14398,7 +14398,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_111": {
 			"anular_recorte_switch": false,
@@ -14479,7 +14479,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_112": {
 			"anular_recorte_switch": false,
@@ -14614,7 +14614,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_113": {
 			"anular_recorte_switch": false,
@@ -14695,7 +14695,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_117": {
 			"anular_recorte_switch": false,
@@ -14776,7 +14776,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_120": {
 			"anular_recorte_switch": false,
@@ -14857,7 +14857,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_121": {
 			"anular_recorte_switch": false,
@@ -14938,7 +14938,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_125": {
 			"anular_recorte_switch": false,
@@ -15019,7 +15019,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_13": {
 			"anular_recorte_switch": false,
@@ -15100,7 +15100,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_140": {
 			"anular_recorte_switch": false,
@@ -15199,7 +15199,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_141": {
 			"anular_recorte_switch": false,
@@ -15280,7 +15280,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_142": {
 			"anular_recorte_switch": false,
@@ -15469,7 +15469,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_143": {
 			"anular_recorte_switch": false,
@@ -15550,7 +15550,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_15": {
 			"anular_recorte_switch": false,
@@ -15631,7 +15631,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_151": {
 			"anular_recorte_switch": false,
@@ -15712,7 +15712,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_152": {
 			"anular_recorte_switch": false,
@@ -15793,7 +15793,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 1.0
 		},
 		"seg_153": {
 			"anular_recorte_switch": false,
@@ -15874,7 +15874,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_155": {
 			"anular_recorte_switch": false,
@@ -15973,7 +15973,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_156": {
 			"anular_recorte_switch": false,
@@ -16180,7 +16180,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_157": {
 			"anular_recorte_switch": false,
@@ -16315,7 +16315,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_158": {
 			"anular_recorte_switch": false,
@@ -16396,7 +16396,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_159": {
 			"anular_recorte_switch": false,
@@ -16477,7 +16477,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_16": {
 			"anular_recorte_switch": false,
@@ -16558,7 +16558,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2.0
 		},
 		"seg_160": {
 			"anular_recorte_switch": false,
@@ -16657,7 +16657,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_161": {
 			"anular_recorte_switch": false,
@@ -16738,7 +16738,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_163": {
 			"anular_recorte_switch": false,
@@ -16819,7 +16819,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_164": {
 			"anular_recorte_switch": false,
@@ -16990,7 +16990,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_167": {
 			"anular_recorte_switch": false,
@@ -17089,7 +17089,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_175": {
 			"anular_recorte_switch": false,
@@ -17170,7 +17170,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_176": {
 			"anular_recorte_switch": false,
@@ -17251,7 +17251,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_178": {
 			"anular_recorte_switch": false,
@@ -17332,7 +17332,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_179": {
 			"anular_recorte_switch": false,
@@ -17431,7 +17431,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_180": {
 			"anular_recorte_switch": false,
@@ -17512,7 +17512,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_181": {
 			"anular_recorte_switch": false,
@@ -17593,7 +17593,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_182": {
 			"anular_recorte_switch": false,
@@ -17674,7 +17674,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_183": {
 			"anular_recorte_switch": false,
@@ -17755,7 +17755,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_184": {
 			"anular_recorte_switch": false,
@@ -17836,7 +17836,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_185": {
 			"anular_recorte_switch": false,
@@ -17917,7 +17917,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_186": {
 			"anular_recorte_switch": false,
@@ -17998,7 +17998,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_202": {
 			"anular_recorte_switch": false,
@@ -18079,7 +18079,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_203": {
 			"anular_recorte_switch": false,
@@ -18160,7 +18160,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_204": {
 			"anular_recorte_switch": false,
@@ -18241,7 +18241,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_205": {
 			"anular_recorte_switch": false,
@@ -18322,7 +18322,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_207": {
 			"anular_recorte_switch": false,
@@ -18403,7 +18403,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_209": {
 			"anular_recorte_switch": false,
@@ -18664,7 +18664,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_21": {
 			"anular_recorte_switch": false,
@@ -18692,12 +18692,12 @@
 					{
 						"in": [
 							9.17633056640625,
-							-0.000095367431640625,
+							-0.00009536743164062,
 							-17.89453125
 						],
 						"out": [
 							-9.17633056640625,
-							0.000095367431640625,
+							0.00009536743164062,
 							17.89453125
 						],
 						"pos": [
@@ -18763,7 +18763,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_210": {
 			"anular_recorte_switch": false,
@@ -18844,7 +18844,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_211": {
 			"anular_recorte_switch": false,
@@ -18925,7 +18925,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_212": {
 			"anular_recorte_switch": false,
@@ -19006,7 +19006,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_213": {
 			"anular_recorte_switch": false,
@@ -19087,7 +19087,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_217": {
 			"anular_recorte_switch": false,
@@ -19168,7 +19168,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_218": {
 			"anular_recorte_switch": false,
@@ -19285,7 +19285,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_219": {
 			"anular_recorte_switch": false,
@@ -19384,7 +19384,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_22": {
 			"anular_recorte_switch": false,
@@ -19483,7 +19483,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_220": {
 			"anular_recorte_switch": false,
@@ -19564,7 +19564,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_221": {
 			"anular_recorte_switch": false,
@@ -19897,7 +19897,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_225": {
 			"anular_recorte_switch": false,
@@ -20014,7 +20014,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_227": {
 			"anular_recorte_switch": false,
@@ -20095,7 +20095,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_228": {
 			"anular_recorte_switch": false,
@@ -20176,7 +20176,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_229": {
 			"anular_recorte_switch": false,
@@ -20257,7 +20257,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_23": {
 			"anular_recorte_switch": false,
@@ -20338,7 +20338,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_230": {
 			"anular_recorte_switch": false,
@@ -20419,7 +20419,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_231": {
 			"anular_recorte_switch": false,
@@ -20590,7 +20590,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_232": {
 			"anular_recorte_switch": false,
@@ -20671,7 +20671,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_236": {
 			"anular_recorte_switch": false,
@@ -20752,7 +20752,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_237": {
 			"anular_recorte_switch": false,
@@ -20833,7 +20833,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 2.0
 		},
 		"seg_238": {
 			"anular_recorte_switch": false,
@@ -20914,7 +20914,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_239": {
 			"anular_recorte_switch": false,
@@ -20995,7 +20995,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_240": {
 			"anular_recorte_switch": false,
@@ -21076,7 +21076,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_241": {
 			"anular_recorte_switch": false,
@@ -21157,7 +21157,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_242": {
 			"anular_recorte_switch": false,
@@ -21238,7 +21238,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_243": {
 			"anular_recorte_switch": false,
@@ -21319,7 +21319,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_244": {
 			"anular_recorte_switch": false,
@@ -21400,7 +21400,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_246": {
 			"anular_recorte_switch": false,
@@ -21481,7 +21481,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_247": {
 			"anular_recorte_switch": false,
@@ -21562,7 +21562,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_248": {
 			"anular_recorte_switch": false,
@@ -21643,7 +21643,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_249": {
 			"anular_recorte_switch": false,
@@ -21724,7 +21724,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_252": {
 			"anular_recorte_switch": false,
@@ -21805,7 +21805,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_253": {
 			"anular_recorte_switch": false,
@@ -21904,7 +21904,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_27": {
 			"anular_recorte_switch": false,
@@ -21985,7 +21985,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_281": {
 			"anular_recorte_switch": false,
@@ -22066,7 +22066,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_282": {
 			"anular_recorte_switch": false,
@@ -22147,7 +22147,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_283": {
 			"anular_recorte_switch": false,
@@ -22228,7 +22228,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_284": {
 			"anular_recorte_switch": false,
@@ -22309,7 +22309,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_285": {
 			"anular_recorte_switch": false,
@@ -22390,7 +22390,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_288": {
 			"anular_recorte_switch": false,
@@ -22543,7 +22543,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_290": {
 			"anular_recorte_switch": false,
@@ -22624,7 +22624,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_301": {
 			"anular_recorte_switch": false,
@@ -22705,7 +22705,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_307": {
 			"anular_recorte_switch": false,
@@ -22840,7 +22840,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_308": {
 			"anular_recorte_switch": false,
@@ -22921,7 +22921,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_309": {
 			"anular_recorte_switch": false,
@@ -23002,7 +23002,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_310": {
 			"anular_recorte_switch": false,
@@ -23083,7 +23083,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_311": {
 			"anular_recorte_switch": false,
@@ -23093,12 +23093,12 @@
 					{
 						"in": [
 							2.26812744140625,
-							0.000308990478515625,
+							0.00030899047851562,
 							-11.5206298828125
 						],
 						"out": [
 							-2.26812744140625,
-							-0.000308990478515625,
+							-0.00030899047851562,
 							11.5206298828125
 						],
 						"pos": [
@@ -23164,7 +23164,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_313": {
 			"anular_recorte_switch": false,
@@ -23245,7 +23245,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_314": {
 			"anular_recorte_switch": false,
@@ -23362,7 +23362,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_315": {
 			"anular_recorte_switch": false,
@@ -23443,7 +23443,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_316": {
 			"anular_recorte_switch": false,
@@ -23592,11 +23592,11 @@
 				0.0,
 				0.0,
 				1.0,
-				5406.88671875,
-				3358.9287109375,
-				-275.3994140625
+				0.0,
+				0.0,
+				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_318": {
 			"anular_recorte_switch": false,
@@ -23677,7 +23677,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_323": {
 			"anular_recorte_switch": false,
@@ -23776,7 +23776,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_324": {
 			"anular_recorte_switch": false,
@@ -23857,7 +23857,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_325": {
 			"anular_recorte_switch": false,
@@ -23992,7 +23992,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_327": {
 			"anular_recorte_switch": false,
@@ -24073,7 +24073,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_328": {
 			"anular_recorte_switch": false,
@@ -24154,7 +24154,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_331": {
 			"anular_recorte_switch": false,
@@ -24235,7 +24235,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_332": {
 			"anular_recorte_switch": false,
@@ -24316,7 +24316,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_333": {
 			"anular_recorte_switch": false,
@@ -24397,7 +24397,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_334": {
 			"anular_recorte_switch": false,
@@ -24478,7 +24478,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_336": {
 			"anular_recorte_switch": false,
@@ -24559,7 +24559,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_343": {
 			"anular_recorte_switch": false,
@@ -24640,7 +24640,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_344": {
 			"anular_recorte_switch": false,
@@ -24721,7 +24721,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_345": {
 			"anular_recorte_switch": false,
@@ -24802,7 +24802,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_346": {
 			"anular_recorte_switch": false,
@@ -24883,7 +24883,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_347": {
 			"anular_recorte_switch": false,
@@ -24964,7 +24964,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_348": {
 			"anular_recorte_switch": false,
@@ -25135,7 +25135,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_349": {
 			"anular_recorte_switch": false,
@@ -25216,7 +25216,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_35": {
 			"anular_recorte_switch": false,
@@ -25297,7 +25297,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_350": {
 			"anular_recorte_switch": false,
@@ -25378,7 +25378,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_357": {
 			"anular_recorte_switch": false,
@@ -25459,7 +25459,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_358": {
 			"anular_recorte_switch": false,
@@ -25540,7 +25540,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_36": {
 			"anular_recorte_switch": false,
@@ -25639,7 +25639,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_360": {
 			"anular_recorte_switch": false,
@@ -25756,7 +25756,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_362": {
 			"anular_recorte_switch": false,
@@ -25855,7 +25855,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_363": {
 			"anular_recorte_switch": false,
@@ -25936,7 +25936,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_366": {
 			"anular_recorte_switch": false,
@@ -26017,7 +26017,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_367": {
 			"anular_recorte_switch": false,
@@ -26098,7 +26098,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_368": {
 			"anular_recorte_switch": false,
@@ -26179,7 +26179,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_369": {
 			"anular_recorte_switch": false,
@@ -26260,7 +26260,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_372": {
 			"anular_recorte_switch": false,
@@ -26359,7 +26359,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_373": {
 			"anular_recorte_switch": false,
@@ -26440,7 +26440,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_374": {
 			"anular_recorte_switch": false,
@@ -26521,7 +26521,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_375": {
 			"anular_recorte_switch": false,
@@ -26602,7 +26602,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_376": {
 			"anular_recorte_switch": false,
@@ -26683,7 +26683,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_378": {
 			"anular_recorte_switch": false,
@@ -26764,7 +26764,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_379": {
 			"anular_recorte_switch": false,
@@ -26845,7 +26845,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_380": {
 			"anular_recorte_switch": false,
@@ -26926,7 +26926,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_381": {
 			"anular_recorte_switch": false,
@@ -27007,7 +27007,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_382": {
 			"anular_recorte_switch": false,
@@ -27088,7 +27088,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_383": {
 			"anular_recorte_switch": false,
@@ -27169,7 +27169,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_384": {
 			"anular_recorte_switch": false,
@@ -27250,7 +27250,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_386": {
 			"anular_recorte_switch": false,
@@ -27331,7 +27331,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_387": {
 			"anular_recorte_switch": false,
@@ -27412,7 +27412,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_388": {
 			"anular_recorte_switch": false,
@@ -27493,7 +27493,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_389": {
 			"anular_recorte_switch": false,
@@ -27574,7 +27574,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_390": {
 			"anular_recorte_switch": false,
@@ -27655,7 +27655,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_391": {
 			"anular_recorte_switch": false,
@@ -27736,7 +27736,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_392": {
 			"anular_recorte_switch": false,
@@ -27889,7 +27889,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_393": {
 			"anular_recorte_switch": false,
@@ -27970,7 +27970,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_396": {
 			"anular_recorte_switch": false,
@@ -28051,7 +28051,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_397": {
 			"anular_recorte_switch": false,
@@ -28150,7 +28150,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_398": {
 			"anular_recorte_switch": false,
@@ -28303,7 +28303,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_4": {
 			"anular_recorte_switch": false,
@@ -28377,7 +28377,7 @@
 						],
 						"pos": [
 							-2.90399932861328,
-							-0.00000197072586161084,
+							-0.00000197072586161,
 							6588.55419921875
 						],
 						"tilt": 0.0
@@ -28557,7 +28557,7 @@
 						],
 						"pos": [
 							-924.853637695313,
-							-0.0000664553153910674,
+							-0.00006645531539106,
 							9964.9658203125
 						],
 						"tilt": 0.0
@@ -28636,7 +28636,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_400": {
 			"anular_recorte_switch": false,
@@ -28717,7 +28717,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_401": {
 			"anular_recorte_switch": false,
@@ -28727,12 +28727,12 @@
 					{
 						"in": [
 							-22.3277587890625,
-							-0.000026702880859375,
+							-0.00002670288085937,
 							267.228515625
 						],
 						"out": [
 							22.3277587890625,
-							0.000026702880859375,
+							0.00002670288085937,
 							-267.228515625
 						],
 						"pos": [
@@ -28816,7 +28816,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_402": {
 			"anular_recorte_switch": false,
@@ -28897,7 +28897,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_403": {
 			"anular_recorte_switch": false,
@@ -28978,7 +28978,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_404": {
 			"anular_recorte_switch": false,
@@ -29059,7 +29059,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_405": {
 			"anular_recorte_switch": false,
@@ -29140,7 +29140,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_409": {
 			"anular_recorte_switch": false,
@@ -29221,7 +29221,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_410": {
 			"anular_recorte_switch": false,
@@ -29302,7 +29302,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_416": {
 			"anular_recorte_switch": false,
@@ -29401,7 +29401,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_423": {
 			"anular_recorte_switch": false,
@@ -29429,12 +29429,12 @@
 					{
 						"in": [
 							0.624053955078125,
-							0.000377655029296875,
+							0.00037765502929687,
 							-20.5333862304688
 						],
 						"out": [
 							-0.624053955078125,
-							-0.000377655029296875,
+							-0.00037765502929687,
 							20.5333862304688
 						],
 						"pos": [
@@ -29482,7 +29482,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_424": {
 			"anular_recorte_switch": false,
@@ -29563,7 +29563,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_435": {
 			"anular_recorte_switch": false,
@@ -29644,7 +29644,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_436": {
 			"anular_recorte_switch": false,
@@ -29725,7 +29725,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_437": {
 			"anular_recorte_switch": false,
@@ -29763,7 +29763,7 @@
 						],
 						"pos": [
 							159.693084716797,
-							-0.000041961669921875,
+							-0.00004196166992187,
 							1272.22021484375
 						],
 						"tilt": 0.0
@@ -29806,7 +29806,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_438": {
 			"anular_recorte_switch": false,
@@ -29887,7 +29887,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_439": {
 			"anular_recorte_switch": false,
@@ -29968,7 +29968,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_440": {
 			"anular_recorte_switch": false,
@@ -30049,7 +30049,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_441": {
 			"anular_recorte_switch": false,
@@ -30184,7 +30184,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_445": {
 			"anular_recorte_switch": false,
@@ -30265,7 +30265,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_446": {
 			"anular_recorte_switch": false,
@@ -30346,7 +30346,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_451": {
 			"anular_recorte_switch": false,
@@ -30427,7 +30427,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_454": {
 			"anular_recorte_switch": false,
@@ -30508,7 +30508,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_455": {
 			"anular_recorte_switch": false,
@@ -30607,7 +30607,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_458": {
 			"anular_recorte_switch": false,
@@ -30635,12 +30635,12 @@
 					{
 						"in": [
 							1.69615173339844,
-							-0.000867843627929688,
+							-0.00086784362792968,
 							13.9275512695313
 						],
 						"out": [
 							-1.69615173339844,
-							0.000867843627929688,
+							0.00086784362792968,
 							-13.9275512695313
 						],
 						"pos": [
@@ -30688,7 +30688,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_459": {
 			"anular_recorte_switch": false,
@@ -30769,7 +30769,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_463": {
 			"anular_recorte_switch": false,
@@ -30850,7 +30850,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_465": {
 			"anular_recorte_switch": false,
@@ -30931,7 +30931,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_466": {
 			"anular_recorte_switch": false,
@@ -31012,7 +31012,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_467": {
 			"anular_recorte_switch": false,
@@ -31093,7 +31093,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_468": {
 			"anular_recorte_switch": false,
@@ -31174,7 +31174,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_469": {
 			"anular_recorte_switch": false,
@@ -31255,7 +31255,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_470": {
 			"anular_recorte_switch": false,
@@ -31336,7 +31336,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_471": {
 			"anular_recorte_switch": false,
@@ -31417,7 +31417,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_472": {
 			"anular_recorte_switch": false,
@@ -31498,7 +31498,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_473": {
 			"anular_recorte_switch": false,
@@ -31579,7 +31579,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_474": {
 			"anular_recorte_switch": false,
@@ -31660,7 +31660,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_475": {
 			"anular_recorte_switch": false,
@@ -31759,7 +31759,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_476": {
 			"anular_recorte_switch": false,
@@ -31858,7 +31858,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_477": {
 			"anular_recorte_switch": false,
@@ -31939,7 +31939,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_478": {
 			"anular_recorte_switch": false,
@@ -32020,7 +32020,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_479": {
 			"anular_recorte_switch": false,
@@ -32119,7 +32119,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_480": {
 			"anular_recorte_switch": false,
@@ -32200,7 +32200,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_481": {
 			"anular_recorte_switch": false,
@@ -32389,7 +32389,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_482": {
 			"anular_recorte_switch": false,
@@ -32488,7 +32488,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_483": {
 			"anular_recorte_switch": false,
@@ -32569,7 +32569,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_484": {
 			"anular_recorte_switch": false,
@@ -32650,7 +32650,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_485": {
 			"anular_recorte_switch": false,
@@ -32731,7 +32731,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_486": {
 			"anular_recorte_switch": false,
@@ -32812,7 +32812,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_487": {
 			"anular_recorte_switch": false,
@@ -32893,7 +32893,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_488": {
 			"anular_recorte_switch": false,
@@ -32974,7 +32974,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_489": {
 			"anular_recorte_switch": false,
@@ -33055,7 +33055,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_490": {
 			"anular_recorte_switch": false,
@@ -33136,7 +33136,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_491": {
 			"anular_recorte_switch": false,
@@ -33217,7 +33217,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_492": {
 			"anular_recorte_switch": false,
@@ -33298,7 +33298,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_495": {
 			"anular_recorte_switch": false,
@@ -33379,7 +33379,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_496": {
 			"anular_recorte_switch": false,
@@ -33460,7 +33460,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_497": {
 			"anular_recorte_switch": false,
@@ -33541,7 +33541,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_5": {
 			"anular_recorte_switch": false,
@@ -33676,7 +33676,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_504": {
 			"anular_recorte_switch": false,
@@ -33757,7 +33757,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_505": {
 			"anular_recorte_switch": false,
@@ -33874,7 +33874,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_51": {
 			"anular_recorte_switch": false,
@@ -33955,7 +33955,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_510": {
 			"anular_recorte_switch": false,
@@ -34054,7 +34054,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_52": {
 			"anular_recorte_switch": false,
@@ -34135,7 +34135,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_520": {
 			"anular_recorte_switch": false,
@@ -34216,7 +34216,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_521": {
 			"anular_recorte_switch": false,
@@ -34297,7 +34297,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_522": {
 			"anular_recorte_switch": false,
@@ -34378,7 +34378,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_523": {
 			"anular_recorte_switch": false,
@@ -34459,7 +34459,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_524": {
 			"anular_recorte_switch": false,
@@ -34540,7 +34540,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_526": {
 			"anular_recorte_switch": false,
@@ -34621,7 +34621,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_527": {
 			"anular_recorte_switch": false,
@@ -34702,7 +34702,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_528": {
 			"anular_recorte_switch": false,
@@ -34783,7 +34783,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_529": {
 			"anular_recorte_switch": false,
@@ -34864,7 +34864,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_530": {
 			"anular_recorte_switch": false,
@@ -34945,7 +34945,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_531": {
 			"anular_recorte_switch": false,
@@ -35080,7 +35080,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_532": {
 			"anular_recorte_switch": false,
@@ -35215,7 +35215,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_533": {
 			"anular_recorte_switch": false,
@@ -35296,7 +35296,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_534": {
 			"anular_recorte_switch": false,
@@ -35377,7 +35377,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_535": {
 			"anular_recorte_switch": false,
@@ -35530,7 +35530,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_536": {
 			"anular_recorte_switch": false,
@@ -35611,7 +35611,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_537": {
 			"anular_recorte_switch": false,
@@ -35710,7 +35710,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_538": {
 			"anular_recorte_switch": false,
@@ -35791,7 +35791,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_539": {
 			"anular_recorte_switch": false,
@@ -35872,7 +35872,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_540": {
 			"anular_recorte_switch": false,
@@ -35953,7 +35953,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_541": {
 			"anular_recorte_switch": false,
@@ -36088,7 +36088,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_542": {
 			"anular_recorte_switch": false,
@@ -36187,7 +36187,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_544": {
 			"anular_recorte_switch": false,
@@ -36268,7 +36268,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_545": {
 			"anular_recorte_switch": false,
@@ -36349,7 +36349,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_552": {
 			"anular_recorte_switch": false,
@@ -36430,7 +36430,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_553": {
 			"anular_recorte_switch": false,
@@ -36511,7 +36511,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_554": {
 			"anular_recorte_switch": false,
@@ -36592,7 +36592,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_555": {
 			"anular_recorte_switch": false,
@@ -36673,7 +36673,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_556": {
 			"anular_recorte_switch": false,
@@ -36754,7 +36754,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_557": {
 			"anular_recorte_switch": false,
@@ -36835,7 +36835,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_558": {
 			"anular_recorte_switch": false,
@@ -36916,7 +36916,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_559": {
 			"anular_recorte_switch": false,
@@ -36997,7 +36997,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_560": {
 			"anular_recorte_switch": false,
@@ -37078,7 +37078,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_561": {
 			"anular_recorte_switch": false,
@@ -37159,7 +37159,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_570": {
 			"anular_recorte_switch": false,
@@ -37240,7 +37240,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_574": {
 			"anular_recorte_switch": false,
@@ -37321,7 +37321,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_575": {
 			"anular_recorte_switch": false,
@@ -37402,7 +37402,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_576": {
 			"anular_recorte_switch": false,
@@ -37483,7 +37483,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_583": {
 			"anular_recorte_switch": false,
@@ -37564,7 +37564,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_584": {
 			"anular_recorte_switch": false,
@@ -37645,7 +37645,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_585": {
 			"anular_recorte_switch": false,
@@ -37726,7 +37726,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_586": {
 			"anular_recorte_switch": false,
@@ -37807,7 +37807,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_587": {
 			"anular_recorte_switch": false,
@@ -37888,7 +37888,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_588": {
 			"anular_recorte_switch": false,
@@ -37969,7 +37969,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_589": {
 			"anular_recorte_switch": false,
@@ -38050,7 +38050,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_590": {
 			"anular_recorte_switch": false,
@@ -38131,7 +38131,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_591": {
 			"anular_recorte_switch": false,
@@ -38212,7 +38212,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_592": {
 			"anular_recorte_switch": false,
@@ -38293,7 +38293,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_593": {
 			"anular_recorte_switch": false,
@@ -38374,7 +38374,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_594": {
 			"anular_recorte_switch": false,
@@ -38473,7 +38473,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_596": {
 			"anular_recorte_switch": false,
@@ -38554,7 +38554,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_61": {
 			"anular_recorte_switch": false,
@@ -38707,7 +38707,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_613": {
 			"anular_recorte_switch": false,
@@ -38788,7 +38788,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_614": {
 			"anular_recorte_switch": false,
@@ -38869,7 +38869,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_615": {
 			"anular_recorte_switch": false,
@@ -38950,7 +38950,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_616": {
 			"anular_recorte_switch": false,
@@ -39031,7 +39031,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_617": {
 			"anular_recorte_switch": false,
@@ -39112,7 +39112,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_618": {
 			"anular_recorte_switch": false,
@@ -39193,7 +39193,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_619": {
 			"anular_recorte_switch": false,
@@ -39274,7 +39274,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_620": {
 			"anular_recorte_switch": false,
@@ -39355,7 +39355,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_621": {
 			"anular_recorte_switch": false,
@@ -39436,7 +39436,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_622": {
 			"anular_recorte_switch": false,
@@ -39517,7 +39517,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_634": {
 			"anular_recorte_switch": false,
@@ -39598,7 +39598,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 2.0
 		},
 		"seg_635": {
 			"anular_recorte_switch": false,
@@ -39769,7 +39769,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_636": {
 			"anular_recorte_switch": false,
@@ -39850,7 +39850,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_637": {
 			"anular_recorte_switch": false,
@@ -39931,7 +39931,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_638": {
 			"anular_recorte_switch": false,
@@ -40012,7 +40012,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_646": {
 			"anular_recorte_switch": false,
@@ -40093,7 +40093,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_647": {
 			"anular_recorte_switch": false,
@@ -40174,7 +40174,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_648": {
 			"anular_recorte_switch": false,
@@ -40255,7 +40255,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_649": {
 			"anular_recorte_switch": false,
@@ -40336,7 +40336,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_650": {
 			"anular_recorte_switch": false,
@@ -40417,7 +40417,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_651": {
 			"anular_recorte_switch": false,
@@ -40498,7 +40498,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_652": {
 			"anular_recorte_switch": false,
@@ -40579,7 +40579,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_657": {
 			"anular_recorte_switch": false,
@@ -40714,7 +40714,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_658": {
 			"anular_recorte_switch": false,
@@ -40849,7 +40849,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_659": {
 			"anular_recorte_switch": false,
@@ -40966,7 +40966,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_667": {
 			"anular_recorte_switch": false,
@@ -41047,7 +41047,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 1.0
 		},
 		"seg_668": {
 			"anular_recorte_switch": false,
@@ -41128,7 +41128,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_669": {
 			"anular_recorte_switch": false,
@@ -41172,7 +41172,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_670": {
 			"anular_recorte_switch": false,
@@ -41218,12 +41218,12 @@
 					{
 						"in": [
 							4.93818664550781,
-							-0.000263214111328125,
+							-0.00026321411132812,
 							-28.771728515625
 						],
 						"out": [
 							-4.93818664550781,
-							0.000263214111328125,
+							0.00026321411132812,
 							28.771728515625
 						],
 						"pos": [
@@ -41271,7 +41271,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_671": {
 			"anular_recorte_switch": false,
@@ -41352,7 +41352,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_672": {
 			"anular_recorte_switch": false,
@@ -41433,7 +41433,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_68": {
 			"anular_recorte_switch": false,
@@ -41514,7 +41514,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_684": {
 			"anular_recorte_switch": false,
@@ -41595,7 +41595,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_685": {
 			"anular_recorte_switch": false,
@@ -41676,7 +41676,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_686": {
 			"anular_recorte_switch": false,
@@ -41757,7 +41757,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_687": {
 			"anular_recorte_switch": false,
@@ -41838,7 +41838,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_688": {
 			"anular_recorte_switch": false,
@@ -41919,7 +41919,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_689": {
 			"anular_recorte_switch": false,
@@ -42000,7 +42000,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_69": {
 			"anular_recorte_switch": false,
@@ -42171,7 +42171,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_690": {
 			"anular_recorte_switch": false,
@@ -42252,7 +42252,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_691": {
 			"anular_recorte_switch": false,
@@ -42333,7 +42333,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_692": {
 			"anular_recorte_switch": false,
@@ -42414,7 +42414,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_693": {
 			"anular_recorte_switch": false,
@@ -42513,7 +42513,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_694": {
 			"anular_recorte_switch": false,
@@ -42594,7 +42594,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_695": {
 			"anular_recorte_switch": false,
@@ -42675,7 +42675,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_696": {
 			"anular_recorte_switch": false,
@@ -42756,7 +42756,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_697": {
 			"anular_recorte_switch": false,
@@ -42837,7 +42837,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_698": {
 			"anular_recorte_switch": false,
@@ -42918,7 +42918,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_699": {
 			"anular_recorte_switch": false,
@@ -42999,7 +42999,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_7": {
 			"anular_recorte_switch": false,
@@ -43224,7 +43224,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_700": {
 			"anular_recorte_switch": false,
@@ -43305,7 +43305,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_701": {
 			"anular_recorte_switch": false,
@@ -43386,7 +43386,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_702": {
 			"anular_recorte_switch": false,
@@ -43467,7 +43467,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_704": {
 			"anular_recorte_switch": false,
@@ -43548,7 +43548,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_705": {
 			"anular_recorte_switch": false,
@@ -43629,7 +43629,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_706": {
 			"anular_recorte_switch": false,
@@ -43710,7 +43710,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_708": {
 			"anular_recorte_switch": false,
@@ -43791,7 +43791,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_709": {
 			"anular_recorte_switch": false,
@@ -43872,7 +43872,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 2.0
 		},
 		"seg_711": {
 			"anular_recorte_switch": false,
@@ -43953,7 +43953,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 2
+			"uso_direccion": 0.0
 		},
 		"seg_712": {
 			"anular_recorte_switch": false,
@@ -44034,7 +44034,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_713": {
 			"anular_recorte_switch": false,
@@ -44115,7 +44115,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_715": {
 			"anular_recorte_switch": false,
@@ -44196,7 +44196,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_72": {
 			"anular_recorte_switch": false,
@@ -44277,7 +44277,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_728": {
 			"anular_recorte_switch": false,
@@ -44358,7 +44358,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_729": {
 			"anular_recorte_switch": false,
@@ -44439,7 +44439,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_73": {
 			"anular_recorte_switch": false,
@@ -44520,7 +44520,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_730": {
 			"anular_recorte_switch": false,
@@ -44601,7 +44601,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_731": {
 			"anular_recorte_switch": false,
@@ -44682,7 +44682,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_734": {
 			"anular_recorte_switch": false,
@@ -44763,7 +44763,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_735": {
 			"anular_recorte_switch": false,
@@ -44844,7 +44844,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_736": {
 			"anular_recorte_switch": false,
@@ -44925,7 +44925,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_737": {
 			"anular_recorte_switch": false,
@@ -45006,7 +45006,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_738": {
 			"anular_recorte_switch": false,
@@ -45087,7 +45087,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_739": {
 			"anular_recorte_switch": false,
@@ -45168,7 +45168,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_740": {
 			"anular_recorte_switch": false,
@@ -45249,7 +45249,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_741": {
 			"anular_recorte_switch": false,
@@ -45312,7 +45312,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_742": {
 			"anular_recorte_switch": false,
@@ -45393,7 +45393,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_743": {
 			"anular_recorte_switch": false,
@@ -45474,7 +45474,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_744": {
 			"anular_recorte_switch": false,
@@ -45555,7 +45555,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_745": {
 			"anular_recorte_switch": false,
@@ -45636,7 +45636,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_746": {
 			"anular_recorte_switch": false,
@@ -45717,7 +45717,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_747": {
 			"anular_recorte_switch": false,
@@ -45798,7 +45798,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_748": {
 			"anular_recorte_switch": false,
@@ -45879,7 +45879,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_749": {
 			"anular_recorte_switch": false,
@@ -45960,7 +45960,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_75": {
 			"anular_recorte_switch": false,
@@ -46041,7 +46041,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_750": {
 			"anular_recorte_switch": false,
@@ -46140,7 +46140,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_751": {
 			"anular_recorte_switch": false,
@@ -46239,7 +46239,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_752": {
 			"anular_recorte_switch": false,
@@ -46338,7 +46338,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_753": {
 			"anular_recorte_switch": false,
@@ -46437,7 +46437,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_76": {
 			"anular_recorte_switch": false,
@@ -46518,7 +46518,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_762": {
 			"anular_recorte_switch": false,
@@ -46617,7 +46617,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_763": {
 			"anular_recorte_switch": false,
@@ -46698,7 +46698,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 1.0
 		},
 		"seg_764": {
 			"anular_recorte_switch": false,
@@ -46779,7 +46779,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 1.0
 		},
 		"seg_765": {
 			"anular_recorte_switch": false,
@@ -46896,7 +46896,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_766": {
 			"anular_recorte_switch": false,
@@ -46977,7 +46977,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_767": {
 			"anular_recorte_switch": false,
@@ -47058,7 +47058,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_768": {
 			"anular_recorte_switch": false,
@@ -47157,7 +47157,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_77": {
 			"anular_recorte_switch": false,
@@ -47292,7 +47292,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_78": {
 			"anular_recorte_switch": false,
@@ -47391,7 +47391,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_8": {
 			"anular_recorte_switch": false,
@@ -47508,7 +47508,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_81": {
 			"anular_recorte_switch": false,
@@ -47589,7 +47589,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_82": {
 			"anular_recorte_switch": false,
@@ -47706,7 +47706,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_83": {
 			"anular_recorte_switch": false,
@@ -47787,7 +47787,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_84": {
 			"anular_recorte_switch": false,
@@ -47868,7 +47868,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_85": {
 			"anular_recorte_switch": false,
@@ -47949,7 +47949,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 2.0
 		},
 		"seg_86": {
 			"anular_recorte_switch": false,
@@ -48066,7 +48066,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_87": {
 			"anular_recorte_switch": false,
@@ -48183,7 +48183,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_88": {
 			"anular_recorte_switch": false,
@@ -48264,7 +48264,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_89": {
 			"anular_recorte_switch": false,
@@ -48345,7 +48345,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_9": {
 			"anular_recorte_switch": false,
@@ -48426,7 +48426,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_90": {
 			"anular_recorte_switch": false,
@@ -48507,7 +48507,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_91": {
 			"anular_recorte_switch": false,
@@ -48588,7 +48588,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		},
 		"seg_92": {
 			"anular_recorte_switch": false,
@@ -48669,7 +48669,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_93": {
 			"anular_recorte_switch": false,
@@ -48750,7 +48750,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 0.0
 		},
 		"seg_94": {
 			"anular_recorte_switch": false,
@@ -48831,7 +48831,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1
+			"uso_direccion": 1.0
 		}
 	},
 	"total_ediciones": 388,

@@ -419,6 +419,12 @@ var switch_states: Dictionary = {}
 var _propietarios_recursos: Dictionary = {}
 var _reservas_por_tren: Dictionary = {}
 var _cola_solicitudes_reserva: Array[Dictionary] = []
+## Intenciones de circulación para bifurcaciones paralelas. A diferencia de
+## una reserva física, no bloquean el tramo: sólo impiden que el planificador
+## mande todas las formaciones a la misma rama antes de que lleguen a la aguja.
+var _itinerarios_ramas_tren: Dictionary = {}
+const RAMAS_IDA_BALANCEADAS: Array[String] = ["seg_735", "seg_737"]
+const PENALIZACION_RAMA_OCUPADA_M: float = 750.0
 ## Diccionario de aparatos de vía instanciados: node_id (int) -> BaseTurnout
 var aparatos_de_via: Dictionary = {}
 ## Marcador efímero de la aguja que el usuario está inspeccionando desde el HUD.
@@ -520,6 +526,7 @@ func _ready() -> void:
 		recolectar_paths_desde_arbol()
 		recolectar_switches_desde_arbol()
 		_integrar_topologia_de_switches_serializados()
+		_integrar_empalmes_de_escena()
 		_sincronizar_expansion_guardada_de_switches()
 		# IMPORTANTE: la escena manda. Nunca se aplica la lista persistente de
 		# bajas sobre los tramos que YA existen en el árbol: hacerlo borraba la
@@ -596,6 +603,7 @@ func _sincronizar_ediciones_serializadas_con_journal() -> void:
 ## desde los switches serializados para que TODOS sus leads y Path3D reciban
 ## los mismos recortes al reabrir la escena.
 func _integrar_topologia_de_switches_serializados() -> void:
+	_reasignar_ramas_eliminadas_de_switches()
 	for sw_raw: Variant in aparatos_de_via.values():
 		var sw: BaseTurnout = sw_raw as BaseTurnout
 		if sw == null or sw.node_id == 0:
@@ -629,6 +637,105 @@ func _integrar_topologia_de_switches_serializados() -> void:
 				segments_data[sid] = datos
 		junction["segments"] = conexiones
 		junctions[clave_junction] = junction
+
+
+## Empalmes dibujados a mano en la escena que la topología JSON no conoce: dos
+## extremos de Path3D que coinciden y continúan uno en el otro. Se guardan aparte
+## de `junctions` para que sólo los use el ruteo y no alteren los recortes de
+## los aparatos. Clave: str(node_id) -> Array[{segment_id, end}].
+var _empalmes_escena: Dictionary = {}
+const TOLERANCIA_EMPALME_ESCENA_M: float = 1.0
+
+
+func _integrar_empalmes_de_escena() -> void:
+	_empalmes_escena.clear()
+	var extremos: Array[Dictionary] = []
+	for sid: String in paths.keys():
+		var via: Path3D = paths[sid] as Path3D
+		if via == null or not is_instance_valid(via) or via.curve == null or via.curve.point_count < 2 or not segments_data.has(sid):
+			continue
+		var datos: Dictionary = segments_data[sid] as Dictionary
+		for extremo_local: String in ["start", "end"]:
+			var extremo: String = _extremo_topologico_de_local(sid, extremo_local)
+			var indice: int = 0 if extremo_local == "start" else via.curve.point_count - 1
+			extremos.append({
+				"segment_id": sid, "end": extremo,
+				"node": int(datos.get("node_start" if extremo == "start" else "node_end", 0)),
+				"posicion": via.to_global(via.curve.get_point_position(indice)),
+				"vector": _obtener_vector_salida_segmento(sid, extremo_local)
+			})
+	var agregados: int = 0
+	for a: Dictionary in extremos:
+		for b: Dictionary in extremos:
+			if a["segment_id"] == b["segment_id"] or int(a["node"]) == int(b["node"]):
+				continue
+			if (a["posicion"] as Vector3).distance_to(b["posicion"] as Vector3) > TOLERANCIA_EMPALME_ESCENA_M:
+				continue
+			# Sólo una continuación: los dos tramos salen del punto en sentidos opuestos.
+			if (a["vector"] as Vector2).dot(b["vector"] as Vector2) > -0.5:
+				continue
+			var clave: String = str(a["node"])
+			var lista: Array = _empalmes_escena.get(clave, []) as Array
+			lista.append({"segment_id": b["segment_id"], "end": b["end"]})
+			_empalmes_escena[clave] = lista
+			agregados += 1
+	if agregados > 0:
+		print("TrackNetwork: %d empalmes de la escena incorporados al grafo de ruteo." % agregados)
+
+
+## Un aparato puede seguir nombrando una rama cuyo Path3D se borró después de
+## estirar la vía vecina hasta el aparato (seg_74 → seg_75 en Rafael Calzada).
+## Esa vía queda con un extremo suelto junto al switch y la red se corta; se la
+## adopta como la rama faltante para conservar la continuidad.
+func _reasignar_ramas_eliminadas_de_switches() -> void:
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw == null or not is_instance_valid(sw) or sw.node_id == 0 or not sw.is_inside_tree():
+			continue
+		for propiedad: String in ["via_comun_id", "via_directa_id", "via_desviada_id"]:
+			var sid: String = str(sw.get(propiedad))
+			if sid.is_empty() or paths.has(sid):
+				continue
+			var reemplazo: String = _buscar_extremo_suelto_junto_a_switch(sw)
+			if reemplazo.is_empty():
+				continue
+			sw.set(propiedad, reemplazo)
+			print("TrackNetwork: el aparato %d reemplaza la rama eliminada %s por %s." % [sw.node_id, sid, reemplazo])
+
+
+## Devuelve el tramo más cercano al switch cuyo extremo no enlaza con ninguna
+## otra vía existente. Los extremos ya conectados nunca se reasignan.
+func _buscar_extremo_suelto_junto_a_switch(sw: BaseTurnout) -> String:
+	var mejor: String = ""
+	var mejor_distancia: float = tolerancia_union_manual
+	for sid: String in paths.keys():
+		if sid in [sw.via_comun_id, sw.via_directa_id, sw.via_desviada_id]:
+			continue
+		var via: Path3D = paths[sid] as Path3D
+		if via == null or not is_instance_valid(via) or via.curve == null or via.curve.point_count < 2:
+			continue
+		for extremo_local: String in ["start", "end"]:
+			var indice: int = 0 if extremo_local == "start" else via.curve.point_count - 1
+			var distancia: float = via.to_global(via.curve.get_point_position(indice)).distance_to(sw.global_position)
+			if distancia > mejor_distancia:
+				continue
+			var extremo: String = _extremo_topologico_de_local(sid, extremo_local)
+			var datos: Dictionary = segments_data.get(sid, {}) as Dictionary
+			var jid: int = int(datos.get("node_start" if extremo == "start" else "node_end", 0))
+			if jid == sw.node_id or _junction_tiene_otras_vias(jid, sid):
+				continue
+			mejor = sid
+			mejor_distancia = distancia
+	return mejor
+
+
+func _junction_tiene_otras_vias(jid: int, sid_excluido: String) -> bool:
+	for conexion_raw: Variant in (junctions.get(str(jid), {}) as Dictionary).get("segments", []):
+		if conexion_raw is Dictionary:
+			var otro: String = str((conexion_raw as Dictionary).get("segment_id", ""))
+			if otro != sid_excluido and paths.has(otro):
+				return true
+	return false
 
 
 ## Prefiere el extremo que ya estaba asignado a la junction. Para una rama
@@ -5240,12 +5347,13 @@ func get_opciones_siguientes(segment_id: String, extremo_actual: String) -> Arra
 	var node_id: int = int(seg.get("node_end", 0)) if extremo_topologico == "end" else int(seg.get("node_start", 0))
 
 	var junction_raw: Variant = junctions.get(str(node_id))
-	if junction_raw == null or not (junction_raw is Dictionary):
+	var empalmes: Array = _empalmes_escena.get(str(node_id), []) as Array
+	if (junction_raw == null or not (junction_raw is Dictionary)) and empalmes.is_empty():
 		return []
 
-	var junction: Dictionary = junction_raw as Dictionary
+	var junction: Dictionary = junction_raw as Dictionary if junction_raw is Dictionary else {}
 	var opciones: Array[Dictionary] = []
-	var conexiones: Array = junction.get("segments", []) as Array
+	var conexiones: Array = (junction.get("segments", []) as Array) + empalmes
 
 	for con_raw: Variant in conexiones:
 		if not (con_raw is Dictionary):
@@ -5352,27 +5460,57 @@ func set_switch_target(node_id: int, target_segment_id: String, solicitante_id: 
 	switch_conmutado.emit(node_id, target_segment_id)
 
 
-## Reserva de forma atómica el próximo Path3D y el switch de entrada. Las
-## solicitudes se ordenan FIFO en cada recurso para que ningún tren saltee a
-## otro que llegó antes.
-func solicitar_reserva_seccion(tren_id: int, segmento: String, nodo_switch: int, odometro: float, largo_tren: float) -> bool:
+## Reserva el switch de entrada al próximo Path3D. Sólo las agujas son un
+## recurso exclusivo: las vías, por largas que sean, admiten varios trenes y la
+## separación entre ellos la resuelve la detección de conflictos del tren. Las
+## solicitudes se ordenan FIFO para que ningún tren saltee a otro que llegó antes.
+##
+## Excepción: las vías de uso común y los andenes en vía muerta se recorren en
+## los dos sentidos. Se reservan como un bloque (`bloque` = tramos que siguen
+## en el itinerario) y se liberan recién cuando la cola sale de cada uno.
+func solicitar_reserva_seccion(tren_id: int, segmento: String, nodo_switch: int, odometro: float, largo_tren: float, bloque: Array[String] = []) -> bool:
 	if tren_id <= 0 or not paths.has(segmento):
 		return false
-	var recursos: Array[String] = ["via:%s" % segmento]
-	if nodo_switch > 0:
+	var recursos: Array[String] = []
+	if nodo_switch > 0 and _nodo_tiene_aguja(nodo_switch):
 		recursos.append("switch:%d" % nodo_switch)
+	if es_via_exclusiva(segmento):
+		recursos.append("via:%s" % segmento)
+		for extra: String in bloque:
+			if paths.has(extra) and es_via_exclusiva(extra) and not recursos.has("via:%s" % extra):
+				recursos.append("via:%s" % extra)
+	if recursos.is_empty():
+		return true
 	if not _adquirir_recursos_fifo(tren_id, recursos):
 		return false
-
-	var path: Path3D = get_segment_path(segmento)
-	var largo_segmento: float = path.curve.get_baked_length() if path != null and path.curve != null else 0.0
 	for recurso: String in recursos:
-		var limite: float = odometro + largo_tren + 8.0
-		if recurso.begins_with("via:"):
-			limite = odometro + largo_segmento + largo_tren
-		_agregar_reserva_tren(tren_id, recurso, limite)
+		_agregar_reserva_tren(tren_id, recurso, INF if recurso.begins_with("via:") else odometro + largo_tren + 8.0)
 	reservas_cambiadas.emit()
 	return true
+
+
+## Vía que admite trenes en ambos sentidos: de uso común o andén en vía muerta
+## (se entra y se sale por el mismo extremo).
+func es_via_exclusiva(segmento: String) -> bool:
+	if not paths.has(segmento):
+		return false
+	if segmento_permite_sentido(segmento, true) and segmento_permite_sentido(segmento, false):
+		return true
+	return get_opciones_siguientes(segmento, "start").is_empty() or get_opciones_siguientes(segmento, "end").is_empty()
+
+
+## La formación dejó `segmento`: su reserva vence cuando la cola termina de salir.
+func liberar_via_al_salir(tren_id: int, segmento: String, limite_odometro: float) -> void:
+	for reserva_raw: Variant in _reservas_por_tren.get(tren_id, []) as Array:
+		var reserva: Dictionary = reserva_raw as Dictionary
+		if str(reserva.get("recurso", "")) == "via:%s" % segmento:
+			reserva["limite"] = minf(float(reserva.get("limite", INF)), limite_odometro)
+
+
+func _nodo_tiene_aguja(nodo: int) -> bool:
+	if aparatos_de_via.has(nodo):
+		return true
+	return ((junctions.get(str(nodo), {}) as Dictionary).get("segments", []) as Array).size() > 2
 
 
 ## Reserva la vía bajo una formación que empieza detenida en Constitución.
@@ -5418,10 +5556,22 @@ func _adquirir_recursos_fifo(tren_id: int, recursos: Array[String]) -> bool:
 		_cola_solicitudes_reserva.append({"tren": tren_id, "recursos": recursos.duplicate()})
 	# FIFO por recurso: una solicitud anterior sólo detiene ésta si necesita
 	# alguno de los mismos recursos; solicitudes independientes no se bloquean.
+	# Un recurso que ya es de este tren no se cede a los que esperan: el dueño
+	# vuelve a pedir su sección al cruzar la unión y, si quedara detrás de otro
+	# en la cola, ambos se esperarían para siempre.
+	# Tampoco espera a una solicitud anterior que necesita algo de este tren: esa
+	# no puede avanzar hasta que éste libere (andén en vía muerta en Bosques).
 	for indice: int in solicitud_indice:
 		var anteriores: Array = _cola_solicitudes_reserva[indice].get("recursos", []) as Array
+		var anterior_depende_de_este: bool = false
+		for recurso_anterior: Variant in anteriores:
+			if int(_propietarios_recursos.get(str(recurso_anterior), 0)) == tren_id:
+				anterior_depende_de_este = true
+				break
+		if anterior_depende_de_este:
+			continue
 		for recurso: String in recursos:
-			if anteriores.has(recurso):
+			if anteriores.has(recurso) and int(_propietarios_recursos.get(recurso, 0)) != tren_id:
 				return false
 	for recurso: String in recursos:
 		var propietario: int = int(_propietarios_recursos.get(recurso, 0))
@@ -5460,7 +5610,31 @@ func liberar_reservas_tren(tren_id: int) -> void:
 			_propietarios_recursos.erase(recurso)
 	_cola_solicitudes_reserva = _cola_solicitudes_reserva.filter(func(solicitud: Dictionary) -> bool: return int(solicitud.get("tren", 0)) != tren_id)
 	_reservas_por_tren.erase(tren_id)
+	_itinerarios_ramas_tren.erase(tren_id)
 	reservas_cambiadas.emit()
+
+
+## Actualiza la rama paralela prevista por una formación. La intención se
+## reemplaza cada vez que el tren calcula su siguiente ruta.
+func registrar_itinerario_tren(tren_id: int, segmentos: Array[String]) -> void:
+	if tren_id <= 0:
+		return
+	var ramas: Array[String] = []
+	for segmento: String in segmentos:
+		if segmento in RAMAS_IDA_BALANCEADAS:
+			ramas.append(segmento)
+	_itinerarios_ramas_tren[tren_id] = ramas
+
+
+func _penalizacion_rama_balanceada(segmento: String) -> float:
+	if not segmento in RAMAS_IDA_BALANCEADAS:
+		return 0.0
+	var cantidad: int = 0
+	for ramas_raw: Variant in _itinerarios_ramas_tren.values():
+		var ramas: Array = ramas_raw as Array
+		if ramas.has(segmento):
+			cantidad += 1
+	return float(cantidad) * PENALIZACION_RAMA_OCUPADA_M
 
 
 func recurso_reservado_por_otro(tren_id: int, segmento: String = "", nodo_switch: int = 0) -> bool:
@@ -5473,6 +5647,10 @@ func recurso_reservado_por_otro(tren_id: int, segmento: String = "", nodo_switch
 
 func segmento_reservado(segmento: String) -> bool:
 	return int(_propietarios_recursos.get("via:%s" % segmento, 0)) != 0
+
+
+func propietario_via(segmento: String) -> int:
+	return int(_propietarios_recursos.get("via:%s" % segmento, 0))
 
 
 func nombre_opcion_switch(nodo_id: int, segmento: String) -> String:
@@ -5569,8 +5747,29 @@ func _agregar_guia_indicador_switch(indicador: Node3D, segmento: String, activa:
 	indicador.add_child(guia)
 
 
-## Obtiene la opción seleccionada para un switch. Si no está definida, devuelve la primera disponible.
-func get_switch_target(node_id: int, opciones: Array[Dictionary], segmento_origen: String = "") -> Dictionary:
+## Comprueba si un tramo Path3D es compatible con el sentido operativo de un tren (IDA o VUELTA).
+## Vías de USO_COMUN son aptas para ambos sentidos.
+func segmento_permite_sentido(segment_id: String, sentido_ida: bool) -> bool:
+	var path: Path3D = get_segment_path(segment_id)
+	if path == null:
+		return false
+	if path.has_method("permite_sentido_servicio"):
+		return bool(path.call("permite_sentido_servicio", sentido_ida))
+	return true
+
+
+## Obtiene la opción seleccionada para un switch. Si no está definida, devuelve la primera disponible compatible con sentido_ida.
+func get_switch_target(node_id: int, opciones: Array[Dictionary], segmento_origen: String = "", sentido_ida: Variant = null) -> Dictionary:
+	# Filtrar antes de evaluar el aparato: su estado activo puede apuntar a una
+	# rama prohibida para este tren. Esta consulta no debe conmutar la aguja.
+	if sentido_ida != null:
+		var permitidas: Array[Dictionary] = []
+		for opcion: Dictionary in opciones:
+			if segmento_permite_sentido(str(opcion.get("segment_id", "")), bool(sentido_ida)):
+				permitidas.append(opcion)
+		opciones = permitidas
+	if opciones.is_empty():
+		return {}
 	if aparatos_de_via.has(node_id):
 		var ap: BaseTurnout = aparatos_de_via[node_id] as BaseTurnout
 		if ap != null:
@@ -5601,28 +5800,72 @@ func get_switch_target(node_id: int, opciones: Array[Dictionary], segmento_orige
 						if str(op.get("segment_id", "")) == ap.via_comun_id:
 							return op
 				elif segmento_origen == ap.via_comun_id:
-					# Si viene desde la vía común (stem), sigue la posición activa del aparato
+					# Si viene desde la vía común (stem), selecciona según el sentido operativo del tren
+					if sentido_ida != null:
+						var permite_dir: bool = segmento_permite_sentido(ap.via_directa_id, bool(sentido_ida))
+						var permite_desv: bool = segmento_permite_sentido(ap.via_desviada_id, bool(sentido_ida))
+						if permite_dir and not permite_desv:
+							for op: Dictionary in opciones:
+								if str(op.get("segment_id", "")) == ap.via_directa_id:
+									return op
+						elif permite_desv and not permite_dir:
+							for op: Dictionary in opciones:
+								if str(op.get("segment_id", "")) == ap.via_desviada_id:
+									return op
+
 					var target: String = ap.get_segmento_activo()
 					for op: Dictionary in opciones:
 						if str(op.get("segment_id", "")) == target:
 							return op
 
-			# Fallback con estado activo del aparato
+			# Fallback con sentido en el aparato
+			if sentido_ida != null:
+				var permite_dir_fb: bool = segmento_permite_sentido(ap.via_directa_id, bool(sentido_ida))
+				var permite_desv_fb: bool = segmento_permite_sentido(ap.via_desviada_id, bool(sentido_ida))
+				if permite_dir_fb and not permite_desv_fb:
+					for op: Dictionary in opciones:
+						if str(op.get("segment_id", "")) == ap.via_directa_id:
+							return op
+				elif permite_desv_fb and not permite_dir_fb:
+					for op: Dictionary in opciones:
+						if str(op.get("segment_id", "")) == ap.via_desviada_id:
+							return op
+
 			var target_id: String = ap.get_segmento_activo()
-			for op: Dictionary in opciones:
-				if str(op.get("segment_id", "")) == target_id:
-					return op
-			# Si target_id no está en opciones (porque es el segmento del que venimos),
-			# dirigir a la vía común
-			for op: Dictionary in opciones:
-				if str(op.get("segment_id", "")) == ap.via_comun_id:
-					return op
+			if sentido_ida != null:
+				if not segmento_permite_sentido(target_id, bool(sentido_ida)):
+					var otra_rama: String = ap.via_desviada_id if target_id == ap.via_directa_id else ap.via_directa_id
+					if segmento_permite_sentido(otra_rama, bool(sentido_ida)):
+						for op: Dictionary in opciones:
+							if str(op.get("segment_id", "")) == otra_rama:
+								return op
+					if segmento_permite_sentido(ap.via_comun_id, bool(sentido_ida)):
+						for op: Dictionary in opciones:
+							if str(op.get("segment_id", "")) == ap.via_comun_id:
+								return op
+				else:
+					for op: Dictionary in opciones:
+						if str(op.get("segment_id", "")) == target_id:
+							return op
+			else:
+				for op: Dictionary in opciones:
+					if str(op.get("segment_id", "")) == target_id:
+						return op
+
+			# Si target_id no está en opciones o no es compatible, intentar vía común
+			if sentido_ida == null or segmento_permite_sentido(ap.via_comun_id, bool(sentido_ida)):
+				for op: Dictionary in opciones:
+					if str(op.get("segment_id", "")) == ap.via_comun_id:
+						return op
 
 	if switch_states.has(node_id):
 		var target_id: String = str(switch_states[node_id])
-		for op: Dictionary in opciones:
-			if str(op.get("segment_id", "")) == target_id:
-				return op
+		if sentido_ida == null or segmento_permite_sentido(target_id, bool(sentido_ida)):
+			for op: Dictionary in opciones:
+				if str(op.get("segment_id", "")) == target_id:
+					return op
+
+	var opciones_evaluadas: Array[Dictionary] = opciones
 
 	# Continuidad geométrica (uniones sin `via_comun/directa/desviada` ni metadata:
 	# cruces, tijeras en cadena, escapes). Antes caía a `opciones[0]` y elegía una
@@ -5631,7 +5874,7 @@ func get_switch_target(node_id: int, opciones: Array[Dictionary], segmento_orige
 	if dir_llegada != Vector2.ZERO:
 		var mejor_dot: float = -2.0
 		var mejor_op: Dictionary = {}
-		for op: Dictionary in opciones:
+		for op: Dictionary in opciones_evaluadas:
 			var v: Vector2 = op.get("vector", Vector2.ZERO) as Vector2
 			if v.length_squared() < 1e-6:
 				continue
@@ -5642,8 +5885,8 @@ func get_switch_target(node_id: int, opciones: Array[Dictionary], segmento_orige
 		if not mejor_op.is_empty() and mejor_dot >= -0.5:
 			return mejor_op
 
-	if opciones.size() > 0:
-		return opciones[0]
+	if opciones_evaluadas.size() > 0:
+		return opciones_evaluadas[0]
 	return {}
 
 
@@ -5672,11 +5915,13 @@ func get_segment_path(segment_id: String) -> Path3D:
 ## Calcula un itinerario por la topología, no por el orden de los nodos de la
 ## escena. El resultado contiene los IDs de tramos, en el orden de circulación,
 ## y la distancia métrica hasta el offset de destino.
-func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String] = [], switches_forzados: Dictionary = {}) -> Dictionary:
+func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String] = [], switches_forzados: Dictionary = {}, sentido_ida: Variant = null, permitir_origen_terminal: bool = false) -> Dictionary:
 	if not paths.has(segmento_origen) or not paths.has(segmento_destino):
 		return {"ok": false, "motivo": "segmento inexistente", "segmentos": []}
+	if sentido_ida != null and ((not permitir_origen_terminal and not segmento_permite_sentido(segmento_origen, bool(sentido_ida))) or not segmento_permite_sentido(segmento_destino, bool(sentido_ida))):
+		return {"ok": false, "motivo": "segmento no permitido para el sentido", "segmentos": []}
 	if not override_segmentos.is_empty():
-		return _planificar_override_dirigido(segmento_origen, offset_origen, sentido_invertido, segmento_destino, offset_destino, override_segmentos)
+		return _planificar_override_dirigido(segmento_origen, offset_origen, sentido_invertido, segmento_destino, offset_destino, override_segmentos, sentido_ida, permitir_origen_terminal)
 
 	var dir_inicial: String = "reversed" if sentido_invertido else "forward"
 	var cola: Array[Dictionary] = [ {"seg": segmento_origen, "dir": dir_inicial, "entrada": offset_origen, "costo": 0.0}]
@@ -5684,7 +5929,6 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 	var anterior: Dictionary = {}
 	var visitados: Dictionary = {}
 	var estado_final: String = ""
-	var distancia_final: float = INF
 
 	while not cola.is_empty():
 		cola.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["costo"]) < float(b["costo"]))
@@ -5703,7 +5947,6 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 		var destino_adelante: bool = seg_id == segmento_destino and ((dir == "forward" and offset_destino >= entrada) or (dir == "reversed" and offset_destino <= entrada))
 		if destino_adelante:
 			estado_final = clave
-			distancia_final = float(actual["costo"]) + absf(offset_destino - entrada)
 			break
 
 		var distancia_salida: float = (largo - entrada) if dir == "forward" else entrada
@@ -5715,9 +5958,16 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 			var prox_id: String = str(opcion.get("segment_id", ""))
 			if not segmento_forzado.is_empty() and prox_id != segmento_forzado:
 				continue
+			if sentido_ida != null and not segmento_permite_sentido(prox_id, bool(sentido_ida)):
+				continue
+			if _es_paso_entre_ramas(nodo_union, seg_id, prox_id):
+				continue
 			var prox_dir: String = str(opcion.get("direccion", "forward"))
 			var prox_clave: String = "%s|%s" % [prox_id, prox_dir]
-			var nuevo_costo: float = float(actual["costo"]) + distancia_salida
+			# Cuando dos rutas IDA usan las ramas paralelas 735/737, la rama que
+			# ya fue elegida por otras formaciones recibe un costo temporal. Así
+			# la siguiente planificación toma la alternativa libre si existe.
+			var nuevo_costo: float = float(actual["costo"]) + distancia_salida + _penalizacion_rama_balanceada(prox_id)
 			if costos.has(prox_clave) and float(costos[prox_clave]) <= nuevo_costo:
 				continue
 			costos[prox_clave] = nuevo_costo
@@ -5750,14 +6000,43 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 		var extremo: String = "end" if str(paso_actual.get("direccion", "forward")) == "forward" else "start"
 		if es_switch(str(paso_actual.get("segmento", "")), extremo):
 			cambios_aguja += 1
-	return {"ok": true, "segmentos": segmentos, "pasos": pasos_inversos, "distancia_m": distancia_final, "cambios_aguja": cambios_aguja, "forzada": false, "sentido_invertido": sentido_invertido}
+
+	# Recalcular la distancia métrica física real sin penalizaciones heurísticas
+	var distancia_real: float = 0.0
+	for idx: int in pasos_inversos.size():
+		var p_sid: String = str(pasos_inversos[idx].get("segmento", ""))
+		var p_path: Path3D = get_segment_path(p_sid)
+		if p_path == null or p_path.curve == null:
+			continue
+		var p_largo: float = p_path.curve.get_baked_length()
+		if idx == 0 and idx == pasos_inversos.size() - 1:
+			distancia_real += absf(offset_destino - offset_origen)
+		elif idx == 0:
+			distancia_real += (p_largo - offset_origen) if str(pasos_inversos[idx].get("direccion", "forward")) == "forward" else offset_origen
+		elif idx == pasos_inversos.size() - 1:
+			distancia_real += offset_destino if str(pasos_inversos[idx].get("direccion", "forward")) == "forward" else (p_largo - offset_destino)
+		else:
+			distancia_real += p_largo
+
+	return {"ok": true, "segmentos": segmentos, "pasos": pasos_inversos, "distancia_m": distancia_real, "cambios_aguja": cambios_aguja, "forzada": false, "sentido_invertido": sentido_invertido}
+
+
+## En un desvío sólo se circula entre la vía común y una de sus ramas. Pasar de
+## la directa a la desviada (o al revés) es un retroceso físicamente imposible
+## (p. ej. llegar por seg_308 y volver por seg_496).
+func _es_paso_entre_ramas(nodo_union: int, desde: String, hacia: String) -> bool:
+	var ap: BaseTurnout = aparatos_de_via.get(nodo_union) as BaseTurnout
+	if ap == null or not is_instance_valid(ap) or ap.has_meta("linea_a_segs"):
+		return false
+	var ramas: Array[String] = [ap.via_directa_id, ap.via_desviada_id]
+	return desde != hacia and desde in ramas and hacia in ramas
 
 
 ## Valida un override como una secuencia física dirigida. Antes se aceptaba la
 ## lista por nombre y el tren podía llegar a una aguja sin continuidad ni
 ## distancia métrica; ahora cada tramo debe suceder al anterior en el extremo
 ## que realmente alcanza la cabecera.
-func _planificar_override_dirigido(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String]) -> Dictionary:
+func _planificar_override_dirigido(segmento_origen: String, offset_origen: float, sentido_invertido: bool, segmento_destino: String, offset_destino: float, override_segmentos: Array[String], sentido_ida: Variant = null, permitir_origen_terminal: bool = false) -> Dictionary:
 	var forzada: Array[String] = override_segmentos.duplicate()
 	if forzada.is_empty():
 		return {"ok": false, "motivo": "override vacío", "segmentos": [], "pasos": []}
@@ -5770,6 +6049,8 @@ func _planificar_override_dirigido(segmento_origen: String, offset_origen: float
 	for sid: String in forzada:
 		if not paths.has(sid):
 			return {"ok": false, "motivo": "override contiene segmento inexistente: %s" % sid, "segmentos": [], "pasos": []}
+		if sentido_ida != null and not (permitir_origen_terminal and sid == segmento_origen) and not segmento_permite_sentido(sid, bool(sentido_ida)):
+			return {"ok": false, "motivo": "override contiene segmento no permitido: %s" % sid, "segmentos": [], "pasos": []}
 		if usados.has(sid):
 			return {"ok": false, "motivo": "override repite el segmento: %s" % sid, "segmentos": [], "pasos": []}
 		usados[sid] = true

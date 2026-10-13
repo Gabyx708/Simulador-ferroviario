@@ -345,6 +345,32 @@ var _opciones_switch_activas := false
 var _reserva_inicial_lista: bool = false
 var _esperando_reserva: bool = false
 
+## Variables para apartar el tren de la vía al ceder paso
+var _apartado_de_via: bool = false
+var _reserva_apartado_liberada: bool = false
+var _desplazamiento_lateral_actual: float = 0.0
+var _desplazamiento_lateral_objetivo: float = 0.0
+# `Tren` es el class_name de este mismo script. Godot puede generar bytecode
+# inválido al recargar una escena que mantiene miembros tipados con su propia
+# clase; se guarda como Node y se valida antes de usarlo.
+var _tren_que_me_pasa: Node = null
+
+## Detección de colisiones y espera por obstrucción
+var _frenando_por_otro_tren: bool = false
+var _esperando_por_otro_tren: bool = false
+var _tren_obstructor: Node = null
+var _inicio_espera_bloqueo_ms: int = 0
+const TIEMPO_MAXIMO_OBSTRUCCION_S: float = 30.0
+var _odometro_retorno_apartado: float = 0.0
+## Vía en la que la formación invirtió la marcha en Bosques. Es de IDA, pero
+## puede recorrerse en vuelta hasta salir de ella, como en una maniobra.
+var _salida_cabecera_traza: String = ""
+## La formación llegó a una cabecera y debe salir marcha atrás del mismo andén.
+## La primera salida de Constitución no la usa: ya mira hacia Yrigoyen.
+var _invertir_al_salir: bool = false
+## Metros que suma un andén con otra formación al elegir entre andenes paralelos.
+const PENALIZACION_ANDEN_OCUPADO_M: float = 300.0
+
 
 func _ready() -> void:
 	add_to_group("trenes")
@@ -957,11 +983,63 @@ func _datos_objetivo_servicio() -> Dictionary:
 
 
 func _candidatos_estacion_servicio(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
+	var candidatos: Array[Dictionary] = _candidatos_estacion_por_poste(estacion, red, sentido_ida)
+	# Las cabeceras tienen andenes en vía muerta (12 en Constitución) que el
+	# poste no alcanza a cubrir: todos los del sentido pedido son paradas.
+	if _usa_servicio() and estacion != null and (estacion == _servicio_ferroviario.obtener_parada(0) or estacion == _servicio_ferroviario.obtener_parada(_servicio_ferroviario.cantidad_paradas() - 1)):
+		for tope: Dictionary in _candidatos_andenes_tope(estacion, red, sentido_ida):
+			var repetido: bool = false
+			for candidato: Dictionary in candidatos:
+				if candidato.get("traza") == tope.get("traza"):
+					repetido = true
+					break
+			if not repetido:
+				candidatos.append(tope)
+	return candidatos
+
+
+## Andenes en vía muerta de una cabecera: la cabecera del tren se detiene a
+## pocos metros del tope, del lado por el que se entra.
+func _candidatos_andenes_tope(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	if not (estacion is Node3D) or red == null or not (red.get("paths") is Dictionary):
+		return resultado
+	var centro: Vector3 = (estacion as Node3D).global_position
+	var alcance: float = float(estacion.get("longitud_anden")) + float(estacion.get("separacion_vias")) * 4.0
+	for sid: String in (red.get("paths") as Dictionary).keys():
+		var via: Path3D = red.call("get_segment_path", sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		if red.has_method("segmento_permite_sentido") and not bool(red.call("segmento_permite_sentido", sid, sentido_ida)):
+			continue
+		var largo: float = via.curve.get_baked_length()
+		for extremo: String in ["start", "end"]:
+			if not (red.call("get_opciones_siguientes", sid, extremo) as Array).is_empty():
+				continue
+			var tope: Vector3 = via.to_global(via.curve.get_point_position(0 if extremo == "start" else via.curve.point_count - 1))
+			if tope.distance_to(centro) > alcance:
+				continue
+			var offset: float = snappedf(clampf(12.0 if extremo == "start" else largo - 12.0, 0.0, largo), 0.01)
+			resultado.append({
+				"segmento": sid, "traza": via, "offset": offset, "offset_ida": offset, "offset_vuelta": offset,
+				"punto_global": via.to_global(via.curve.sample_baked(offset, true)), "tope": true
+			})
+	return resultado
+
+
+func _candidatos_estacion_por_poste(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
 	var candidatos: Array[Dictionary] = []
 	if estacion != null and estacion.has_method("obtener_puntos_parada_multivia"):
 		candidatos = estacion.call("obtener_puntos_parada_multivia", red, sentido_ida) as Array[Dictionary]
 	if not candidatos.is_empty():
-		return _servicio_ferroviario.filtrar_vias_sentido(estacion, candidatos, sentido_ida) if _usa_servicio() else candidatos
+		var filtrados: Array[Dictionary] = _servicio_ferroviario.filtrar_vias_sentido(estacion, candidatos, sentido_ida) if _usa_servicio() else candidatos
+		if not filtrados.is_empty():
+			return filtrados
+	var candidatos_centro: Array[Dictionary] = _candidatos_via_centro_anden(estacion, red, sentido_ida)
+	if not candidatos_centro.is_empty():
+		return candidatos_centro
+	if not candidatos.is_empty():
+		return []
 	if _usa_servicio() and _servicio_ferroviario.separar_vias_por_sentido and estacion != _servicio_ferroviario.obtener_parada(0):
 		return candidatos
 	# Compatibilidad con estaciones antiguas o una red aún no inicializada.
@@ -971,6 +1049,35 @@ func _candidatos_estacion_servicio(estacion: Node, red: Node, sentido_ida: bool)
 	var offset: float = estacion.call("obtener_offset_parada", sentido_ida) if estacion.has_method("obtener_offset_parada") else float(estacion.get("progreso_en_via"))
 	candidatos.append({"segmento": ancla.name, "traza": ancla, "offset": offset, "offset_ida": offset, "offset_vuelta": offset})
 	return candidatos
+
+
+## Algunos tramos cortos terminan dentro del andén sin llegar al poste de
+## frenado. Se proyecta el centro físico sólo cuando no hay poste compatible.
+func _candidatos_via_centro_anden(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	if not (estacion is Node3D) or red == null or not (red.get("paths") is Dictionary):
+		return resultado
+	var anden: Node3D = estacion as Node3D
+	var mitad_largo: float = float(estacion.get("longitud_anden")) * 0.5 + 3.0
+	var mitad_ancho: float = float(estacion.get("ancho_cobertura_vias")) * 0.5
+	var eje_anden: Vector3 = anden.global_transform.basis.x.normalized()
+	for sid: String in (red.get("paths") as Dictionary).keys():
+		if red.has_method("segmento_permite_sentido") and not bool(red.call("segmento_permite_sentido", sid, sentido_ida)):
+			continue
+		var via: Path3D = red.call("get_segment_path", sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		var offset: float = via.curve.get_closest_offset(via.to_local(anden.global_position))
+		var punto: Vector3 = via.to_global(via.curve.sample_baked(offset, true))
+		var local: Vector3 = anden.to_local(punto)
+		if absf(local.x) > mitad_largo or absf(local.z) > mitad_ancho:
+			continue
+		var muestra: Transform3D = via.curve.sample_baked_with_rotation(offset, true, true)
+		var eje_via: Vector3 = (via.global_transform.basis * -muestra.basis.z).normalized()
+		if absf(eje_via.dot(eje_anden)) < 0.7:
+			continue
+		resultado.append({"segmento": sid, "traza": via, "offset": snappedf(offset, 0.01), "offset_ida": snappedf(offset, 0.01), "offset_vuelta": snappedf(offset, 0.01), "punto_global": punto})
+	return resultado
 
 
 ## Devuelve únicamente los postes alcanzables antes de la primera decisión de
@@ -997,14 +1104,59 @@ func _candidatos_adelante_en_corredor(candidatos: Array[Dictionary], corredor: A
 	return resultado
 
 
+## Una parada alcanzable puede dejar la formación en un ramal sin salida hacia
+## el resto del servicio. Se comprueba la continuidad desde el poste y con el
+## sentido local de llegada antes de comprometer la aguja de aproximación.
+func _candidatos_con_continuidad_terminal(red: Node, candidatos: Array[Dictionary], segmento_origen: String, offset_origen: float, sentido_invertido: bool, override: Array[String]) -> Array[Dictionary]:
+	if not _usa_servicio() or _en_maniobra_terminal or _servicio_ferroviario.es_terminal(_indice_servicio) or (candidatos.size() < 2 and _direccion_servicio < 0):
+		return candidatos
+	if not bool(red.call("segmento_permite_sentido", segmento_origen, es_sentido_ida())):
+		return candidatos
+	# Ida exige llegar hasta Bosques. En vuelta los andenes paralelos siguen por
+	# vías propias sin cruces entre sí (Escalada 480/316, Lanús 481/314): se
+	# exige que el andén elegido alcance algún andén de la parada siguiente.
+	var indice_terminal: int = _servicio_ferroviario.cantidad_paradas() - 1 if _direccion_servicio > 0 else _indice_servicio - 1
+	var candidatos_terminal: Array[Dictionary] = _candidatos_estacion_servicio(_servicio_ferroviario.obtener_parada(indice_terminal), red, es_sentido_ida())
+	if candidatos_terminal.is_empty():
+		return candidatos
+	var viables: Array[Dictionary] = []
+	var sin_override: Array[String] = []
+	for candidato: Dictionary in candidatos:
+		var sid: String = str(candidato.get("segmento", ""))
+		var offset: float = float(candidato.get("offset", 0.0))
+		var llegada: Dictionary = red.call("planificar_ruta", segmento_origen, offset_origen, sentido_invertido, sid, offset, override, _desvios_switch, es_sentido_ida()) as Dictionary
+		if not bool(llegada.get("ok", false)) and _indice_servicio == 1 and _vel <= 0.05:
+			# Después del cambio de cabecera en Constitución el Path3D puede
+			# requerir invertir su orientación local antes de salir otra vez.
+			llegada = red.call("planificar_ruta", segmento_origen, offset_origen, not sentido_invertido, sid, offset, override, _desvios_switch, es_sentido_ida()) as Dictionary
+		if not bool(llegada.get("ok", false)):
+			continue
+		var pasos: Array = llegada.get("pasos", []) as Array
+		if pasos.is_empty():
+			continue
+		var ultimo_paso: Dictionary = pasos.back() as Dictionary
+		var salida_invertida: bool = str(ultimo_paso.get("direccion", "forward")) == "reversed"
+		for terminal: Dictionary in candidatos_terminal:
+			var salida: Dictionary = red.call("planificar_ruta", sid, offset, salida_invertida, str(terminal.get("segmento", "")), float(terminal.get("offset", 0.0)), sin_override, {}, es_sentido_ida()) as Dictionary
+			if bool(salida.get("ok", false)):
+				viables.append(candidato)
+				break
+	if viables.is_empty() and _direccion_servicio < 0:
+		return candidatos
+	return viables
+
+
 ## Construye una ruta dirigida sin aguja a partir del corredor inmediato. Se
 ## usa cuando el poste ya está delante de la formación sobre su propia vía.
 func _ruta_directa_corredor(candidato: Dictionary, corredor: Array[Dictionary], sentido_invertido: bool) -> Dictionary:
 	var pasos: Array[Dictionary] = []
 	var segmentos: Array[String] = []
 	var segmento_destino: String = str(candidato.get("segmento", ""))
+	var red: Node = _obtener_red()
 	for paso: Dictionary in corredor:
 		var paso_ruta: Dictionary = {"segmento": str(paso.get("segmento", "")), "direccion": str(paso.get("direccion", "forward"))}
+		if str(paso_ruta["segmento"]) != _salida_cabecera_traza and red != null and red.has_method("segmento_permite_sentido") and not bool(red.call("segmento_permite_sentido", str(paso_ruta["segmento"]), es_sentido_ida())):
+			return {}
 		pasos.append(paso_ruta)
 		segmentos.append(str(paso_ruta.get("segmento", "")))
 		if str(paso.get("segmento", "")) == segmento_destino:
@@ -1045,7 +1197,7 @@ func _mejor_ruta_a_candidatos(red: Node, candidatos: Array[Dictionary], sentido_
 
 ## Selecciona por maniobras y después por metros de vía. Se conserva separado
 ## del estado del tren para poder resolver el sentido local de la salida inicial.
-func _mejor_ruta_a_candidatos_desde(red: Node, candidatos: Array[Dictionary], segmento_origen: String, offset_origen: float, sentido_invertido: bool, override: Array[String], switches_forzados: Dictionary = {}) -> Dictionary:
+func _mejor_ruta_a_candidatos_desde(red: Node, candidatos: Array[Dictionary], segmento_origen: String, offset_origen: float, sentido_invertido: bool, override: Array[String], switches_forzados: Dictionary = {}, sentido_ida: Variant = null, permitir_origen_terminal: bool = false, filtrar_sentido: bool = true) -> Dictionary:
 	var mejor: Dictionary = {}
 	var menor_agujas: int = 999999
 	var menor_distancia: float = INF
@@ -1058,21 +1210,56 @@ func _mejor_ruta_a_candidatos_desde(red: Node, candidatos: Array[Dictionary], se
 	# evalúan los candidatos físicos más cercanos; el punto actual conserva
 	# prioridad absoluta y los overrides no quedan afectados por este límite.
 	var limite: int = ordenados.size() if not override.is_empty() else mini(ordenados.size(), 12)
+	var sentido_ida_efectivo: Variant = (sentido_ida if sentido_ida != null else es_sentido_ida()) if filtrar_sentido else null
+	var mejor_tope_ocupado: bool = false
 	for indice: int in limite:
 		var candidato: Dictionary = ordenados[indice]
 		var destino: Path3D = candidato.get("traza") as Path3D
 		if destino == null:
 			continue
-		var ruta: Dictionary = red.call("planificar_ruta", segmento_origen, offset_origen, sentido_invertido, destino.name, float(candidato.get("offset", 0.0)), override, switches_forzados) as Dictionary
+		var ruta: Dictionary = red.call("planificar_ruta", segmento_origen, offset_origen, sentido_invertido, destino.name, float(candidato.get("offset", 0.0)), override, switches_forzados, sentido_ida_efectivo, permitir_origen_terminal) as Dictionary
 		if not bool(ruta.get("ok", false)):
 			continue
 		var agujas: int = int(ruta.get("cambios_aguja", 0))
+		# Con andenes paralelos (Lanús: dos de ida y dos de vuelta) el ocupado
+		# sólo suma metros: desempata recorridos parecidos sin justificar un rodeo.
 		var distancia: float = float(ruta.get("distancia_m", INF))
-		if mejor.is_empty() or agujas < menor_agujas or (agujas == menor_agujas and distancia < menor_distancia):
+		var ocupado: bool = _anden_ocupado_por_otro(candidato)
+		if ocupado:
+			distancia += PENALIZACION_ANDEN_OCUPADO_M
+		# En una playa de vías muertas un andén ocupado no sirve: se elige
+		# cualquier andén libre antes que comparar agujas.
+		var tope_ocupado: bool = ocupado and bool(candidato.get("tope", false))
+		var es_mejor: bool = mejor.is_empty() or (mejor_tope_ocupado and not tope_ocupado)
+		if not es_mejor and tope_ocupado == mejor_tope_ocupado:
+			es_mejor = agujas < menor_agujas or (agujas == menor_agujas and distancia < menor_distancia)
+		if es_mejor:
 			mejor = {"ruta": ruta, "candidato": candidato}
 			menor_agujas = agujas
 			menor_distancia = distancia
+			mejor_tope_ocupado = tope_ocupado
 	return mejor
+
+
+## Indica si otra formación está detenida o yendo a detenerse en ese andén.
+func _anden_ocupado_por_otro(candidato: Dictionary) -> bool:
+	var destino: Path3D = candidato.get("traza") as Path3D
+	if destino == null:
+		return false
+	var punto: Vector3 = candidato.get("punto_global", destino.to_global(destino.curve.sample_baked(float(candidato.get("offset", 0.0)), true))) as Vector3
+	var red: Node = _obtener_red()
+	if bool(candidato.get("tope", false)) and red != null and red.has_method("propietario_via"):
+		if int(red.call("propietario_via", str(destino.name))) not in [0, get_instance_id()]:
+			return true
+	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
+		var otro: Node = nodo
+		if otro == self or not otro.has_method("esta_eliminado") or otro.esta_eliminado():
+			continue
+		if otro.traza == destino and otro.traza.curve != null and otro.traza.to_global(otro.traza.curve.sample_baked(otro._avance, true)).distance_to(punto) <= otro.obtener_largo_formacion() + 50.0:
+			return true
+		if otro._objetivo_servicio_resuelto.get("traza") == destino and absf(float(otro._objetivo_servicio_resuelto.get("offset", -1.0)) - float(candidato.get("offset", 0.0))) < 1.0:
+			return true
+	return false
 
 
 func _registrar_diagnostico_ruta(estacion: Node, candidato: Dictionary, corredor: Array[String], ruta: Dictionary, fase: String) -> void:
@@ -1227,7 +1414,7 @@ func _avanzar_validacion_switch(trabajo: Dictionary) -> Dictionary:
 		if destino == null:
 			return {"terminado": true, "valida": false}
 		var override: Array[String] = _servicio_ferroviario.override_para(_indice_servicio - _direccion_servicio, _indice_servicio)
-		var ruta: Dictionary = red.call("planificar_ruta", traza.name, _avance, invertir_sentido, destino.name, float(objetivo.get("offset", 0.0)), override, restricciones) as Dictionary
+		var ruta: Dictionary = red.call("planificar_ruta", traza.name, _avance, invertir_sentido, destino.name, float(objetivo.get("offset", 0.0)), override, restricciones, es_sentido_ida()) as Dictionary
 		if not bool(ruta.get("ok", false)) or not _ruta_contiene_desvio(red, ruta, int(trabajo.get("nodo", 0)), str(trabajo.get("segmento", ""))):
 			return {"terminado": true, "valida": false}
 		var pasos: Array = ruta.get("pasos", []) as Array
@@ -1292,7 +1479,7 @@ func _planificar_con_switch(nodo_id: int, segmento_elegido: String, aplicar: boo
 	if destino == null:
 		return {}
 	var override: Array[String] = _servicio_ferroviario.override_para(_indice_servicio - _direccion_servicio, _indice_servicio)
-	var ruta: Dictionary = red.call("planificar_ruta", traza.name, _avance, invertir_sentido, destino.name, float(objetivo.get("offset", 0.0)), override, restricciones) as Dictionary
+	var ruta: Dictionary = red.call("planificar_ruta", traza.name, _avance, invertir_sentido, destino.name, float(objetivo.get("offset", 0.0)), override, restricciones, es_sentido_ida()) as Dictionary
 	if not bool(ruta.get("ok", false)) or not _ruta_contiene_desvio(red, ruta, nodo_id, segmento_elegido):
 		return {}
 	if not _validar_paradas_restantes(red, ruta):
@@ -1381,11 +1568,18 @@ func _iniciar_maniobra_terminal() -> void:
 	var estacion: Node = _parada_objetivo_servicio()
 	if red == null or estacion == null or traza == null:
 		return
-	var candidatos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, false)
+	var sentido_salida_ida: bool = _indice_servicio == 0
+	var candidatos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, sentido_salida_ida)
 	var sin_override: Array[String] = []
-	var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, sin_override)
+	var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, sin_override, {}, sentido_salida_ida, true)
 	if eleccion.is_empty():
-		eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, not invertir_sentido, sin_override)
+		eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, not invertir_sentido, sin_override, {}, sentido_salida_ida, true)
+	if eleccion.is_empty():
+		# La formación aún ocupa la vía del servicio que termina. Hasta alcanzar
+		# el andén de salida puede atravesar esa vía como maniobra de cabecera.
+		eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, sin_override, {}, sentido_salida_ida, true, false)
+	if eleccion.is_empty():
+		eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, not invertir_sentido, sin_override, {}, sentido_salida_ida, true, false)
 	if eleccion.is_empty():
 		_reintentos_ruta_servicio += 1
 		if _reintentos_ruta_servicio >= MAX_REINTENTOS_RUTA_SERVICIO:
@@ -1394,7 +1588,7 @@ func _iniciar_maniobra_terminal() -> void:
 			_espera = INTERVALO_REINTENTO_RUTA_S
 		return
 	_reintentos_ruta_servicio = 0
-	_direccion_servicio = -1
+	_direccion_servicio = 1 if sentido_salida_ida else -1
 	_maniobra_terminal_pendiente = false
 	_en_maniobra_terminal = true
 	var objetivo: Dictionary = _objetivo_desde_candidato(estacion, eleccion["candidato"] as Dictionary)
@@ -1417,6 +1611,9 @@ func _aplicar_ruta_actualizada(ruta: Dictionary, objetivo: Dictionary) -> void:
 	_ruta_pasos.clear()
 	for segmento: Variant in ruta.get("segmentos", []):
 		_ruta_segmentos.append(str(segmento))
+	var red: Node = _obtener_red()
+	if red != null and red.has_method("registrar_itinerario_tren"):
+		red.call("registrar_itinerario_tren", get_instance_id(), _ruta_segmentos)
 	for paso: Variant in ruta.get("pasos", []):
 		if paso is Dictionary:
 			_ruta_pasos.append((paso as Dictionary).duplicate())
@@ -1428,6 +1625,7 @@ func _aplicar_ruta_actualizada(ruta: Dictionary, objetivo: Dictionary) -> void:
 	_distancia_ruta = float(ruta.get("distancia_m", -1.0))
 	_odometro_destino_ruta = _odometro_ferroviario + _distancia_ruta if _distancia_ruta >= 0.0 else -1.0
 	_actualizar_distancia_ruta()
+	_preparar_proximo_switch(_obtener_red())
 	ruta_actualizada.emit(str(objetivo.get("nombre", "")), _distancia_ruta)
 
 
@@ -1455,6 +1653,7 @@ func _actualizar_ruta_servicio() -> void:
 		# Constitución → Bosques siempre usa el poste de ida: invertir_sentido sólo
 		# expresa la orientación del Path3D que se está recorriendo.
 		var candidatos: Array[Dictionary] = _candidatos_estacion_servicio(estacion, red, _direccion_servicio > 0)
+		candidatos = _candidatos_con_continuidad_terminal(red, candidatos, traza.name, _avance, invertir_sentido, override)
 		var corredor: Array[Dictionary] = []
 		if red.has_method("obtener_corredor_inmediato"):
 			corredor = red.call("obtener_corredor_inmediato", traza.name, _avance, invertir_sentido) as Array[Dictionary]
@@ -1464,17 +1663,38 @@ func _actualizar_ruta_servicio() -> void:
 		var candidatos_corredor: Array[Dictionary] = _candidatos_adelante_en_corredor(candidatos, corredor)
 		# Si la estación está sobre la vía que ya se está recorriendo, no se cruza
 		# ninguna aguja para perseguir otra proyección del mismo andén.
-		var usar_corredor: bool = not candidatos_corredor.is_empty()
+		var usar_corredor: bool = false
+		var ruta_corredor: Dictionary = {}
+		var candidato_directo: Dictionary = {}
+		candidatos_corredor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.get("distancia_corredor", INF)) < float(b.get("distancia_corredor", INF)))
+		for candidato_corredor: Dictionary in candidatos_corredor:
+			ruta_corredor = _ruta_directa_corredor(candidato_corredor, corredor, invertir_sentido)
+			if not ruta_corredor.is_empty():
+				candidato_directo = candidato_corredor
+				usar_corredor = true
+				break
 		var override_activo: Array[String] = []
 		if not usar_corredor:
 			override_activo = override
 		var eleccion: Dictionary = {}
 		if usar_corredor:
-			candidatos_corredor.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.get("distancia_corredor", INF)) < float(b.get("distancia_corredor", INF)))
-			var candidato_directo: Dictionary = candidatos_corredor[0]
-			eleccion = {"ruta": _ruta_directa_corredor(candidato_directo, corredor, invertir_sentido), "candidato": candidato_directo}
+			eleccion = {"ruta": ruta_corredor, "candidato": candidato_directo}
 		else:
-			eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, override_activo, _desvios_switch)
+			var permitir_origen: bool = str(traza.name) == _salida_cabecera_traza
+			eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, invertir_sentido, override_activo, _desvios_switch, null, permitir_origen)
+		# En algunas estaciones el poste de VUELTA queda en un tramo que sólo
+		# enlaza con la siguiente estación desde el otro extremo. La inversión
+		# local se hace detenido y conserva el sentido operativo VUELTA.
+		if eleccion.is_empty() and _vel <= 0.05 and (_direccion_servicio < 0 or _indice_servicio == 1):
+			eleccion = _mejor_ruta_a_candidatos_desde(red, candidatos, traza.name, _avance, not invertir_sentido, override_activo, _desvios_switch, es_sentido_ida())
+			# Invertir sólo vale para un ajuste local en el andén. Si para llegar
+			# hay que recorrer varias veces la distancia real (subir hasta otra
+			# estación y volver), no es un recorrido posible.
+			if not eleccion.is_empty():
+				var destino_invertido: Vector3 = (eleccion["candidato"] as Dictionary).get("punto_global", global_position) as Vector3
+				var directa: float = traza.to_global(traza.curve.sample_baked(_avance, true)).distance_to(destino_invertido)
+				if float((eleccion["ruta"] as Dictionary).get("distancia_m", INF)) > directa * 2.0 + 500.0:
+					eleccion = {}
 		# Un servicio sólo ida no puede convertir una falta de conexión hacia
 		# adelante en una maniobra de retorno. Es preferible diagnosticar la vía
 		# faltante que alejarse de la próxima estación.
@@ -1508,6 +1728,8 @@ func _actualizar_ruta_servicio() -> void:
 		_ruta_segmentos.clear()
 		for segmento: Variant in ruta.get("segmentos", []):
 			_ruta_segmentos.append(str(segmento))
+		if red.has_method("registrar_itinerario_tren"):
+			red.call("registrar_itinerario_tren", get_instance_id(), _ruta_segmentos)
 		_ruta_pasos.clear()
 		for paso: Variant in ruta.get("pasos", []):
 			if paso is Dictionary:
@@ -1728,6 +1950,7 @@ func _continuar_en_via(nueva_traza: Path3D, nuevo_avance: float, sentido_inverti
 	if traza != null and is_instance_valid(traza) and traza.curve != null and traza != nueva_traza:
 		if traza.curve.changed.is_connected(_on_curva_cambiada):
 			traza.curve.changed.disconnect(_on_curva_cambiada)
+		_liberar_via_dejada(str(traza.name))
 	_transicion_de_ruta = true
 	traza = nueva_traza
 	if traza.curve != null and not traza.curve.changed.is_connected(_on_curva_cambiada):
@@ -1817,6 +2040,16 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 func _process(delta: float) -> void:
 	if _eliminado or _servicio_finalizado:
 		return
+	if _apartado_de_via:
+		_desplazamiento_lateral_actual = move_toward(_desplazamiento_lateral_actual, _desplazamiento_lateral_objetivo, 3.5 * delta)
+		_ubicar(0.0)
+		if not _reserva_apartado_liberada and _desplazamiento_lateral_actual >= 4.5:
+			var red_apartado: Node = _obtener_red()
+			if red_apartado != null and red_apartado.has_method("liberar_reservas_tren"):
+				red_apartado.call("liberar_reservas_tren", get_instance_id())
+			_reserva_apartado_liberada = true
+		_procesar_espera_y_retorno_apartado(delta)
+		return
 	if _tiempo_hasta_reintento_ruta > 0.0 and not Engine.is_editor_hint():
 		_tiempo_hasta_reintento_ruta -= delta
 		_vel = 0.0
@@ -1867,13 +2100,14 @@ func _process(delta: float) -> void:
 					return
 				if _origen_servicio_inicializado and not _reserva_inicial_lista:
 					var red_origen: Node = _obtener_red()
-					var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
-					if red_origen == null or not red_origen.has_method("reservar_tramo_inicial") or not bool(red_origen.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, largo_formacion)):
+					var largo_formacion_salida: float = float(cantidad_coches - 1) * paso + 24.2
+					if red_origen == null or not red_origen.has_method("reservar_tramo_inicial") or not bool(red_origen.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, largo_formacion_salida)):
 						_esperando_reserva = true
 						_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Esperando reserva de salida.")
 						_espera = 0.5
 						return
 					_reserva_inicial_lista = true
+					_inicio_espera_bloqueo_ms = 0
 				if _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio):
 					# Solo ida termina en Bosques; ida y vuelta termina en Constitución.
 					_finalizar_servicio_en_terminal()
@@ -1882,8 +2116,11 @@ func _process(delta: float) -> void:
 				_esperando_reserva = false
 				# En cada cabecera, la formación sale por la misma vía en sentido
 				# contrario. La primera salida de Constitución ya mira hacia Bosques.
-				if _servicio_ferroviario.es_terminal(_indice_servicio) and not (_indice_servicio == 0 and _direccion_servicio > 0):
+				if _servicio_ferroviario.es_terminal(_indice_servicio) and not _servicio_ferroviario.separar_vias_por_sentido and not (_indice_servicio == 0 and _direccion_servicio > 0):
 					invertir_sentido = not invertir_sentido
+				elif _invertir_al_salir:
+					_invertir_al_salir = false
+					_invertir_marcha_en_el_lugar()
 				var estacion_salida: Dictionary = _resumen_estacion(_parada_objetivo_servicio())
 				_establecer_estado(EstadoOperacion.EN_MARCHA)
 				salio_de_estacion.emit(obtener_resumen_operativo(), estacion_salida)
@@ -1914,6 +2151,53 @@ func _process(delta: float) -> void:
 
 			_aceleracion_actual = 0.0
 		return
+
+	var net: Node = _obtener_red()
+	_preparar_proximo_switch(net)
+
+	var conflicto: Dictionary = _detectar_conflicto_proximo(delta, net)
+	if bool(conflicto.get("hay_conflicto", false)):
+		_frenando_por_otro_tren = true
+		_esperando_por_otro_tren = true
+		var otro_conflicto: Node = conflicto.get("tren") as Node
+		if _tren_obstructor != otro_conflicto:
+			_inicio_espera_bloqueo_ms = 0
+		_tren_obstructor = otro_conflicto
+		var espacio_libre: float = maxf(0.0, float(conflicto.get("distancia", 0.0)) - 15.0)
+		var freno_efectivo_conf: float = maxf(desaceleracion_efectiva(), 0.1)
+		var velocidad_segura: float = sqrt(2.0 * freno_efectivo_conf * espacio_libre)
+		_vel = minf(move_toward(_vel, velocidad_segura, freno_efectivo_conf * delta), velocidad_maxima_efectiva_kmh() / 3.6)
+		_aceleracion_actual = 0.0
+		var paso_conflicto: float = minf(_vel * delta, espacio_libre)
+		if _tiene_proxima_parada and _distancia_ruta >= 0.0:
+			paso_conflicto = minf(paso_conflicto, _distancia_ruta)
+		if paso_conflicto > 0.0:
+			var recorrido_conflicto: float = _avanzar_por_red(paso_conflicto, net)
+			if net != null and net.has_method("actualizar_reservas_tren"):
+				net.call("actualizar_reservas_tren", get_instance_id(), _odometro_ferroviario)
+			_actualizar_distancia_ruta()
+			_ubicar(recorrido_conflicto)
+
+		if espacio_libre <= 0.05 or _vel <= 0.05:
+			_vel = 0.0
+			var nombre_otro: String = str(otro_conflicto.name) if otro_conflicto != null else "otro tren"
+			# Se espera sobre la propia vía: correr de costado a la formación que
+			# estorba la dejaba encima de la vía paralela del sentido contrario.
+			_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Cediendo el paso a %s." % nombre_otro)
+		else:
+			_inicio_espera_bloqueo_ms = 0
+
+		velocidad_cambiada.emit(velocidad_actual())
+		return
+	else:
+		if _esperando_por_otro_tren:
+			_esperando_por_otro_tren = false
+			_frenando_por_otro_tren = false
+			_inicio_espera_bloqueo_ms = 0
+			_tren_obstructor = null
+			if _estado_operacion == EstadoOperacion.ESPERANDO_RESERVA:
+				_establecer_estado(EstadoOperacion.EN_MARCHA)
+				marcha_reanudada.emit()
 
 	var v_max: float = velocidad_maxima_efectiva_kmh() / 3.6
 
@@ -1987,7 +2271,8 @@ func _process(delta: float) -> void:
 		var distancia_local: float = fposmod((objetivo_local - _avance) * direccion + largo * 0.5, largo) - largo * 0.5
 		if distancia_local >= 0.0:
 			paso_avance = minf(paso_avance, distancia_local)
-	var net: Node = _obtener_red()
+	if net == null:
+		net = _obtener_red()
 	var estaba_en_marcha: bool = _estado_operacion == EstadoOperacion.EN_MARCHA
 	var recorrido_real: float = _avanzar_por_red(paso_avance, net)
 	# La red informa cuántos metros se consumieron realmente. Acumular sólo si
@@ -2105,8 +2390,11 @@ func _avanzar_por_red(distancia: float, net: Node) -> float:
 				_detener_por_ruta_invalida("El itinerario no continúa desde %s hacia %s." % [traza.name, esperado])
 				break
 		if proxima.is_empty():
-			proxima = net.call("get_switch_target", node_id, opciones, traza.name) as Dictionary
+			proxima = net.call("get_switch_target", node_id, opciones, traza.name, es_sentido_ida()) as Dictionary
 		var siguiente_id: String = str(proxima.get("segment_id", ""))
+		if not _en_maniobra_terminal and not siguiente_id.is_empty() and net.has_method("segmento_permite_sentido") and not bool(net.call("segmento_permite_sentido", siguiente_id, es_sentido_ida())):
+			_detener_por_ruta_invalida("La vía %s no permite el sentido de este tren." % siguiente_id)
+			break
 		var siguiente: Path3D = net.call("get_segment_path", siguiente_id) as Path3D
 		if siguiente == null or siguiente.curve == null:
 			if _usa_servicio():
@@ -2116,7 +2404,7 @@ func _avanzar_por_red(distancia: float, net: Node) -> float:
 			break
 		if net.has_method("solicitar_reserva_seccion"):
 			var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
-			if not bool(net.call("solicitar_reserva_seccion", get_instance_id(), siguiente_id, node_id, _odometro_ferroviario, largo_formacion)):
+			if not bool(net.call("solicitar_reserva_seccion", get_instance_id(), siguiente_id, node_id, _odometro_ferroviario, largo_formacion, _bloque_exclusivo_tras(net, siguiente_id))):
 				_esperando_reserva = true
 				_vel = 0.0
 				_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Esperando reserva de sección.")
@@ -2297,12 +2585,19 @@ func _ubicar(recorrido: float) -> void:
 			continue
 
 		var cuerpo: Node3D = _cuerpos[i]
-		cuerpo.global_position = (a + b) * 0.5
-
-		# El último coche va de cola: mira para el otro lado.
+		var pos_base: Vector3 = (a + b) * 0.5
 		var es_cola: bool = (i == _cuerpos.size() - 1)
 		var objetivo: Vector3 = b if es_cola else a
-		cuerpo.look_at(objetivo, Vector3.UP)
+
+		if _desplazamiento_lateral_actual != 0.0:
+			var dir_via: Vector3 = (a - b).normalized()
+			var lateral_via: Vector3 = dir_via.cross(Vector3.UP).normalized()
+			pos_base += lateral_via * _desplazamiento_lateral_actual
+			objetivo += lateral_via * _desplazamiento_lateral_actual
+
+		cuerpo.global_position = pos_base
+		if cuerpo.global_position.distance_squared_to(objetivo) > 0.25:
+			cuerpo.look_at(objetivo, Vector3.UP)
 
 		if recorrido != 0.0:
 			var sentido_coche: float = -1.0 if es_cola else 1.0
@@ -2434,6 +2729,278 @@ func _viaja_hacia_constitucion() -> bool:
 	return _direccion_servicio < 0 if _usa_servicio() else invertir_sentido
 
 
+func es_sentido_ida() -> bool:
+	return not _viaja_hacia_constitucion()
+
+
+func obtener_largo_formacion() -> float:
+	return float(cantidad_coches - 1) * paso + 24.2
+
+
+## Tramos del itinerario que siguen a `siguiente_id` y que, como él, se
+## recorren en los dos sentidos. Se reservan juntos para que un tren no quede
+## detenido dentro de una vía compartida esperando un andén ocupado.
+func _bloque_exclusivo_tras(net: Node, siguiente_id: String) -> Array[String]:
+	var bloque: Array[String] = []
+	if net == null or not net.has_method("es_via_exclusiva") or _ruta_pasos.is_empty():
+		return bloque
+	var indice: int = -1
+	for k: int in range(maxi(_indice_paso_ruta, 0), _ruta_pasos.size()):
+		if str(_ruta_pasos[k].get("segmento", "")) == siguiente_id:
+			indice = k
+			break
+	if indice < 0:
+		return bloque
+	for k: int in range(indice + 1, _ruta_pasos.size()):
+		var tramo: String = str(_ruta_pasos[k].get("segmento", ""))
+		if not bool(net.call("es_via_exclusiva", tramo)):
+			break
+		bloque.append(tramo)
+	return bloque
+
+
+func _liberar_via_dejada(segmento: String) -> void:
+	var net: Node = _obtener_red()
+	if net != null and net.has_method("liberar_via_al_salir"):
+		net.call("liberar_via_al_salir", get_instance_id(), segmento, _odometro_ferroviario + obtener_largo_formacion())
+
+
+## En las cabeceras no hay maniobra: el tren llega a su andén y vuelve a salir
+## por la misma vía marcha atrás (Bosques hacia Zeballos, Constitución hacia
+## Yrigoyen).
+func _invierte_en_anden_de_cabecera() -> bool:
+	return _usa_servicio() and _servicio_ferroviario.separar_vias_por_sentido \
+		and _servicio_ferroviario.es_terminal(_indice_servicio) \
+		and not _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio)
+
+
+## Invierte la marcha sin mover la formación: el último coche pasa a ser la
+## cabecera y el tren queda mirando hacia la vía por la que llegó.
+func _invertir_marcha_en_el_lugar() -> void:
+	var cola: Dictionary = _estado_en_red(-paso * float(cantidad_coches - 1))
+	var nueva_traza: Path3D = cola.get("traza") as Path3D
+	if nueva_traza == null or not is_instance_valid(nueva_traza) or nueva_traza.curve == null:
+		invertir_sentido = not invertir_sentido
+		_salida_cabecera_traza = str(traza.name) if traza != null else ""
+		return
+	if traza != null and is_instance_valid(traza) and traza != nueva_traza and traza.curve != null:
+		if traza.curve.changed.is_connected(_on_curva_cambiada):
+			traza.curve.changed.disconnect(_on_curva_cambiada)
+		_liberar_via_dejada(str(traza.name))
+	traza = nueva_traza
+	if not traza.curve.changed.is_connected(_on_curva_cambiada):
+		traza.curve.changed.connect(_on_curva_cambiada)
+	_avance = float(cola.get("avance", _avance))
+	invertir_sentido = not bool(cola.get("invertido", invertir_sentido))
+	# El historial previo describe la marcha anterior; desde la nueva cabecera
+	# los coches se ubican recorriendo la vía hacia atrás.
+	_historial_recorrido.clear()
+	_historial_recorrido.append({"odometro": _odometro_ferroviario, "traza": traza, "avance": _avance, "invertido": invertir_sentido})
+	_salida_cabecera_traza = str(traza.name)
+	_ubicar(0.0)
+
+
+## Posición sobre la red a `dist` metros de la cabecera (negativo = detrás),
+## tomada del historial de lo que la formación ya recorrió.
+func _estado_en_red(dist: float) -> Dictionary:
+	var odometro_muestra: float = _odometro_ferroviario + dist
+	for indice: int in range(_historial_recorrido.size() - 1, -1, -1):
+		var estado: Dictionary = _historial_recorrido[indice]
+		if odometro_muestra + 0.0001 < float(estado.get("odometro", 0.0)):
+			continue
+		var tramo: Path3D = estado.get("traza") as Path3D
+		if tramo == null or not is_instance_valid(tramo) or tramo.curve == null:
+			break
+		var invertido: bool = bool(estado.get("invertido", false))
+		var signo: float = -1.0 if invertido else 1.0
+		var avance_historico: float = float(estado.get("avance", 0.0)) + (odometro_muestra - float(estado.get("odometro", 0.0))) * signo
+		return {"traza": tramo, "avance": clampf(avance_historico, 0.0, tramo.curve.get_baked_length()), "invertido": invertido}
+	if traza == null or traza.curve == null:
+		return {}
+	var signo_actual: float = -1.0 if invertir_sentido else 1.0
+	return {"traza": traza, "avance": clampf(_avance + dist * signo_actual, 0.0, traza.curve.get_baked_length()), "invertido": invertir_sentido}
+
+
+## Prepara y conmuta la aguja próxima con antelación (hasta 80 metros antes)
+## para que esté colocada en la posición que corresponde al sentido operativo.
+func _preparar_proximo_switch(net: Node) -> void:
+	if net == null or traza == null or traza.curve == null:
+		return
+	var largo_actual: float = traza.curve.get_baked_length()
+	var direccion_actual: float = -1.0 if invertir_sentido else 1.0
+	var hasta_extremo: float = (largo_actual - _avance) if direccion_actual > 0.0 else _avance
+	if hasta_extremo > 80.0:
+		return
+
+	var extremo: String = "end" if direccion_actual > 0.0 else "start"
+	var opciones: Array = net.call("get_opciones_siguientes", traza.name, extremo) as Array
+	if opciones.is_empty():
+		return
+	var node_id: int = int((opciones[0] as Dictionary).get("node_id", 0))
+	if node_id <= 0:
+		return
+
+	var siguiente_id: String = ""
+	if _usa_servicio() and not _ruta_pasos.is_empty():
+		if _indice_paso_ruta < _ruta_pasos.size() and str(_ruta_pasos[_indice_paso_ruta].get("segmento", "")) == traza.name:
+			if _indice_paso_ruta + 1 < _ruta_pasos.size():
+				siguiente_id = str(_ruta_pasos[_indice_paso_ruta + 1].get("segmento", ""))
+
+	if siguiente_id.is_empty() and net.has_method("get_switch_target"):
+		var target: Dictionary = net.call("get_switch_target", node_id, opciones, traza.name, es_sentido_ida()) as Dictionary
+		siguiente_id = str(target.get("segment_id", ""))
+
+	if not _en_maniobra_terminal and not siguiente_id.is_empty() and net.has_method("segmento_permite_sentido") and not bool(net.call("segmento_permite_sentido", siguiente_id, es_sentido_ida())):
+		return
+	# La aguja sólo puede moverse cuando este tren posee el recurso de entrada.
+	if not siguiente_id.is_empty() and net.has_method("solicitar_reserva_seccion"):
+		if not bool(net.call("solicitar_reserva_seccion", get_instance_id(), siguiente_id, node_id, _odometro_ferroviario + hasta_extremo, obtener_largo_formacion(), _bloque_exclusivo_tras(net, siguiente_id))):
+			return
+	if not siguiente_id.is_empty() and net.has_method("set_switch_target"):
+		net.call("set_switch_target", node_id, siguiente_id, get_instance_id())
+
+
+## Detecta si otro tren está en la misma vía, en el tramo siguiente, en la aguja,
+## o en proximidad 3D con riesgo de colisión frontal o por alcance.
+func _detectar_conflicto_proximo(_delta: float, net: Node) -> Dictionary:
+	if _apartado_de_via or traza == null or traza.curve == null:
+		return {"hay_conflicto": false}
+
+	var todos: Array[Node] = get_tree().get_nodes_in_group("trenes")
+	if todos.size() <= 1:
+		return {"hay_conflicto": false}
+
+	var dist_seguridad: float = (_vel * _vel) / (2.0 * maxf(desaceleracion_efectiva(), 0.1)) + 30.0
+	dist_seguridad = clampf(dist_seguridad, 35.0, 220.0)
+	var dir_propia: float = -1.0 if invertir_sentido else 1.0
+
+	# 1. Mismo tramo de vía (alcance o choque frontal en vía común)
+	var largo_traza: float = traza.curve.get_baked_length()
+	for nodo: Node in todos:
+		var otro: Node = nodo
+		if otro == null or otro == self or otro.esta_eliminado() or (otro._apartado_de_via and otro._desplazamiento_lateral_actual >= 4.5):
+			continue
+		if otro.traza == traza:
+			var diff: float = (otro._avance - _avance) * dir_propia
+			var misma_direccion: bool = otro.invertir_sentido == invertir_sentido
+			var dist_neta: float = diff - (otro.obtener_largo_formacion() if misma_direccion else 0.0)
+			if diff > 0.0 and dist_neta < dist_seguridad:
+				return {"hay_conflicto": true, "tren": otro, "distancia": dist_neta, "tipo": "mismo_tramo"}
+
+	# 2. Siguiente tramo / aguja en la dirección de avance
+	var dist_al_extremo: float = (largo_traza - _avance) if dir_propia > 0.0 else _avance
+	if dist_al_extremo < dist_seguridad:
+		var siguiente_seg_id: String = ""
+		var extremo: String = "end" if dir_propia > 0.0 else "start"
+		var opciones: Array = net.call("get_opciones_siguientes", traza.name, extremo) as Array if net != null else []
+		var node_id: int = int((opciones[0] as Dictionary).get("node_id", 0)) if not opciones.is_empty() else 0
+
+		if _usa_servicio() and not _ruta_pasos.is_empty():
+			if _indice_paso_ruta < _ruta_pasos.size() and str(_ruta_pasos[_indice_paso_ruta].get("segmento", "")) == traza.name:
+				if _indice_paso_ruta + 1 < _ruta_pasos.size():
+					siguiente_seg_id = str(_ruta_pasos[_indice_paso_ruta + 1].get("segmento", ""))
+
+		if siguiente_seg_id.is_empty() and net != null and not opciones.is_empty():
+			var target: Dictionary = net.call("get_switch_target", node_id, opciones, traza.name, es_sentido_ida()) as Dictionary
+			siguiente_seg_id = str(target.get("segment_id", ""))
+
+		if not siguiente_seg_id.is_empty():
+			# Un tren en el tramo siguiente sólo es conflicto si está cerca de la
+			# entrada: en una vía larga se mide la distancia real hasta él.
+			var dir_siguiente: float = 1.0
+			for opcion_raw: Variant in opciones:
+				var opcion: Dictionary = opcion_raw as Dictionary
+				if str(opcion.get("segment_id", "")) == siguiente_seg_id:
+					dir_siguiente = 1.0 if str(opcion.get("direccion", "forward")) == "forward" else -1.0
+					break
+			for nodo: Node in todos:
+				var otro: Node = nodo
+				if otro == null or otro == self or otro.esta_eliminado() or (otro._apartado_de_via and otro._desplazamiento_lateral_actual >= 4.5):
+					continue
+				if otro.traza != null and otro.traza.curve != null and otro.traza.name == siguiente_seg_id:
+					var entrada: float = 0.0 if dir_siguiente > 0.0 else otro.traza.curve.get_baked_length()
+					var dir_otro: float = -1.0 if otro.invertir_sentido else 1.0
+					var desde_entrada: float = absf(otro._avance - entrada)
+					var dist_total: float = dist_al_extremo + desde_entrada - (otro.obtener_largo_formacion() if dir_otro == dir_siguiente else 0.0)
+					if dist_total < dist_seguridad:
+						return {"hay_conflicto": true, "tren": otro, "distancia": dist_total, "tipo": "siguiente_tramo"}
+
+		# Vías de doble sentido y andenes en vía muerta: se espera antes de la
+		# unión si otro tren tiene reservado cualquier tramo del bloque.
+		if not siguiente_seg_id.is_empty() and net != null and net.has_method("es_via_exclusiva") and bool(net.call("es_via_exclusiva", siguiente_seg_id)):
+			for tramo_bloque: String in [siguiente_seg_id] + _bloque_exclusivo_tras(net, siguiente_seg_id):
+				if bool(net.call("recurso_reservado_por_otro", get_instance_id(), tramo_bloque, 0)):
+					return {"hay_conflicto": true, "tren": null, "distancia": dist_al_extremo, "tipo": "bloque_reservado"}
+
+		if node_id > 0 and net != null and net.has_method("recurso_reservado_por_otro"):
+			if bool(net.call("recurso_reservado_por_otro", get_instance_id(), siguiente_seg_id, node_id)):
+				for nodo: Node in todos:
+					var otro: Node = nodo
+					if otro != null and otro != self and not otro.esta_eliminado() and (not otro._apartado_de_via or otro._desplazamiento_lateral_actual < 4.5):
+						if otro.traza != null and (otro.traza.name == siguiente_seg_id or otro.traza == traza):
+							return {"hay_conflicto": true, "tren": otro, "distancia": dist_al_extremo, "tipo": "reserva_switch"}
+				return {"hay_conflicto": true, "tren": null, "distancia": dist_al_extremo, "tipo": "reserva_switch"}
+
+	return {"hay_conflicto": false}
+
+
+## Mueve la formación lateralmente fuera de la vía para permitir el paso de otro tren.
+func apartar_de_via_para_ceder_paso(tren_que_pasa: Node) -> void:
+	if _apartado_de_via:
+		return
+	_apartado_de_via = true
+	_reserva_apartado_liberada = false
+	_tren_que_me_pasa = tren_que_pasa
+	_odometro_retorno_apartado = 0.0
+	if tren_que_pasa != null and is_instance_valid(tren_que_pasa):
+		var hasta_pasarme: float = 0.0
+		if tren_que_pasa.traza == traza:
+			var dir_paso: float = -1.0 if tren_que_pasa.invertir_sentido else 1.0
+			hasta_pasarme = (_avance - tren_que_pasa._avance) * dir_paso
+		elif traza != null and traza.curve != null and tren_que_pasa.traza != null and tren_que_pasa.traza.curve != null:
+			var punto_bloqueo: Vector3 = traza.to_global(traza.curve.sample_baked(_avance, true))
+			var punto_pasa: Vector3 = tren_que_pasa.traza.to_global(tren_que_pasa.traza.curve.sample_baked(tren_que_pasa._avance, true))
+			hasta_pasarme = punto_pasa.distance_to(punto_bloqueo)
+		_odometro_retorno_apartado = tren_que_pasa._odometro_ferroviario + maxf(0.0, hasta_pasarme) + tren_que_pasa.obtener_largo_formacion() + 25.0
+	_desplazamiento_lateral_objetivo = 4.8
+	_vel = 0.0
+	_aceleracion_actual = 0.0
+	_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Apartado de vía (cediendo paso a %s)" % (str(tren_que_pasa.name) if tren_que_pasa != null else ""))
+	print("Tren %s: apartado de la vía para ceder paso a %s." % [name, str(tren_que_pasa.name) if tren_que_pasa != null else ""])
+
+
+## Administra el estado apartado y el retorno automático cuando la vía queda libre.
+func _procesar_espera_y_retorno_apartado(_delta: float) -> void:
+	var red: Node = _obtener_red()
+	if _desplazamiento_lateral_objetivo > 0.0:
+		var puede_retornar: bool = false
+		if _tren_que_me_pasa == null or not is_instance_valid(_tren_que_me_pasa) or _tren_que_me_pasa.esta_eliminado():
+			puede_retornar = true
+		else:
+			puede_retornar = _tren_que_me_pasa._odometro_ferroviario >= _odometro_retorno_apartado
+
+		if puede_retornar and red != null and red.has_method("segmento_reservado") and traza != null:
+			if bool(red.call("segmento_reservado", traza.name)):
+				puede_retornar = false
+
+		if puede_retornar:
+			_desplazamiento_lateral_objetivo = 0.0
+			print("Tren %s: vía despejada; retornando a la vía." % name)
+	else:
+		if _desplazamiento_lateral_actual <= 0.05:
+			if red != null and red.has_method("reservar_tramo_inicial") and traza != null:
+				if not bool(red.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, obtener_largo_formacion())):
+					_desplazamiento_lateral_objetivo = 4.8
+					return
+			_desplazamiento_lateral_actual = 0.0
+			_apartado_de_via = false
+			_reserva_apartado_liberada = false
+			_tren_que_me_pasa = null
+			_establecer_estado(EstadoOperacion.EN_MARCHA)
+			marcha_reanudada.emit()
+			print("Tren %s: reanudando marcha sobre la vía." % name)
+
+
 func _resolver_anden_embarque(estacion: Node) -> String:
 	if estacion == null or not is_instance_valid(estacion) or not estacion.has_method("resolver_anden_pasajeros"):
 		return ""
@@ -2473,7 +3040,13 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 
 	if _eliminado or _ruta_invalida or not is_instance_valid(self):
 		return
-	if es_terminal_actual:
+	if es_terminal_actual and _invierte_en_anden_de_cabecera():
+		# En la cabecera la formación sólo invierte la marcha: embarca en el
+		# mismo andén a los pasajeros del sentido en que va a salir.
+		_direccion_servicio = 1 if _indice_servicio == 0 else -1
+		_invertir_al_salir = true
+		id_anden = _resolver_anden_embarque(estacion)
+	elif es_terminal_actual:
 		# La terminal de regreso se atiende en su vía de salida antes de embarcar.
 		if _usa_servicio() and not _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio) and _servicio_ferroviario.separar_vias_por_sentido:
 			_maniobra_terminal_pendiente = true

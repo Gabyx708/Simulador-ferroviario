@@ -29,12 +29,14 @@ func _run() -> void:
 	assert(tren != null, "No existe TrenCSR")
 	var red := raiz.find_child("TrackNetwork", true, false) as TrackNetwork
 	assert(red != null, "No existe TrackNetwork")
-	# Esta prueba valida una formación completa. Las otras tres se congelan y
-	# liberan sus reservas para que no conviertan el ensayo unitario en una cola.
+	# Esta prueba valida una formación completa. Las otras tres se congelan,
+	# se apartan de la detección y liberan sus reservas para aislar el recorrido.
 	for otro_raw: Node in get_nodes_in_group("trenes"):
 		var otro := otro_raw as Tren
 		if otro != null and otro != tren:
 			red.liberar_reservas_tren(otro.get_instance_id())
+			otro._apartado_de_via = true
+			otro._desplazamiento_lateral_actual = 4.8
 			otro.set_process(false)
 	tren.velocidad_max_kmh = 240.0
 	tren.aceleracion = 24.0

@@ -176,7 +176,9 @@ func _resolver_puestos_instancia() -> Array[Dictionary]:
 		return resultado
 	var destinos: Array[Dictionary] = destino.call("obtener_puntos_parada_multivia", red_ferroviaria, true) as Array[Dictionary]
 	var marcadores: Array[Marker3D] = []
-	for hijo: Node in contenedor.get_children():
+	var contenedor_constitucion: Node = contenedor.find_child("Constitucion", true, false)
+	var nodo_marcadores: Node = contenedor_constitucion if contenedor_constitucion != null else contenedor
+	for hijo: Node in nodo_marcadores.get_children():
 		if hijo is Marker3D:
 			marcadores.append(hijo as Marker3D)
 	marcadores.sort_custom(func(a: Marker3D, b: Marker3D) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)

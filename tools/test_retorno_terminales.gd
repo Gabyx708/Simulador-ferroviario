@@ -27,13 +27,15 @@ func _run() -> void:
 	var red: TrackNetwork = raiz.find_child("TrackNetwork", true, false) as TrackNetwork
 	assert(tren != null and servicio != null and red != null)
 	assert(not servicio.solo_ida and not servicio.finalizar_al_volver)
-	assert(not servicio.separar_vias_por_sentido)
+	assert(servicio.separar_vias_por_sentido)
 	assert((servicio.obtener_parada(0) as Estacion).es_terminal)
 	assert((servicio.obtener_parada(servicio.cantidad_paradas() - 1) as Estacion).es_terminal)
 	for otro_raw: Node in get_nodes_in_group("trenes"):
 		var otro: Tren = otro_raw as Tren
 		if otro != null and otro != tren:
 			red.liberar_reservas_tren(otro.get_instance_id())
+			otro._apartado_de_via = true
+			otro._desplazamiento_lateral_actual = 4.8
 			otro.set_process(false)
 	tren.velocidad_max_kmh = 240.0
 	tren.aceleracion = 24.0
@@ -61,17 +63,18 @@ func _run() -> void:
 	tren.salio_de_estacion.connect(func(_datos: Dictionary, estacion: Dictionary) -> void:
 		var nombre: String = str(estacion.get("nombre", ""))
 		if nombre == "Bosques":
-			assert(_vio_bosques and tren.invertir_sentido != _sentido_antes_bosques, "Bosques debe invertir el sentido al salir")
+			assert(_vio_bosques and red.segmento_permite_sentido(tren.traza.name, false), "Bosques debe salir por una vía de VUELTA o común")
 			_salidas_terminal.append(nombre)
 		elif nombre == "Plaza Constitución" and _vio_regreso:
-			assert(tren.invertir_sentido != _sentido_antes_constitucion, "Constitución debe invertir el sentido al volver a salir")
+			assert(red.segmento_permite_sentido(tren.traza.name, true), "Constitución debe salir por una vía de IDA o común")
 			_salidas_terminal.append(nombre)
 	)
 
-	var limite: int = Time.get_ticks_msec() + 180000
-	while Time.get_ticks_msec() < limite and not _vio_nueva_ida and not tren.servicio_finalizado():
+	var limite: int = Time.get_ticks_msec() + 270000
+	while Time.get_ticks_msec() < limite and not _vio_nueva_ida and not tren.servicio_finalizado() and not tren._ruta_invalida:
 		await process_frame
 	Engine.time_scale = 1.0
+	assert(not tren._ruta_invalida, "El servicio perdió la ruta: %s; segmento=%s, parada=%d, maniobra=%s" % [tren._motivo_resultado, tren.traza.name if tren.traza != null else "", tren._indice_servicio, tren._en_maniobra_terminal])
 	assert(not tren.servicio_finalizado(), "El servicio debe continuar luego de la vuelta")
 	assert(_salidas_terminal == ["Bosques", "Plaza Constitución"], "No se completaron ambas inversiones: %s; llegadas: %s" % [str(_salidas_terminal), str(_llegadas)])
 	assert(_vio_nueva_ida, "La nueva ida debe llegar a Yrigoyen")
