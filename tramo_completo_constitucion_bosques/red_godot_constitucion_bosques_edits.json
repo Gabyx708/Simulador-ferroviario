@@ -29644,7 +29644,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_436": {
 			"anular_recorte_switch": false,
@@ -29725,7 +29725,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_437": {
 			"anular_recorte_switch": false,
@@ -29806,7 +29806,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_438": {
 			"anular_recorte_switch": false,
@@ -30346,7 +30346,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_451": {
 			"anular_recorte_switch": false,
@@ -32020,7 +32020,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_479": {
 			"anular_recorte_switch": false,
@@ -36430,7 +36430,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_553": {
 			"anular_recorte_switch": false,
@@ -39355,7 +39355,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 0
+			"uso_direccion": 2
 		},
 		"seg_621": {
 			"anular_recorte_switch": false,

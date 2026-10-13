@@ -98,8 +98,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.9238564, 0.9238564)
-shader_parameter/cirrus_position2 = Vector2(0.9238564, 0.9238564)
+shader_parameter/cirrus_position1 = Vector2(0.40218827, 0.40218827)
+shader_parameter/cirrus_position2 = Vector2(0.40218827, 0.40218827)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -109,7 +109,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(19.665346, 19.665346)
+shader_parameter/cumulus_position = Vector2(27.085058, 27.085058)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -4809,8 +4809,9 @@ longitud_metros = 77.73106
 
 [node name="seg_435" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=530356234]
 curve = SubResource("Curve3D_f8g4o")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_435"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -4820,8 +4821,9 @@ longitud_metros = 44.028175
 
 [node name="seg_436" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=125415932]
 curve = SubResource("Curve3D_ltg4k")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_436"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -4831,8 +4833,9 @@ longitud_metros = 30.331827
 
 [node name="seg_437" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=505225493]
 curve = SubResource("Curve3D_ylgng")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_437"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -4889,8 +4892,9 @@ longitud_metros = 53.77889
 
 [node name="seg_446" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1001119119]
 curve = SubResource("Curve3D_jpp1r")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_446"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -5118,8 +5122,9 @@ longitud_metros = 203.23184
 
 [node name="seg_478" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1362459530]
 curve = SubResource("Curve3D_iyo0j")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_478"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -5244,8 +5249,9 @@ longitud_metros = 26.263788
 
 [node name="seg_552" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1447152907]
 curve = SubResource("Curve3D_q8mfx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_552"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
@@ -5439,8 +5445,9 @@ longitud_metros = 19.975845
 
 [node name="seg_620" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2047113321]
 curve = SubResource("Curve3D_2smfx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(0.9607843, 0.77254903, 0.25882354, 1)
 script = ExtResource("4_7yiem")
+uso_direccion = 2
 segment_id = "seg_620"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
 tramo_nombre = "01_Plaza_Constitucion"
