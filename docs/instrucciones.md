@@ -72,3 +72,5 @@ internos del HUD; no constituyen una API para otros sistemas.
   cálculo de `retraso_s` y los 3 eventos de dominio (Persona 5).
 - [Integración de switches y vías](integracion_switches_vias.md): diagnóstico
   especializado de infraestructura.
+- [Circulación por sentido](circulacion_por_sentido.md): vías de ida, vuelta
+  y uso común, elección de andén, cabeceras, reservas y limitaciones actuales.

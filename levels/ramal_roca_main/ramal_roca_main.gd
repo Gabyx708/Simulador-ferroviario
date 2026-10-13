@@ -188,15 +188,20 @@ func _resolver_puestos_instancia() -> Array[Dictionary]:
 		if path == null or path.curve == null or path.curve.point_count < 2:
 			push_warning("%s no está sobre una vía válida." % marcador.name)
 			continue
+		# Los andenes de vuelta reciben las llegadas: un tren nuevo sale de ida y
+		# sólo puede ocupar un andén que admita ese sentido.
+		if not red_ferroviaria.segmento_permite_sentido(segmento, true):
+			continue
 		var avance: float = path.curve.get_closest_offset(path.to_local(marcador.global_position))
 		var mejor: Dictionary = {}
 		var invertido: bool = false
+		var sin_override: Array[String] = []
 		for sentido: bool in [false, true]:
 			for parada_destino: Dictionary in destinos:
 				var destino_traza: Path3D = parada_destino.get("traza") as Path3D
 				if destino_traza == null:
 					continue
-				var ruta: Dictionary = red_ferroviaria.planificar_ruta(path.name, avance, sentido, destino_traza.name, float(parada_destino.get("offset", 0.0)))
+				var ruta: Dictionary = red_ferroviaria.planificar_ruta(path.name, avance, sentido, destino_traza.name, float(parada_destino.get("offset", 0.0)), sin_override, {}, true)
 				if bool(ruta.get("ok", false)) and (mejor.is_empty() or float(ruta.get("distancia_m", INF)) < float(mejor.get("distancia_m", INF))):
 					mejor = ruta
 					invertido = sentido

@@ -84,7 +84,7 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 
 - Abrí `project.godot` con **Godot 4.7** (la integración se verificó con Godot 4.7.2) y esperá a que termine la importación inicial de recursos.
 - La escena de inicio es `levels/ramal_roca_main/ramal_roca_main.tscn`. Usá **F5** para ejecutar el proyecto; con **F6** podés ejecutar la escena abierta en el editor.
-- El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio actual completa Constitución → Bosques → Constitución y finaliza al regresar.
+- El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio recorre Constitución → Bosques → Constitución en bucle.
 - Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
 
 ### Configurar el recorrido por estaciones
@@ -103,15 +103,19 @@ y embarcar. El desvío posterior `seg_135` y su aparato se eliminaron de la esce
 y se registraron como bajas en las ediciones de la red. La salida conserva la
 continuidad `seg_210` → `seg_211` → `seg_212` → `seg_694` hacia Rafael Calzada.
 
-En el nivel principal, `separar_vias_por_sentido` selecciona la vía derecha para
-Constitución → Bosques y la izquierda para Bosques → Constitución, siempre
-mirando hacia Constitución. Los accesos de la playa de Constitución se conservan.
-Los destinos de los andenes laterales se asignan al iniciar según ese lado;
-los centrales mantienen sus destinos configurados. En Bosques bajan todos y
-la formación recorre los cambios de la terminal hasta el poste de la vía de
-regreso antes de embarcar. `finalizar_al_volver` cierra el servicio después de
-la última bajada en Constitución. Si el grafo no tiene una conexión transitable,
-el tren informa un recorrido incompleto; no cambia de vía por teletransporte.
+En el nivel principal, `separar_vias_por_sentido` hace que cada tren sólo use
+vías compatibles con su sentido: cada `Path3D` declara `uso_direccion` (IDA,
+VUELTA o uso común). Los destinos de los andenes laterales se asignan al
+iniciar según ese lado; los centrales mantienen sus destinos configurados. En
+las cabeceras (Constitución y Bosques) bajan todos, embarcan los del sentido
+opuesto en el mismo andén y la formación sale marcha atrás, sin maniobra.
+`finalizar_al_volver` cierra el servicio después de la última bajada en
+Constitución. Si el grafo no tiene una conexión transitable, el tren informa un
+recorrido incompleto; no cambia de vía por teletransporte.
+
+El detalle de la elección de vía y andén, las cabeceras, las reservas y las
+limitaciones conocidas está en
+[docs/circulacion_por_sentido.md](docs/circulacion_por_sentido.md).
 
 ### Capacidad de pasajeros por estación
 

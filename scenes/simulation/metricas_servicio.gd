@@ -46,6 +46,19 @@ func _on_llegada(datos: Dictionary, estacion: Dictionary, id: int) -> void:
 	var registro: Dictionary = _registros[id]
 	var horario: Array[Dictionary] = registro["horario"]
 	var siguiente: int = int(registro["siguiente"])
+	# El servicio repite ida y vuelta: completado un ciclo, la primera parada
+	# del siguiente reinicia el horario con base en la llegada real a la
+	# cabecera. Sin esto la puntualidad quedaba congelada tras la primera vuelta.
+	if siguiente >= horario.size() and horario.size() > 1 and str(horario[1]["id"]) == str(estacion.get("id", "")):
+		var llegadas_ciclo: Dictionary = registro["llegadas"]
+		var ultima: int = horario.size() - 1
+		if llegadas_ciclo.has(ultima):
+			registro["inicio_s"] = float(registro["inicio_s"]) + float(llegadas_ciclo[ultima])
+			registro["llegadas"] = {0: 0.0}
+			registro["siguiente"] = 1
+			registro["desvio_s"] = 0.0
+			registro["ciclo"] = int(registro.get("ciclo", 1)) + 1
+			siguiente = 1
 	if siguiente >= horario.size() or str(horario[siguiente]["id"]) != str(estacion.get("id", "")):
 		return
 	var transcurrido: float = _ahora() - float(registro["inicio_s"])
@@ -85,6 +98,7 @@ func obtener_puntualidad(id: int) -> Dictionary:
 	var atrasado: bool = retraso > tolerancia_s
 	return {
 		"horario_disponible": true, "atrasado": atrasado,
+		"ciclo_horario": int(registro.get("ciclo", 1)),
 		"puntualidad_nombre": "Atrasado" if atrasado else "En tiempo",
 		"retraso_horario_s": retraso if atrasado else 0.0,
 		"tiempo_recorrido_s": transcurrido,
