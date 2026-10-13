@@ -5499,6 +5499,31 @@ func es_via_exclusiva(segmento: String) -> bool:
 	return get_opciones_siguientes(segmento, "start").is_empty() or get_opciones_siguientes(segmento, "end").is_empty()
 
 
+## Al cambiar de itinerario, un tren suelta las vías que había reservado y ya no
+## va a recorrer (sin límite porque nunca entró) y su solicitud pendiente. Si
+## no, quedaban tomadas para siempre y bloqueaban a los trenes siguientes.
+func depurar_reservas_tren(tren_id: int, conservar: Array[String]) -> void:
+	var restantes: Array = []
+	var hubo_cambios: bool = false
+	for reserva_raw: Variant in _reservas_por_tren.get(tren_id, []) as Array:
+		var reserva: Dictionary = reserva_raw as Dictionary
+		var recurso: String = str(reserva.get("recurso", ""))
+		if recurso.begins_with("via:") and is_inf(float(reserva.get("limite", 0.0))) and not conservar.has(recurso.substr(4)):
+			if int(_propietarios_recursos.get(recurso, 0)) == tren_id:
+				_propietarios_recursos.erase(recurso)
+			hubo_cambios = true
+			continue
+		restantes.append(reserva)
+	if restantes.is_empty():
+		_reservas_por_tren.erase(tren_id)
+	else:
+		_reservas_por_tren[tren_id] = restantes
+	var cola_previa: int = _cola_solicitudes_reserva.size()
+	_cola_solicitudes_reserva = _cola_solicitudes_reserva.filter(func(solicitud: Dictionary) -> bool: return int(solicitud.get("tren", 0)) != tren_id)
+	if hubo_cambios or cola_previa != _cola_solicitudes_reserva.size():
+		reservas_cambiadas.emit()
+
+
 ## La formación dejó `segmento`: su reserva vence cuando la cola termina de salir.
 func liberar_via_al_salir(tren_id: int, segmento: String, limite_odometro: float) -> void:
 	for reserva_raw: Variant in _reservas_por_tren.get(tren_id, []) as Array:

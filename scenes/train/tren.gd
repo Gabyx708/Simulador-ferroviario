@@ -368,6 +368,10 @@ var _salida_cabecera_traza: String = ""
 ## La formación llegó a una cabecera y debe salir marcha atrás del mismo andén.
 ## La primera salida de Constitución no la usa: ya mira hacia Yrigoyen.
 var _invertir_al_salir: bool = false
+## Vía y avance de la cabecera al crearse la formación. Los trenes de vuelta
+## se detienen para quedar, tras invertir, en esa misma posición.
+var _traza_inicio: Path3D = null
+var _avance_inicio: float = 0.0
 ## Metros que suma un andén con otra formación al elegir entre andenes paralelos.
 const PENALIZACION_ANDEN_OCUPADO_M: float = 300.0
 
@@ -390,6 +394,8 @@ func _ready() -> void:
 	# traza. Así conserva la vía elegida por el editor y luego sólo avanza por la
 	# red física.
 	_resolver_avance_inicial_runtime()
+	_traza_inicio = traza
+	_avance_inicio = _avance
 	_reiniciar_historial_recorrido()
 	_reconstruir()
 	_resolver_servicio()
@@ -988,24 +994,34 @@ func _candidatos_estacion_servicio(estacion: Node, red: Node, sentido_ida: bool)
 	# poste no alcanza a cubrir: todos los del sentido pedido son paradas.
 	if _usa_servicio() and estacion != null and (estacion == _servicio_ferroviario.obtener_parada(0) or estacion == _servicio_ferroviario.obtener_parada(_servicio_ferroviario.cantidad_paradas() - 1)):
 		for tope: Dictionary in _candidatos_andenes_tope(estacion, red, sentido_ida):
-			var repetido: bool = false
-			for candidato: Dictionary in candidatos:
-				if candidato.get("traza") == tope.get("traza"):
-					repetido = true
+			# En una vía muerta manda la parada del andén (el marcador).
+			var repetido: int = -1
+			for indice: int in candidatos.size():
+				if candidatos[indice].get("traza") == tope.get("traza"):
+					repetido = indice
 					break
-			if not repetido:
+			if repetido >= 0:
+				candidatos[repetido] = tope
+			else:
 				candidatos.append(tope)
 	return candidatos
 
 
-## Andenes en vía muerta de una cabecera: la cabecera del tren se detiene a
-## pocos metros del tope, del lado por el que se entra.
+## Andenes en vía muerta de una cabecera. La cabecera del tren se detiene en
+## el Marker3D de MarcadoresDeInstancia que cae sobre esa vía (los mismos
+## puestos desde donde salen las formaciones); sin marcador, cerca del tope.
 func _candidatos_andenes_tope(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
 	var resultado: Array[Dictionary] = []
 	if not (estacion is Node3D) or red == null or not (red.get("paths") is Dictionary):
 		return resultado
+	var marcadores: Array[Node] = []
+	var raiz: Node = get_tree().current_scene if get_tree().current_scene != null else get_tree().root
+	var contenedor_marcadores: Node = raiz.find_child("MarcadoresDeInstancia", true, false)
+	if contenedor_marcadores != null:
+		marcadores = contenedor_marcadores.find_children("*", "Marker3D", true, false)
 	var centro: Vector3 = (estacion as Node3D).global_position
 	var alcance: float = float(estacion.get("longitud_anden")) + float(estacion.get("separacion_vias")) * 4.0
+	var cabecera_inicial: float = _distancia_cabecera_inicial_desde_tope(red, centro, alcance)
 	for sid: String in (red.get("paths") as Dictionary).keys():
 		var via: Path3D = red.call("get_segment_path", sid) as Path3D
 		if via == null or via.curve == null or via.curve.point_count < 2:
@@ -1020,11 +1036,52 @@ func _candidatos_andenes_tope(estacion: Node, red: Node, sentido_ida: bool) -> A
 			if tope.distance_to(centro) > alcance:
 				continue
 			var offset: float = snappedf(clampf(12.0 if extremo == "start" else largo - 12.0, 0.0, largo), 0.01)
+			# Los marcadores de ida y de vuelta están a ~4 m: se toma el más
+			# cercano y sólo si está prácticamente sobre esta vía.
+			var menor_separacion: float = 2.0
+			for marcador: Node in marcadores:
+				var posicion_marcador: Vector3 = (marcador as Node3D).global_position
+				var offset_marcador: float = via.curve.get_closest_offset(via.to_local(posicion_marcador))
+				var separacion: float = via.to_global(via.curve.sample_baked(offset_marcador, true)).distance_to(posicion_marcador)
+				if separacion <= menor_separacion:
+					menor_separacion = separacion
+					offset = snappedf(offset_marcador, 0.01)
+			# Con formaciones iniciales en la estación manda su posición: al
+			# invertir, el último coche pasa a ser la cabecera y debe quedar donde
+			# arrancan esas formaciones.
+			if cabecera_inicial > 0.0:
+				var desde_tope: float = clampf(cabecera_inicial - paso * float(cantidad_coches - 1), 5.0, largo)
+				offset = snappedf(desde_tope if extremo == "start" else largo - desde_tope, 0.01)
 			resultado.append({
 				"segmento": sid, "traza": via, "offset": offset, "offset_ida": offset, "offset_vuelta": offset,
 				"punto_global": via.to_global(via.curve.sample_baked(offset, true)), "tope": true
 			})
 	return resultado
+
+
+## Distancia media entre el tope del andén y la cabecera de las formaciones
+## colocadas en la escena para esta cabecera (las altas del HUD no cuentan).
+## Devuelve -1 si la estación no tiene formaciones iniciales.
+func _distancia_cabecera_inicial_desde_tope(red: Node, centro: Vector3, alcance: float) -> float:
+	var suma: float = 0.0
+	var cantidad: int = 0
+	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
+		if nodo.has_meta("puesto_instancia") or not ("_traza_inicio" in nodo):
+			continue
+		var via: Path3D = nodo.get("_traza_inicio") as Path3D
+		if via == null or not is_instance_valid(via) or via.curve == null or via.curve.point_count < 2:
+			continue
+		var largo: float = via.curve.get_baked_length()
+		var avance_escena: float = float(nodo.get("_avance_inicio"))
+		for extremo: String in ["start", "end"]:
+			if not (red.call("get_opciones_siguientes", str(via.name), extremo) as Array).is_empty():
+				continue
+			var tope: Vector3 = via.to_global(via.curve.get_point_position(0 if extremo == "start" else via.curve.point_count - 1))
+			if tope.distance_to(centro) > alcance:
+				continue
+			suma += avance_escena if extremo == "start" else largo - avance_escena
+			cantidad += 1
+	return suma / float(cantidad) if cantidad > 0 else -1.0
 
 
 func _candidatos_estacion_por_poste(estacion: Node, red: Node, sentido_ida: bool) -> Array[Dictionary]:
@@ -1614,6 +1671,7 @@ func _aplicar_ruta_actualizada(ruta: Dictionary, objetivo: Dictionary) -> void:
 	var red: Node = _obtener_red()
 	if red != null and red.has_method("registrar_itinerario_tren"):
 		red.call("registrar_itinerario_tren", get_instance_id(), _ruta_segmentos)
+	_depurar_reservas_fuera_de_ruta(red)
 	for paso: Variant in ruta.get("pasos", []):
 		if paso is Dictionary:
 			_ruta_pasos.append((paso as Dictionary).duplicate())
@@ -1730,6 +1788,7 @@ func _actualizar_ruta_servicio() -> void:
 			_ruta_segmentos.append(str(segmento))
 		if red.has_method("registrar_itinerario_tren"):
 			red.call("registrar_itinerario_tren", get_instance_id(), _ruta_segmentos)
+		_depurar_reservas_fuera_de_ruta(red)
 		_ruta_pasos.clear()
 		for paso: Variant in ruta.get("pasos", []):
 			if paso is Dictionary:
@@ -2757,6 +2816,14 @@ func _bloque_exclusivo_tras(net: Node, siguiente_id: String) -> Array[String]:
 			break
 		bloque.append(tramo)
 	return bloque
+
+
+func _depurar_reservas_fuera_de_ruta(red: Node) -> void:
+	if red == null or not red.has_method("depurar_reservas_tren") or traza == null:
+		return
+	var conservar: Array[String] = _ruta_segmentos.duplicate()
+	conservar.append(str(traza.name))
+	red.call("depurar_reservas_tren", get_instance_id(), conservar)
 
 
 func _liberar_via_dejada(segmento: String) -> void:

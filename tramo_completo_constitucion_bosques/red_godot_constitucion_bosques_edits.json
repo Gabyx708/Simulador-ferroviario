@@ -629,7 +629,7 @@
 				"destino_anden_central_2": 2.0,
 				"es_terminal": true,
 				"incluir_anden_b_pasajeros": false,
-				"invertir_sentido": false,
+				"invertir_sentido": true,
 				"longitud_anden": 200.0,
 				"maximo_pasajeros_visibles": 150.0,
 				"mostrar_estructura_andenes": false,
@@ -645,15 +645,15 @@
 				"tiempo_espera": 3.0,
 				"tiempo_salida_pasajeros": 3.0,
 				"transform": [
-					0.0125871701166034,
-					0.0,
-					0.999920845031738,
-					0.0,
-					1.0,
+					-0.0125871701166034,
 					0.0,
 					-0.999920845031738,
 					0.0,
-					0.0125871701166034,
+					1.0,
+					0.0,
+					0.999920845031738,
+					0.0,
+					-0.0125871701166034,
 					155.96533203125,
 					0.0,
 					160.305847167969
@@ -17431,7 +17431,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_180": {
 			"anular_recorte_switch": false,
@@ -17593,7 +17593,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_182": {
 			"anular_recorte_switch": false,
@@ -17674,7 +17674,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_183": {
 			"anular_recorte_switch": false,
@@ -17755,7 +17755,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_184": {
 			"anular_recorte_switch": false,
@@ -24235,7 +24235,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_332": {
 			"anular_recorte_switch": false,
@@ -24640,7 +24640,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_344": {
 			"anular_recorte_switch": false,
@@ -27655,7 +27655,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_391": {
 			"anular_recorte_switch": false,
@@ -29563,7 +29563,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_435": {
 			"anular_recorte_switch": false,
@@ -29887,7 +29887,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_439": {
 			"anular_recorte_switch": false,
@@ -29968,7 +29968,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_440": {
 			"anular_recorte_switch": false,
@@ -30427,7 +30427,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_454": {
 			"anular_recorte_switch": false,
@@ -30850,7 +30850,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_465": {
 			"anular_recorte_switch": false,
@@ -31858,7 +31858,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_477": {
 			"anular_recorte_switch": false,
@@ -36673,7 +36673,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_556": {
 			"anular_recorte_switch": false,
@@ -37645,7 +37645,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_585": {
 			"anular_recorte_switch": false,
@@ -37807,7 +37807,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_587": {
 			"anular_recorte_switch": false,
@@ -37969,7 +37969,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_589": {
 			"anular_recorte_switch": false,
@@ -38131,7 +38131,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_591": {
 			"anular_recorte_switch": false,
@@ -38293,7 +38293,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_593": {
 			"anular_recorte_switch": false,
@@ -39436,7 +39436,7 @@
 				0.0,
 				0.0
 			],
-			"uso_direccion": 1.0
+			"uso_direccion": 2.0
 		},
 		"seg_622": {
 			"anular_recorte_switch": false,
