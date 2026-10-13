@@ -19,9 +19,16 @@ const SWITCH_TIPO_B_SCENE = preload("res://scenes/switches/switch_tipo_b.tscn")
 const SWITCH_TIPO_C_SCENE = preload("res://scenes/switches/switch_tipo_c.tscn")
 const SWITCH_TIPO_D_SCENE = preload("res://scenes/switches/switch_tipo_d.tscn")
 const SWITCH_TIPO_E_SCENE = preload("res://scenes/switches/switch_tipo_e.tscn")
+const GENERAR_SWITCHES_COMPUESTOS_D_E: bool = false
+const PROPIEDADES_SWITCH_JOURNAL = ["largo_turnout", "largo_aguja", "largo_zona_cruce", "angulo_cruce_rad", "trocha_media", "luz_pestana", "paso_durmientes", "generar_extremos_flexibles", "mostrar_marmita", "distancia_culling_cuerpo", "distancia_culling_detalles"]
+const CURVAS_SWITCH_JOURNAL = ["curva_directa", "curva_desviada", "curva_izquierda", "curva_derecha", "curva_a", "curva_b"]
 const EDITABLE_TRACK_SEGMENT_SCRIPT = preload("res://scenes/tracks/editable_track_segment.gd")
 const DISTANCIA_MINIMA_ADAPTACION_SWITCH: float = 120.0
 const MARGEN_FINAL_SEGMENTO_SWITCH: float = 2.0
+## Solape mínimo entre la vía completa y el extremo flexible. Ambos usan el
+## mismo punto de corte, pero esta tolerancia evita una grieta por la precisión
+## del bake o por la interpolación de dos mallas independientes.
+const SOLAPE_VISUAL_UNION_SWITCH: float = 0.020
 const PASO_BUSQUEDA_ADAPTACION_SWITCH: float = 10.0
 const DOT_TANGENTE_ADAPTACION_SWITCH: float = 0.985
 signal red_cargada(total_segmentos: int, total_uniones: int)
@@ -219,6 +226,10 @@ static var _json_cache: Dictionary = {}
 		if v:
 			boton_generar_switches = false
 			generar_switches_desde_paths_existentes()
+
+## Distancia máxima entre extremos de Path3D para considerarlos una unión
+## creada manualmente en el editor.
+@export_range(0.05, 5.0, 0.05, "suffix:m") var tolerancia_union_manual: float = 2.0
 
 ## Pulsador: Limpiar todos los switches de la escena.
 @export var boton_limpiar_switches: bool = false:
@@ -419,6 +430,9 @@ var _recortes_segmentos: Dictionary = {}
 ## Intervalos EXCLUIDOS por segmento (uno por cada unión): permite que un tramo
 ## entre DOS aparatos conserve vía plena en el medio en vez de colapsar a absorbido.
 var _recortes_extra: Dictionary = {}
+## Huecos interiores ocupados por un crossover D en Path3D que lo atraviesan.
+## Se mantienen ambos lados de la vía; no se modifica la Curve3D de ruteo.
+var _recortes_internos_switch: Dictionary = {}
 ## Segmentos donde dos zonas de adaptación no dejan separación física suficiente.
 var _conflictos_adaptacion_switch: Dictionary = {}
 ## Registro único de cada extremo switch-segmento conectado en la última reconstrucción.
@@ -452,15 +466,29 @@ var _bajas_tramos_pendientes: Dictionary = {}
 var _switches_eliminados_persistentes: Dictionary = {}
 # Huella (transform + estado) de cada switch para detectar movimientos en el editor.
 var _huellas_switches: Dictionary = {}
+var _huellas_estaciones: Dictionary = {}
+var _huellas_config_switches: Dictionary = {}
 # Huella de las curvas reales copiadas por cada aparato (evita recalibrar de más).
 var _hash_recalibracion: Dictionary = {}
 # Aparatos ya alineados al junction (el ajuste se aplica una sola vez por sesión).
 var _refit_hecho: Dictionary = {}
 var _switch_movido_pendiente: bool = false
 var _acum_polling_switches: float = 0.0
+## Instancias que el usuario modificó durante esta sesión. Complementa la
+## marca serializada de BaseTurnout para no reemplazarlas al generar switches.
+var _switches_editados_manualmente: Dictionary = {}
 # Edición incremental: tramos cuya geometría cambió y se resolverán agrupados.
 var _segmentos_edicion_pendientes: Dictionary = {}
 var _edicion_diferida_programada: bool = false
+var _autoguardado_pendiente: bool = false
+var _tiempo_autoguardado: float = 0.0
+const RETARDO_AUTOGUARDADO: float = 0.8
+## Respaldo de topología JSON mientras se añaden uniones temporales detectadas
+## directamente desde los extremos de los Path3D del editor.
+var _datos_segmentos_previos_uniones_manuales: Dictionary = {}
+## Respaldo de junctions existentes mientras se les agregan extremos creados
+## desde el editor. Así la detección es reversible y no modifica el JSON.
+var _junctions_previas_uniones_manuales: Dictionary = {}
 
 ## Intervalo (s) entre sondeos de huellas de aparatos en el editor.
 const INTERVALO_POLLING_SWITCHES: float = 0.25
@@ -491,6 +519,8 @@ func _ready() -> void:
 		#print("TrackNetwork: Vías existentes detectadas en escena. Sincronizando árbol de escena...")
 		recolectar_paths_desde_arbol()
 		recolectar_switches_desde_arbol()
+		_integrar_topologia_de_switches_serializados()
+		_sincronizar_expansion_guardada_de_switches()
 		# IMPORTANTE: la escena manda. Nunca se aplica la lista persistente de
 		# bajas sobre los tramos que YA existen en el árbol: hacerlo borraba la
 		# red completa al abrir la escena (toda edición manual se perdía al guardar).
@@ -507,6 +537,8 @@ func _ready() -> void:
 			_recortes_segmentos.clear()
 			_reconstruir_conexiones_adaptativas()
 
+		if Engine.is_editor_hint():
+			_sincronizar_ediciones_serializadas_con_journal()
 		_inicializar_seguimiento_switches_editor()
 		red_cargada.emit(paths.size(), junctions.size())
 		habilitar_edicion_en_arbol()
@@ -518,6 +550,101 @@ func _ready() -> void:
 	else:
 		# Primera carga o escena vacía: generar desde el archivo JSON base
 		cargar_red()
+
+
+func _exit_tree() -> void:
+	# Las ediciones ya capturadas en memoria no se pierden al cerrar la escena
+	# antes de que venza el retardo de escritura.
+	if Engine.is_editor_hint() and _autoguardado_pendiente:
+		_escribir_archivo_ediciones()
+
+
+## Propaga la expansión serializada del switch a sus hijos flexibles después
+## de que el árbol de escena esté completo. Debe ocurrir antes de calcular los
+## recortes que generan la geometría visible de los Path3D.
+func _sincronizar_expansion_guardada_de_switches() -> void:
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw != null:
+			sw.sincronizar_expansion_extremos_flexibles()
+
+
+## La escena guardada es la fuente principal. Actualiza el respaldo JSON con
+## sus vías modificadas y switches antes de aceptar nuevas ediciones del editor.
+func _sincronizar_ediciones_serializadas_con_journal() -> void:
+	var cambio: bool = false
+	for seg_id: String in paths.keys():
+		var via: EditableTrackSegment = paths[seg_id] as EditableTrackSegment
+		if via == null or not via.esta_modificada:
+			continue
+		var datos: Dictionary = via.serializar_datos()
+		if _ediciones_guardadas.get(seg_id, {}) != datos:
+			_ediciones_guardadas[seg_id] = datos
+			cambio = true
+	var switches_previos: Dictionary = (_ediciones_guardadas.get("_switches", {}) as Dictionary).duplicate(true)
+	_persistir_diccionario_switches()
+	if switches_previos != (_ediciones_guardadas.get("_switches", {}) as Dictionary):
+		cambio = true
+	if cambio:
+		_autoguardado_pendiente = true
+		_tiempo_autoguardado = 0.0
+
+
+## La generación manual puede crear una unión temporal que no existe en el
+## JSON base. Al guardar, Godot conserva el switch y sus IDs de vías, pero no
+## esa tabla temporal de junctions. Reconstruimos aquí la topología necesaria
+## desde los switches serializados para que TODOS sus leads y Path3D reciban
+## los mismos recortes al reabrir la escena.
+func _integrar_topologia_de_switches_serializados() -> void:
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw == null or sw.node_id == 0:
+			continue
+		var clave_junction: String = str(sw.node_id)
+		var junction: Dictionary = junctions.get(clave_junction, {
+			"id": sw.node_id,
+			"position": {"x": sw.position.x, "y": sw.position.y, "z": sw.position.z},
+			"segments": []
+		}) as Dictionary
+		var conexiones: Array = junction.get("segments", []) as Array
+		for sid: String in [sw.via_comun_id, sw.via_directa_id, sw.via_desviada_id]:
+			if sid.is_empty() or not paths.has(sid):
+				continue
+			var extremo: String = _extremo_de_segmento_para_switch_serializado(sid, conexiones, sw)
+			var existe: bool = false
+			for conexion_raw: Variant in conexiones:
+				if conexion_raw is Dictionary:
+					var conexion: Dictionary = conexion_raw as Dictionary
+					if str(conexion.get("segment_id", "")) == sid and str(conexion.get("end", "")) == extremo:
+						existe = true
+						break
+			if not existe:
+				conexiones.append({"segment_id": sid, "end": extremo})
+			if segments_data.has(sid):
+				var datos: Dictionary = (segments_data[sid] as Dictionary).duplicate(true)
+				if extremo == "start":
+					datos["node_start"] = sw.node_id
+				else:
+					datos["node_end"] = sw.node_id
+				segments_data[sid] = datos
+		junction["segments"] = conexiones
+		junctions[clave_junction] = junction
+
+
+## Prefiere el extremo que ya estaba asignado a la junction. Para una rama
+## generada manualmente, toma el extremo del Path3D más cercano al switch.
+func _extremo_de_segmento_para_switch_serializado(seg_id: String, conexiones: Array, sw: BaseTurnout) -> String:
+	for conexion_raw: Variant in conexiones:
+		if conexion_raw is Dictionary:
+			var conexion: Dictionary = conexion_raw as Dictionary
+			if str(conexion.get("segment_id", "")) == seg_id:
+				return str(conexion.get("end", "start"))
+	var via: Path3D = paths.get(seg_id) as Path3D
+	if via == null or via.curve == null or via.curve.point_count < 2:
+		return "start"
+	var p_inicio: Vector3 = via.to_global(via.curve.get_point_position(0))
+	var p_fin: Vector3 = via.to_global(via.curve.get_point_position(via.curve.point_count - 1))
+	return "start" if p_inicio.distance_squared_to(sw.global_position) <= p_fin.distance_squared_to(sw.global_position) else "end"
 
 
 # ==============================================================================
@@ -643,6 +770,12 @@ func solicitar_baja_segmento(seg_id: String) -> void:
 
 ## Confirma las bajas de tramos cuya ventana de gracia ya venció.
 func _procesar_bajas_segmentos_pendientes() -> void:
+	# Las eliminaciones hechas desde el árbol de escena ya las conserva el
+	# UndoRedo del editor. Persistirlas desde un callback diferido puede liberar
+	# la misma instancia que el editor intenta restaurar con Ctrl+Z.
+	if Engine.is_editor_hint():
+		_bajas_tramos_pendientes.clear()
+		return
 	if _bajas_tramos_pendientes.is_empty():
 		return
 	# Si la instancia ya no está operativa, el árbol se estaba desmontando.
@@ -734,6 +867,8 @@ func restaurar_tramos_eliminados() -> int:
 			var ed: EditableTrackSegment = path as EditableTrackSegment
 			if not ed.geometria_modificada.is_connected(_on_segmento_geometria_modificada):
 				ed.geometria_modificada.connect(_on_segmento_geometria_modificada)
+			if not ed.datos_modificados.is_connected(_on_segmento_datos_modificados):
+				ed.datos_modificados.connect(_on_segmento_datos_modificados)
 		restaurados += 1
 
 	_escribir_archivo_ediciones()
@@ -846,10 +981,12 @@ func _aplicar_bajas_switches_persistentes() -> void:
 
 func _inicializar_seguimiento_switches_editor() -> void:
 	_huellas_switches.clear()
+	_huellas_config_switches.clear()
 	for nid: int in aparatos_de_via.keys():
 		var sw: BaseTurnout = aparatos_de_via[nid] as BaseTurnout
 		if sw != null:
 			_huellas_switches[nid] = _huella_switch(sw)
+			_huellas_config_switches[nid] = _huella_config_switch(sw)
 
 
 ## Huella estable de un aparato: transform + estado de agujas.
@@ -860,11 +997,53 @@ func _huella_switch(sw: BaseTurnout) -> int:
 	return h
 
 
+## Detecta cambios de inspector y de extremos flexibles que no mueven el nodo.
+func _huella_config_switch(sw: BaseTurnout) -> int:
+	var h: int = 0
+	var campos: Dictionary = {}
+	for propiedad_raw: Variant in sw.get_property_list():
+		var propiedad: Dictionary = propiedad_raw as Dictionary
+		campos[str(propiedad.get("name", ""))] = true
+	for nombre: String in ["largo_turnout", "largo_aguja", "largo_zona_cruce", "angulo_cruce_rad", "trocha_media", "luz_pestana", "paso_durmientes", "generar_extremos_flexibles", "mostrar_marmita", "distancia_culling_cuerpo", "distancia_culling_detalles", "expansion_extremos_flexibles", "curva_directa", "curva_desviada", "curva_izquierda", "curva_derecha", "curva_a", "curva_b"]:
+		if not campos.has(nombre):
+			continue
+		var valor: Variant = sw.get(nombre)
+		if valor is Curve3D:
+			var curva: Curve3D = valor as Curve3D
+			h = hash(h ^ curva.point_count)
+			for i: int in curva.point_count:
+				h = hash(h ^ hash(curva.get_point_position(i)) ^ hash(curva.get_point_in(i)) ^ hash(curva.get_point_out(i)))
+		else:
+			h = hash(h ^ hash(valor))
+	var grupo: Node = sw.get_node_or_null("ExtremosFlexibles")
+	if grupo != null:
+		for hijo: Node in grupo.get_children():
+			if not (hijo is FlexibleTrackLead):
+				continue
+			var lead: FlexibleTrackLead = hijo as FlexibleTrackLead
+			h = hash(h ^ hash(lead.name) ^ hash(lead.expansion_sobre_path))
+			h = hash(h ^ hash(lead.longitud_extension) ^ hash(lead.offset_lateral) ^ hash(lead.offset_vertical))
+			h = hash(h ^ hash(lead.angulo_curva_deg) ^ hash(lead.factor_tangente))
+			h = hash(h ^ hash(lead.usar_extremo_manual) ^ hash(lead.respetar_edicion_manual))
+			if lead.respetar_edicion_manual:
+				h = hash(h ^ hash(lead.punto_inicio) ^ hash(lead.direccion_inicio))
+				h = hash(h ^ hash(lead.punto_fin_manual) ^ hash(lead.direccion_fin_manual))
+	return h
+
+
 func _process(delta: float) -> void:
 	# Las bajas de tramos se confirman siempre (editor y juego): la ventana de
 	# gracia evita registrar bajas por operaciones transitorias del editor.
 	_procesar_bajas_segmentos_pendientes()
-	if not Engine.is_editor_hint() or aparatos_de_via.is_empty():
+	if Engine.is_editor_hint() and _autoguardado_pendiente:
+		_tiempo_autoguardado += delta
+		if _tiempo_autoguardado >= RETARDO_AUTOGUARDADO:
+			_autoguardado_pendiente = false
+			_tiempo_autoguardado = 0.0
+			_sincronizar_lista_eliminados_en_ediciones()
+			_persistir_diccionario_switches()
+			_escribir_archivo_ediciones()
+	if not Engine.is_editor_hint():
 		return
 	# El sondeo de huellas de aparatos se limita a ~0.25 s: recorrer los ~200 switches
 	# cada frame (hashear transform+estado y comprobar ancestros) es costoso en el editor.
@@ -872,7 +1051,11 @@ func _process(delta: float) -> void:
 	if _acum_polling_switches < INTERVALO_POLLING_SWITCHES:
 		return
 	_acum_polling_switches = 0.0
+	_sincronizar_estaciones_serializadas_con_journal()
+	if aparatos_de_via.is_empty():
+		return
 	var cambio: bool = false
+	var cambio_config: bool = false
 	for nid: int in aparatos_de_via.keys():
 		var sw: BaseTurnout = aparatos_de_via[nid] as BaseTurnout
 		if sw == null:
@@ -880,7 +1063,19 @@ func _process(delta: float) -> void:
 		var h: int = _huella_switch(sw)
 		if not _huellas_switches.has(nid) or int(_huellas_switches[nid]) != h:
 			_huellas_switches[nid] = h
+			sw.marcar_editado_para_regeneracion()
+			_switches_editados_manualmente[sw.get_instance_id()] = true
 			cambio = true
+		var config_h: int = _huella_config_switch(sw)
+		if not _huellas_config_switches.has(nid) or int(_huellas_config_switches[nid]) != config_h:
+			_huellas_config_switches[nid] = config_h
+			sw.marcar_editado_para_regeneracion()
+			_switches_editados_manualmente[sw.get_instance_id()] = true
+			_autoguardado_pendiente = true
+			_tiempo_autoguardado = 0.0
+			cambio_config = true
+	if cambio_config:
+		_persistir_diccionario_switches()
 	if not cambio:
 		_detectar_switches_removidos()
 		return
@@ -891,6 +1086,10 @@ func _process(delta: float) -> void:
 ## Detecta aparatos que el usuario quitó del contenedor en el editor y persiste su baja.
 ## Sólo se ejecuta en el editor: si la escena entera se desmonta, este proceso no corre.
 func _detectar_switches_removidos() -> void:
+	# En el editor una baja visual puede ser una operación reversible. La baja
+	# persistente se hace sólo mediante eliminar_switch(), no desde el sondeo.
+	if Engine.is_editor_hint():
+		return
 	if _contenedor_switches == null or aparatos_de_via.is_empty():
 		return
 	var removidos: Array[BaseTurnout] = []
@@ -974,17 +1173,46 @@ func _persistir_diccionario_switches() -> void:
 			"via_directa_id": sw.via_directa_id,
 			"via_desviada_id": sw.via_desviada_id,
 			"largo_aparato": sw.get_largo_aparato(),
+			"expansion_extremos_flexibles": sw.expansion_extremos_flexibles,
 			"tipo_aparato": sw.get_tipo_aparato(),
 			"desviada": sw.is_desviado()
 		}
+		var nombres_propiedades: Dictionary = {}
+		for propiedad_raw: Variant in sw.get_property_list():
+			var propiedad: Dictionary = propiedad_raw as Dictionary
+			nombres_propiedades[str(propiedad.get("name", ""))] = true
+		var propiedades: Dictionary = {}
+		for nombre_propiedad: String in PROPIEDADES_SWITCH_JOURNAL:
+			if nombres_propiedades.has(nombre_propiedad):
+				propiedades[nombre_propiedad] = sw.get(nombre_propiedad)
+		(sw_dict[str(nid)] as Dictionary)["propiedades"] = propiedades
+		var curvas: Dictionary = {}
+		for nombre_curva: String in CURVAS_SWITCH_JOURNAL:
+			if nombres_propiedades.has(nombre_curva) and sw.get(nombre_curva) is Curve3D:
+				curvas[nombre_curva] = EditableTrackSegment.curva_a_dict(sw.get(nombre_curva) as Curve3D)
+		if not curvas.is_empty():
+			(sw_dict[str(nid)] as Dictionary)["curvas"] = curvas
 		# Extremos flexibles fijados a mano (edición de los extremos del switch).
 		var extremos: Dictionary = {}
+		var expansiones: Dictionary = {}
+		var ajustes: Dictionary = {}
 		var g_ext: Node = sw.get_node_or_null("ExtremosFlexibles")
 		if g_ext != null:
 			for h: Node in g_ext.get_children():
 				if not (h is FlexibleTrackLead):
 					continue
 				var l: FlexibleTrackLead = h as FlexibleTrackLead
+				expansiones[String(l.name)] = l.expansion_sobre_path
+				ajustes[String(l.name)] = {
+					"expansion_sobre_path": l.expansion_sobre_path,
+					"longitud_extension": l.longitud_extension,
+					"offset_lateral": l.offset_lateral,
+					"offset_vertical": l.offset_vertical,
+					"angulo_curva_deg": l.angulo_curva_deg,
+					"factor_tangente": l.factor_tangente,
+					"usar_extremo_manual": l.usar_extremo_manual,
+					"respetar_edicion_manual": l.respetar_edicion_manual
+				}
 				if not l.respetar_edicion_manual:
 					continue
 				extremos[String(l.name)] = {
@@ -1002,12 +1230,16 @@ func _persistir_diccionario_switches() -> void:
 				}
 		if not extremos.is_empty():
 			(sw_dict[str(nid)] as Dictionary)["extremos"] = extremos
+		if not expansiones.is_empty():
+			(sw_dict[str(nid)] as Dictionary)["expansiones_extremos"] = expansiones
+		if not ajustes.is_empty():
+			(sw_dict[str(nid)] as Dictionary)["ajustes_extremos"] = ajustes
 	_ediciones_guardadas["_switches"] = sw_dict
 
 
 ## Aplica a los aparatos recién generados las posiciones/estados guardados en el
 ## journal. Se usa únicamente al regenerar la red desde el JSON base.
-func _aplicar_switches_guardados() -> void:
+func _aplicar_switches_guardados(omitidos: Dictionary = {}) -> void:
 	if not _ediciones_guardadas.has("_switches"):
 		return
 	var sw_dict: Dictionary = _ediciones_guardadas["_switches"] as Dictionary
@@ -1018,6 +1250,8 @@ func _aplicar_switches_guardados() -> void:
 		var nid: int = int(nid_str)
 		var sw: BaseTurnout = aparatos_de_via.get(nid) as BaseTurnout
 		if sw == null:
+			continue
+		if omitidos.has(sw.get_instance_id()):
 			continue
 		var datos: Dictionary = sw_dict[nid_str] as Dictionary
 		# Si el aparato cambió de tipo al regenerar, su pose guardada no aplica.
@@ -1039,7 +1273,23 @@ func _aplicar_switches_guardados() -> void:
 			sw.via_directa_id = str(datos["via_directa_id"])
 		if datos.has("via_desviada_id"):
 			sw.via_desviada_id = str(datos["via_desviada_id"])
+		var propiedades: Dictionary = datos.get("propiedades", {}) as Dictionary
+		for nombre_propiedad: String in propiedades.keys():
+			if nombre_propiedad in PROPIEDADES_SWITCH_JOURNAL and sw.get(nombre_propiedad) != propiedades[nombre_propiedad]:
+				sw.set(nombre_propiedad, propiedades[nombre_propiedad])
+		var curvas: Dictionary = datos.get("curvas", {}) as Dictionary
+		for nombre_curva: String in curvas.keys():
+			if nombre_curva in CURVAS_SWITCH_JOURNAL and curvas[nombre_curva] is Dictionary:
+				var curva_restaurada: Curve3D = EditableTrackSegment.dict_a_curva(curvas[nombre_curva] as Dictionary)
+				if curva_restaurada.point_count >= 2:
+					sw.set(nombre_curva, curva_restaurada)
+		if datos.has("expansion_extremos_flexibles"):
+			sw.expansion_extremos_flexibles = float(datos["expansion_extremos_flexibles"])
 		sw.conmutar_a(1 if bool(datos.get("desviada", false)) else 0)
+		if datos.has("ajustes_extremos"):
+			_aplicar_ajustes_extremos_guardados(sw, datos)
+		else:
+			_aplicar_expansiones_extremos_guardadas(sw, datos)
 		_aplicar_extremos_guardados(sw, datos)
 		aplicados += 1
 	if aplicados > 0:
@@ -1048,7 +1298,7 @@ func _aplicar_switches_guardados() -> void:
 
 ## Aplica a un aparato los extremos flexibles fijados a mano guardados en el journal.
 ## Devuelve cuántos extremos restauró.
-func _aplicar_extremos_guardados(sw: BaseTurnout, datos: Dictionary) -> int:
+func _aplicar_extremos_guardados(sw: BaseTurnout, datos: Dictionary, solo_faltantes: bool = false) -> int:
 	var extremos: Dictionary = datos.get("extremos", {}) as Dictionary
 	if extremos.is_empty():
 		return 0
@@ -1059,6 +1309,11 @@ func _aplicar_extremos_guardados(sw: BaseTurnout, datos: Dictionary) -> int:
 	for nombre: String in extremos.keys():
 		var lead: FlexibleTrackLead = g_ext.get_node_or_null(nombre) as FlexibleTrackLead
 		if lead == null:
+			continue
+		if solo_faltantes and lead.respetar_edicion_manual:
+			continue
+		var ajustes: Dictionary = datos.get("ajustes_extremos", {}) as Dictionary
+		if ajustes.has(nombre) and not bool((ajustes[nombre] as Dictionary).get("respetar_edicion_manual", true)):
 			continue
 		var e: Dictionary = extremos[nombre] as Dictionary
 		lead._bloqueo_reconstruccion = true
@@ -1087,6 +1342,55 @@ func _aplicar_extremos_guardados(sw: BaseTurnout, datos: Dictionary) -> int:
 	return aplicados
 
 
+func _aplicar_ajustes_extremos_guardados(sw: BaseTurnout, datos: Dictionary, restaurar_expansion: bool = true, omitidos: Dictionary = {}) -> int:
+	var ajustes: Dictionary = datos.get("ajustes_extremos", {}) as Dictionary
+	var grupo: Node = sw.get_node_or_null("ExtremosFlexibles")
+	if grupo == null:
+		return 0
+	var aplicados: int = 0
+	for nombre: String in ajustes.keys():
+		if omitidos.has(nombre):
+			continue
+		var lead: FlexibleTrackLead = grupo.get_node_or_null(nombre) as FlexibleTrackLead
+		if lead == null:
+			continue
+		var a: Dictionary = ajustes[nombre] as Dictionary
+		lead._bloqueo_reconstruccion = true
+		if restaurar_expansion:
+			lead.expansion_sobre_path = maxf(0.0, float(a.get("expansion_sobre_path", lead.expansion_sobre_path)))
+		lead.longitud_extension = float(a.get("longitud_extension", lead.longitud_extension))
+		lead.offset_lateral = float(a.get("offset_lateral", lead.offset_lateral))
+		lead.offset_vertical = float(a.get("offset_vertical", lead.offset_vertical))
+		lead.angulo_curva_deg = float(a.get("angulo_curva_deg", lead.angulo_curva_deg))
+		lead.factor_tangente = float(a.get("factor_tangente", lead.factor_tangente))
+		lead.usar_extremo_manual = bool(a.get("usar_extremo_manual", lead.usar_extremo_manual))
+		lead.respetar_edicion_manual = bool(a.get("respetar_edicion_manual", lead.respetar_edicion_manual))
+		lead._bloqueo_reconstruccion = false
+		lead.reconstruir_tramo()
+		aplicados += 1
+	return aplicados
+
+
+## Restaura la expansión de TODOS los leads del aparato, incluidos los que no
+## tienen una edición manual. Así cada Path3D recibe al cargar el mismo recorte
+## que tenía al guardar la escena.
+func _aplicar_expansiones_extremos_guardadas(sw: BaseTurnout, datos: Dictionary) -> int:
+	var expansiones: Dictionary = datos.get("expansiones_extremos", {}) as Dictionary
+	if expansiones.is_empty():
+		return 0
+	var g_ext: Node = sw.get_node_or_null("ExtremosFlexibles")
+	if g_ext == null:
+		return 0
+	var aplicados: int = 0
+	for nombre: String in expansiones.keys():
+		var lead: FlexibleTrackLead = g_ext.get_node_or_null(nombre) as FlexibleTrackLead
+		if lead == null:
+			continue
+		lead.expansion_sobre_path = maxf(0.0, float(expansiones[nombre]))
+		aplicados += 1
+	return aplicados
+
+
 ## En la carga desde escena, completa con el journal los extremos que la escena no
 ## trae fijados a mano (la escena siempre gana si ya los tiene).
 func _aplicar_extremos_guardados_si_faltan() -> int:
@@ -1098,7 +1402,23 @@ func _aplicar_extremos_guardados_si_faltan() -> int:
 		var sw: BaseTurnout = aparatos_de_via.get(int(nid_str)) as BaseTurnout
 		if sw == null:
 			continue
-		total += _aplicar_extremos_guardados(sw, sw_dict[nid_str] as Dictionary)
+		var datos: Dictionary = sw_dict[nid_str] as Dictionary
+		if str(datos.get("tipo_aparato", "")) != sw.get_tipo_aparato():
+			continue
+		if not str(datos.get("via_comun_id", "")).is_empty() and str(datos.get("via_comun_id", "")) != sw.via_comun_id:
+			continue
+		var manuales_escena: Dictionary = {}
+		var grupo: Node = sw.get_node_or_null("ExtremosFlexibles")
+		if grupo != null:
+			for hijo: Node in grupo.get_children():
+				if hijo is FlexibleTrackLead and (hijo as FlexibleTrackLead).respetar_edicion_manual:
+					manuales_escena[String(hijo.name)] = true
+		var expansion_coincide: bool = is_equal_approx(float(datos.get("expansion_extremos_flexibles", sw.expansion_extremos_flexibles)), sw.expansion_extremos_flexibles)
+		total += _aplicar_extremos_guardados(sw, datos, true)
+		if datos.has("ajustes_extremos"):
+			total += _aplicar_ajustes_extremos_guardados(sw, datos, expansion_coincide, manuales_escena)
+		elif expansion_coincide:
+			total += _aplicar_expansiones_extremos_guardadas(sw, datos)
 	if total > 0:
 		print("TrackNetwork: %d extremos de switch restaurados desde el journal." % total)
 	return total
@@ -1151,6 +1471,7 @@ func _limpiar() -> void:
 	_switches_ordenados.clear()
 	_recortes_segmentos.clear()
 	_recortes_extra.clear()
+	_recortes_internos_switch.clear()
 	_conflictos_adaptacion_switch.clear()
 	_conexiones_switch_segmento.clear()
 	_segmentos_reemplazados_por_switch.clear()
@@ -1273,6 +1594,8 @@ func _recolectar_paths_recursivo(nodo: Node) -> void:
 					sid = ed.segment_id
 				if not ed.geometria_modificada.is_connected(_on_segmento_geometria_modificada):
 					ed.geometria_modificada.connect(_on_segmento_geometria_modificada)
+				if not ed.datos_modificados.is_connected(_on_segmento_datos_modificados):
+					ed.datos_modificados.connect(_on_segmento_datos_modificados)
 			paths[sid] = hijo as Path3D
 		elif hijo.get_child_count() > 0:
 			_recolectar_paths_recursivo(hijo)
@@ -1284,7 +1607,62 @@ func recolectar_switches_desde_arbol() -> void:
 	_switches_ordenados.clear()
 	if _contenedor_switches != null:
 		_recolectar_switches_recursivo(_contenedor_switches)
+	_eliminar_switches_duplicados()
 	#print("TrackNetwork: Sincronizados %d aparatos de vía desde el árbol de escena." % aparatos_de_via.size())
+
+
+## Dos IDs de junction pueden describir la misma terna de vías. Conservar los
+## dos aparatos superpone sus mallas y además los vuelve a preservar al regenerar.
+func _eliminar_switches_duplicados() -> void:
+	var por_vias: Dictionary = {}
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw == null or not is_instance_valid(sw):
+			continue
+		var firma: String = _firma_vias_switch(sw)
+		if firma.is_empty():
+			continue
+		var previo: BaseTurnout = por_vias.get(firma) as BaseTurnout
+		if previo == sw:
+			continue
+		if previo == null:
+			por_vias[firma] = sw
+		elif sw.expansion_extremos_flexibles > previo.expansion_extremos_flexibles:
+			_quitar_aparato_del_registro(previo)
+			por_vias[firma] = sw
+		else:
+			_quitar_aparato_del_registro(sw)
+
+
+func _firma_vias_switch(sw: BaseTurnout) -> String:
+	var ids: Array[String] = [sw.via_comun_id, sw.via_directa_id, sw.via_desviada_id]
+	var firma: String = _firma_segmentos_switch(ids)
+	if not firma.is_empty():
+		return firma
+	if sw.get_tipo_aparato() == "TIPO_C" and sw.has_meta("linea_a_segs") and sw.has_meta("linea_b_segs"):
+		ids.clear()
+		for sid_raw: Variant in (sw.get_meta("linea_a_segs") as Array):
+			ids.append(str(sid_raw))
+		for sid_raw: Variant in (sw.get_meta("linea_b_segs") as Array):
+			ids.append(str(sid_raw))
+		return _firma_segmentos_switch(ids)
+	return ""
+
+
+func _firma_segmentos_switch(ids: Array[String]) -> String:
+	if ids.size() < 3 or ids.size() > 4:
+		return ""
+	for sid: String in ids:
+		if sid.is_empty():
+			return ""
+	ids.sort()
+	for i: int in range(1, ids.size()):
+		if ids[i] == ids[i - 1]:
+			return ""
+	var firma: String = str(ids.size())
+	for sid: String in ids:
+		firma += ":" + sid
+	return firma
 
 
 func _recolectar_switches_recursivo(nodo: Node) -> void:
@@ -1293,8 +1671,9 @@ func _recolectar_switches_recursivo(nodo: Node) -> void:
 	for hijo: Node in nodo.get_children():
 		if hijo is BaseTurnout:
 			var sw: BaseTurnout = hijo as BaseTurnout
-			var nid: int = sw.node_id
-			if nid != 0:
+			for nid: int in sw.obtener_ids_uniones():
+				if nid == 0:
+					continue
 				aparatos_de_via[nid] = sw
 				if not _switches_ordenados.has(nid):
 					_switches_ordenados.append(nid)
@@ -1337,10 +1716,19 @@ func limpiar_switches() -> void:
 	aparatos_de_via.clear()
 	_switches_ordenados.clear()
 	_recortes_segmentos.clear()
+	_recortes_extra.clear()
+	_recortes_internos_switch.clear()
 	_conflictos_adaptacion_switch.clear()
 	_conexiones_switch_segmento.clear()
 	_segmentos_reemplazados_por_switch.clear()
 	_enclavamientos_crossover.clear()
+	_switches_editados_manualmente.clear()
+	# Limpiar significa descartar también las restauraciones de switches para
+	# que una generación posterior parta de una red de aparatos nueva.
+	_ediciones_guardadas.erase("_switches")
+	_switches_eliminados_persistentes.clear()
+	_sincronizar_lista_eliminados_en_ediciones()
+	_escribir_archivo_ediciones()
 	var geo: Node = get_node_or_null("GeometriaVias")
 	if geo != null and geo.has_method("construir_geometria"):
 		geo.call_deferred("construir_geometria")
@@ -1349,26 +1737,264 @@ func limpiar_switches() -> void:
 ## Genera switches exclusivamente adaptados sobre los tramos Path3D que existen en la escena.
 func generar_switches_desde_paths_existentes() -> void:
 	recolectar_paths_desde_arbol()
+	recolectar_switches_desde_arbol()
 	_asegurar_topologia_cargada()
+	# Primero se descarta la unión temporal de la pasada anterior: puede haber
+	# restaurado posiciones históricas en su junction de origen.
+	_limpiar_uniones_manuales_detectadas()
+	_actualizar_posiciones_junctions_desde_paths()
+	_detectar_uniones_manuales_entre_paths()
+	var preservar: Dictionary = _obtener_switches_a_conservar_al_regenerar()
 
-	if _contenedor_switches != null:
-		_limpiar_nodo_recursivo(_contenedor_switches)
-	aparatos_de_via.clear()
-	_switches_ordenados.clear()
-
-	_generar_aparatos_de_via()
+	_generar_aparatos_de_via(preservar)
 	# Se reponen las poses/estados guardados sólo de los aparatos que conservaron
 	# su tipo (si cambió, la pose vieja no tiene sentido).
-	_aplicar_switches_guardados()
+	_aplicar_switches_guardados(preservar)
 	_aplicar_bajas_switches_persistentes()
 	_reconstruir_conexiones_adaptativas()
 	habilitar_edicion_en_arbol()
+	_persistir_diccionario_switches()
+	_escribir_archivo_ediciones()
 
 	var geo: Node = get_node_or_null("GeometriaVias")
 	if geo != null and geo.has_method("construir_geometria"):
 		geo.call_deferred("construir_geometria")
 
 	print("TrackNetwork: Generados %d switches a partir de los %d tramos existentes." % [aparatos_de_via.size(), paths.size()])
+
+
+## El JSON conserva la topología, pero el usuario puede mover los extremos de
+## sus Path3D en el editor. Antes de generar, cada junction toma el centro de
+## sus extremos actuales para que ningún aparato nazca en su posición histórica.
+func _actualizar_posiciones_junctions_desde_paths() -> void:
+	for clave: Variant in junctions.keys():
+		var junction: Dictionary = junctions[clave] as Dictionary
+		var suma: Vector3 = Vector3.ZERO
+		var cantidad: int = 0
+		for conexion_raw: Variant in junction.get("segments", []):
+			if not (conexion_raw is Dictionary):
+				continue
+			var conexion: Dictionary = conexion_raw as Dictionary
+			var sid: String = str(conexion.get("segment_id", ""))
+			var via: Path3D = paths.get(sid) as Path3D
+			if via == null or via.curve == null or via.curve.point_count < 2:
+				continue
+			var extremo: String = str(conexion.get("end", "start"))
+			var indice: int = 0 if extremo == "start" else via.curve.point_count - 1
+			suma += to_local(via.to_global(via.curve.get_point_position(indice)))
+			cantidad += 1
+		if cantidad <= 0:
+			continue
+		var centro: Vector3 = suma / float(cantidad)
+		junction["position"] = {"x": centro.x, "y": centro.y, "z": centro.z}
+		junctions[clave] = junction
+
+
+## Recopila una vez cada instancia modificada. Los aparatos sin la marca se
+## pueden regenerar para incorporar Path3D nuevos; los editados se mantienen.
+func _obtener_switches_a_conservar_al_regenerar() -> Dictionary:
+	var preservar: Dictionary = {}
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw == null or preservar.has(sw.get_instance_id()):
+			continue
+		if sw.get_tipo_aparato() in ["TIPO_D", "TIPO_E"]:
+			continue
+		if _huellas_switches.has(sw.node_id) and int(_huellas_switches[sw.node_id]) != _huella_switch(sw):
+			sw.marcar_editado_para_regeneracion()
+		if _huellas_config_switches.has(sw.node_id) and int(_huellas_config_switches[sw.node_id]) != _huella_config_switch(sw):
+			sw.marcar_editado_para_regeneracion()
+		if sw.conservar_al_regenerar or _switches_editados_manualmente.has(sw.get_instance_id()):
+			preservar[sw.get_instance_id()] = sw
+	return preservar
+
+
+## Retira únicamente las instancias sin edición para que la detección vuelva a
+## crearlas con la topología actual. Los nodos contenedores se conservan porque
+## pueden alojar aparatos editados en otros sectores.
+func _eliminar_switches_no_preservados(preservar: Dictionary) -> void:
+	var a_eliminar: Array[BaseTurnout] = []
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw: BaseTurnout = sw_raw as BaseTurnout
+		if sw != null and not preservar.has(sw.get_instance_id()) and not a_eliminar.has(sw):
+			a_eliminar.append(sw)
+	for sw: BaseTurnout in a_eliminar:
+		_quitar_aparato_del_registro(sw)
+
+
+## Construye o amplía junctions temporales desde los extremos cercanos de los
+## Path3D. Una vía nueva puede terminar junto a una unión ya existente: en ese
+## caso se agrega como tercera rama de esa unión y se genera su switch.
+func _detectar_uniones_manuales_entre_paths() -> void:
+	_limpiar_uniones_manuales_detectadas()
+	if paths.size() < 3:
+		return
+	var extremos: Array[Dictionary] = []
+	for sid: String in paths.keys():
+		var via: Path3D = paths[sid] as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		for extremo in ["start", "end"]:
+			var indice: int = 0 if extremo == "start" else via.curve.point_count - 1
+			extremos.append({
+				"segment_id": sid,
+				"end": extremo,
+				"posicion": via.to_global(via.curve.get_point_position(indice))
+			})
+	var grupos: Array[Array] = _agrupar_extremos_cercanos(extremos)
+	var siguiente_id: int = 2100000000
+	for grupo_raw: Array in grupos:
+		var grupo: Array[Dictionary] = []
+		var ids_vistos: Dictionary = {}
+		for conexion_raw: Variant in grupo_raw:
+			var conexion: Dictionary = conexion_raw as Dictionary
+			var sid: String = str(conexion["segment_id"])
+			if ids_vistos.has(sid):
+				continue
+			ids_vistos[sid] = true
+			grupo.append(conexion)
+		# Un switch necesita al menos tres ramas. No se reasignan pares aislados:
+		# podrían ser los dos extremos de una vía y cortar una junction existente.
+		if grupo.size() < 3:
+			continue
+
+		var claves_grupo: Dictionary = {}
+		for conexion: Dictionary in grupo:
+			claves_grupo["%s|%s" % [str(conexion["segment_id"]), str(conexion["end"])]] = true
+
+		var junctions_existentes: Dictionary = {}
+		for conexion: Dictionary in grupo:
+			var jid_existente: int = _obtener_junction_de_extremo(str(conexion["segment_id"]), str(conexion["end"]))
+			if jid_existente != 0:
+				junctions_existentes[jid_existente] = true
+		var id_union: int = 0
+		var reutilizar_junction: bool = false
+		if junctions_existentes.size() == 1:
+			var posible_id: int = int(junctions_existentes.keys()[0])
+			var conexiones_existentes: Array = (junctions.get(str(posible_id), {}) as Dictionary).get("segments", []) as Array
+			var claves_existentes: Dictionary = {}
+			for existente_raw: Variant in conexiones_existentes:
+				if existente_raw is Dictionary:
+					var existente: Dictionary = existente_raw as Dictionary
+					claves_existentes["%s|%s" % [str(existente.get("segment_id", "")), str(existente.get("end", ""))]] = true
+			if claves_existentes.size() == claves_grupo.size():
+				reutilizar_junction = true
+				for clave_grupo: String in claves_grupo.keys():
+					if not claves_existentes.has(clave_grupo):
+						reutilizar_junction = false
+						break
+
+		if reutilizar_junction:
+			id_union = int(junctions_existentes.keys()[0])
+			var clave_reutilizada: String = str(id_union)
+			if not _junctions_previas_uniones_manuales.has(clave_reutilizada):
+				_junctions_previas_uniones_manuales[clave_reutilizada] = (junctions[clave_reutilizada] as Dictionary).duplicate(true)
+		else:
+			while junctions.has(str(siguiente_id)):
+				siguiente_id -= 1
+			id_union = siguiente_id
+			siguiente_id -= 1
+			# Unir extremos de junctions viejos no debe arrastrar sus otras ramas:
+			# se retiran sólo los extremos que el usuario acercó y se conserva el
+			# resto de cada junction original para que se regenere por separado.
+			for jid_raw: Variant in junctions_existentes.keys():
+				var jid: int = int(jid_raw)
+				var clave_jid: String = str(jid)
+				var junction_previa: Dictionary = junctions[clave_jid] as Dictionary
+				if not _junctions_previas_uniones_manuales.has(clave_jid):
+					_junctions_previas_uniones_manuales[clave_jid] = junction_previa.duplicate(true)
+				var restantes: Array[Dictionary] = []
+				for existente_raw: Variant in junction_previa.get("segments", []):
+					if not (existente_raw is Dictionary):
+						continue
+					var existente: Dictionary = existente_raw as Dictionary
+					var clave_existente: String = "%s|%s" % [str(existente.get("segment_id", "")), str(existente.get("end", ""))]
+					if not claves_grupo.has(clave_existente):
+						restantes.append(existente.duplicate(true))
+				junction_previa["segments"] = restantes
+				junctions[clave_jid] = junction_previa
+
+		var promedio: Vector3 = Vector3.ZERO
+		for conexion: Dictionary in grupo:
+			promedio += conexion["posicion"] as Vector3
+		promedio /= float(grupo.size())
+		junctions[str(id_union)] = {
+			"id": id_union,
+			"position": {"x": to_local(promedio).x, "y": to_local(promedio).y, "z": to_local(promedio).z},
+			"segments": grupo,
+			"_editor_detectada": true
+		}
+		for conexion: Dictionary in grupo:
+			_asignar_extremo_a_union_temporal(str(conexion["segment_id"]), str(conexion["end"]), id_union)
+
+
+## Agrupa extremos por conectividad espacial, no sólo por su distancia al primer
+## extremo. Así tres extremos encadenados dentro de la tolerancia siguen siendo
+## una sola unión aunque el primero y el último estén más alejados entre sí.
+func _agrupar_extremos_cercanos(extremos: Array[Dictionary]) -> Array[Array]:
+	var usados: Dictionary = {}
+	var grupos: Array[Array] = []
+	for i in extremos.size():
+		if usados.has(i):
+			continue
+		var pendientes: Array[int] = [i]
+		var grupo: Array = []
+		usados[i] = true
+		while not pendientes.is_empty():
+			var actual: int = pendientes.pop_front()
+			grupo.append(extremos[actual])
+			var pos_actual: Vector3 = extremos[actual]["posicion"] as Vector3
+			for j in extremos.size():
+				if usados.has(j):
+					continue
+				if pos_actual.distance_to(extremos[j]["posicion"] as Vector3) <= tolerancia_union_manual:
+					usados[j] = true
+					pendientes.append(j)
+		grupos.append(grupo)
+	return grupos
+
+
+func _asignar_extremo_a_union_temporal(sid: String, extremo: String, id_union: int) -> void:
+	if not _datos_segmentos_previos_uniones_manuales.has(sid):
+		_datos_segmentos_previos_uniones_manuales[sid] = segments_data.get(sid, null)
+	var datos: Dictionary = (segments_data.get(sid, {"id": sid}) as Dictionary).duplicate(true)
+	if extremo == "start":
+		datos["node_start"] = id_union
+	else:
+		datos["node_end"] = id_union
+	segments_data[sid] = datos
+
+
+func _limpiar_uniones_manuales_detectadas() -> void:
+	for clave: Variant in junctions.keys():
+		var juncion: Dictionary = junctions[clave] as Dictionary
+		if bool(juncion.get("_editor_detectada", false)):
+			junctions.erase(clave)
+	for sid: String in _datos_segmentos_previos_uniones_manuales.keys():
+		var previo: Variant = _datos_segmentos_previos_uniones_manuales[sid]
+		if previo == null:
+			segments_data.erase(sid)
+		else:
+			segments_data[sid] = (previo as Dictionary).duplicate(true)
+	_datos_segmentos_previos_uniones_manuales.clear()
+	for clave: String in _junctions_previas_uniones_manuales.keys():
+		junctions[clave] = (_junctions_previas_uniones_manuales[clave] as Dictionary).duplicate(true)
+	_junctions_previas_uniones_manuales.clear()
+
+
+func _extremo_tiene_union_topologica(seg_id: String, extremo: String) -> bool:
+	return _obtener_junction_de_extremo(seg_id, extremo) != 0
+
+
+func _obtener_junction_de_extremo(seg_id: String, extremo: String) -> int:
+	for clave: Variant in junctions.keys():
+		var juncion: Dictionary = junctions[clave] as Dictionary
+		for conexion_raw: Variant in juncion.get("segments", []):
+			if conexion_raw is Dictionary:
+				var conexion: Dictionary = conexion_raw as Dictionary
+				if str(conexion.get("segment_id", "")) == seg_id and str(conexion.get("end", "")) == extremo:
+					return int(clave)
+	return 0
 
 
 ## Elimina permanentemente un tramo de vía de la red, su modelo 3D y switches huérfanos.
@@ -1601,15 +2227,16 @@ func _instanciar_switch_tipo_e() -> ProceduralScissorsCrossover:
 
 
 ## Obtiene la posición 3D global y la dirección tangencial hacia afuera del tramo en el punto de recorte.
-## Devuelve la curva COMPLETA de un tramo (la original, sin el recorte automático):
-## todo el análisis de uniones y distancias se calcula contra ella (idempotencia).
+## Devuelve la curva completa y vigente de un tramo. El recorte de un switch no
+## modifica nunca este recurso: sólo limita el rango que TrackGeometry dibuja.
+##
+## No se debe usar `curva_original` aquí. Esa curva es la referencia para los
+## botones de edición de EditableTrackSegment y puede quedar atrás de los ajustes
+## de extremo aplicados en el Inspector. Si el flexible se ancla allí y la malla
+## se extruye desde `p.curve`, ambos extremos quedan separados visualmente.
 func _curva_completa_de_path(p: Path3D) -> Curve3D:
 	if p == null:
 		return null
-	if p is EditableTrackSegment:
-		var e: EditableTrackSegment = p as EditableTrackSegment
-		if e.curva_original != null and e.curva_original.point_count >= 2:
-			return e.curva_original
 	return p.curve
 
 
@@ -1840,6 +2467,8 @@ func cargar_red() -> void:
 			var segmento_editable: EditableTrackSegment = path as EditableTrackSegment
 			if not segmento_editable.geometria_modificada.is_connected(_on_segmento_geometria_modificada):
 				segmento_editable.geometria_modificada.connect(_on_segmento_geometria_modificada)
+			if not segmento_editable.datos_modificados.is_connected(_on_segmento_datos_modificados):
+				segmento_editable.datos_modificados.connect(_on_segmento_datos_modificados)
 
 	total_vias_editadas = _contar_ediciones_reales()
 
@@ -2053,23 +2682,36 @@ func _detectar_segmento_desviado_union(j_id: int) -> String:
 ## Instancia y calibra geométricamente los aparatos de vía (Tipos A, B, C, D, E) detectando
 ## la vía común, vía directa y vía desviada real, con su lado y ángulo de divergencia,
 ## organizándolos según el sector y tramo de vías al que pertenecen.
-func _generar_aparatos_de_via() -> void:
+func _generar_aparatos_de_via(preservar: Dictionary = {}) -> void:
 	_asegurar_topologia_cargada()
-	if _contenedor_switches != null:
-		_limpiar_nodo_recursivo(_contenedor_switches)
-	aparatos_de_via.clear()
-	_switches_ordenados.clear()
+	if preservar.is_empty():
+		if _contenedor_switches != null:
+			_limpiar_nodo_recursivo(_contenedor_switches)
+		aparatos_de_via.clear()
+		_switches_ordenados.clear()
+	else:
+		_eliminar_switches_no_preservados(preservar)
 	_recortes_segmentos.clear()
 	_enclavamientos_crossover.clear()
 	var root_owner: Node = _obtener_root_owner()
 	var procesados_set: Dictionary = {}
+	var firmas_procesadas: Dictionary = {}
+	for sw_raw: Variant in preservar.values():
+		var sw_preservado: BaseTurnout = sw_raw as BaseTurnout
+		if sw_preservado == null:
+			continue
+		for nid_preservado: int in sw_preservado.obtener_ids_uniones():
+			procesados_set[nid_preservado] = true
+		var firma_preservada: String = _firma_vias_switch(sw_preservado)
+		if not firma_preservada.is_empty():
+			firmas_procesadas[firma_preservada] = true
 
 	# -------------------------------------------------------------------------
 	# 1. PRE-ANÁLISIS TOPOLÓGICO: Tijeras (Tipo E) y Crossovers (Tipo D)
 	# -------------------------------------------------------------------------
-	var scissors_4way_set: Dictionary = {}    # 4way_jid (int) -> Array[int] (turnouts vinculados)
+	var scissors_4way_set: Dictionary = {} # 4way_jid (int) -> Array[int] (turnouts vinculados)
 	var scissors_turnout_set: Dictionary = {} # turnout_jid (int) -> 4way_jid (int)
-	var crossover_pair_map: Dictionary = {}   # turnout_jid (int) -> Array [partner_jid (int), diag_sid (String)]
+	var crossover_pair_map: Dictionary = {} # turnout_jid (int) -> Array [partner_jid (int), diag_sid (String)]
 
 	# A) Detectar centros de Scissors Crossover (Tijeras en X / Bretelle):
 	# Un centro 4-way cuyas 4 ramas conectan a la vía desviada de 4 desvíos distintos
@@ -2124,6 +2766,12 @@ func _generar_aparatos_de_via() -> void:
 				crossover_pair_map[n_e] = [n_s, seg_id]
 				_enclavamientos_crossover[n_s] = n_e
 				_enclavamientos_crossover[n_e] = n_s
+
+	# Los compuestos D/E están deshabilitados por ahora. Sus junctions quedan
+	# libres para que las etapas siguientes creen cruces C y desvíos A/B.
+	if not GENERAR_SWITCHES_COMPUESTOS_D_E:
+		scissors_4way_set.clear()
+		crossover_pair_map.clear()
 
 	# =========================================================================
 	# ETAPA 1: TIJERAS / BRETELLES EN X (TIPO E)
@@ -2234,9 +2882,9 @@ func _generar_aparatos_de_via() -> void:
 		to_e.construir_geometria()
 
 		# Reajustar bornes fijos a las dimensiones reales del aparato
-		var x1_e: float = -dist_ejes * 0.5
+		var x1_e: float = - dist_ejes * 0.5
 		var x2_e: float = dist_ejes * 0.5
-		var z_in_e: float = -largo_crossover_e * 0.5
+		var z_in_e: float = - largo_crossover_e * 0.5
 		var z_out_e: float = largo_crossover_e * 0.5
 		var g_ext_e: Node = to_e.get_node_or_null("ExtremosFlexibles")
 		if g_ext_e != null:
@@ -2348,7 +2996,7 @@ func _generar_aparatos_de_via() -> void:
 			var dir_2d: Vector2 = (v1 - v0).normalized()
 			var v_diag: Vector2 = Vector2(pos2.x - pos1.x, pos2.z - pos1.z)
 			if dir_2d.dot(v_diag) < 0.0:
-				dir_2d = -dir_2d
+				dir_2d = - dir_2d
 			fwd_sw = Vector3(dir_2d.x, 0.0, dir_2d.y).normalized()
 		else:
 			var dz_test: Vector3 = (pos2 - pos1)
@@ -2375,6 +3023,7 @@ func _generar_aparatos_de_via() -> void:
 		var to_d: ProceduralCrossover = _instanciar_switch_tipo_d()
 		to_d.name = "Escape_Crossover_D_%d_%d" % [j1_int, j2_int]
 		to_d.node_id = j1_int
+		to_d.node_id_secundario = j2_int
 		to_d.transform = trans_sw
 		to_d.distancia_ejes = dist_ejes
 		to_d.largo_crossover = largo_crossover_d
@@ -2384,9 +3033,9 @@ func _generar_aparatos_de_via() -> void:
 		to_d.construir_geometria()
 
 		# Reajustar bornes fijos a las dimensiones reales del crossover
-		var x1_d: float = -dist_ejes * 0.5
+		var x1_d: float = - dist_ejes * 0.5
 		var x2_d: float = dist_ejes * 0.5
-		var z_in_d: float = -largo_crossover_d * 0.5
+		var z_in_d: float = - largo_crossover_d * 0.5
 		var z_out_d: float = largo_crossover_d * 0.5
 		var g_ext_d: Node = to_d.get_node_or_null("ExtremosFlexibles")
 		if g_ext_d != null:
@@ -2486,6 +3135,12 @@ func _generar_aparatos_de_via() -> void:
 
 		if datos_conns.size() < 4:
 			continue
+		var ids_cruce: Array[String] = []
+		for i: int in 4:
+			ids_cruce.append(str(datos_conns[i]["segment_id"]))
+		var firma_cruce: String = _firma_segmentos_switch(ids_cruce)
+		if not firma_cruce.is_empty() and firmas_procesadas.has(firma_cruce):
+			continue
 
 		var sum_pos: Vector3 = Vector3.ZERO
 		for d_c: Dictionary in datos_conns:
@@ -2526,7 +3181,7 @@ func _generar_aparatos_de_via() -> void:
 		var v_b1: Vector2 = datos_conns[pair2[1]]["vector"] as Vector2
 		var dir_b_2d: Vector2 = (v_b1 - v_b0).normalized()
 		if dir_b_2d.dot(dir_a_2d) < 0.0:
-			dir_b_2d = -dir_b_2d
+			dir_b_2d = - dir_b_2d
 		var c_b_in: Dictionary = datos_conns[pair2[0]] if v_b0.dot(dir_b_2d) < 0.0 else datos_conns[pair2[1]]
 		var c_b_out: Dictionary = datos_conns[pair2[1]] if v_b0.dot(dir_b_2d) < 0.0 else datos_conns[pair2[0]]
 
@@ -2567,7 +3222,7 @@ func _generar_aparatos_de_via() -> void:
 		var conns_info: Array[Dictionary] = [
 			{"conn": c_a_in, "lead": "Extremo_Via_A_Entrada", "fwd_def": Vector3.BACK},
 			{"conn": c_a_out, "lead": "Extremo_Via_A_Salida", "fwd_def": Vector3.FORWARD},
-			{"conn": c_b_in, "lead": "Extremo_Via_B_Entrada", "fwd_def": -dir_b_loc},
+			{"conn": c_b_in, "lead": "Extremo_Via_B_Entrada", "fwd_def": - dir_b_loc},
 			{"conn": c_b_out, "lead": "Extremo_Via_B_Salida", "fwd_def": dir_b_loc}
 		]
 		for c_item: Dictionary in conns_info:
@@ -2598,6 +3253,8 @@ func _generar_aparatos_de_via() -> void:
 
 		_registrar_switch_en_escena(to_c, j_id_int, sector_tramo, root_owner)
 		procesados_set[j_id_int] = true
+		if not firma_cruce.is_empty():
+			firmas_procesadas[firma_cruce] = true
 
 	# =========================================================================
 	# ETAPA 4: DESVÍOS INDIVIDUALES SIMPLES Y SIMÉTRICOS (TIPO A Y TIPO B)
@@ -2654,6 +3311,10 @@ func _generar_aparatos_de_via() -> void:
 		var stem_id: String = str(stem_conn["segment_id"])
 		var tr_dir: String = str(dir_conn["segment_id"])
 		var tr_desv: String = str(desv_conn["segment_id"])
+		var ids_desvio: Array[String] = [stem_id, tr_dir, tr_desv]
+		var firma_desvio: String = _firma_segmentos_switch(ids_desvio)
+		if not firma_desvio.is_empty() and firmas_procesadas.has(firma_desvio):
+			continue
 
 		var p_stem: Path3D = paths.get(stem_id) as Path3D
 		var p_dir: Path3D = paths.get(tr_dir) as Path3D
@@ -2678,7 +3339,7 @@ func _generar_aparatos_de_via() -> void:
 		var l_desv: float = p_desv.curve.get_baked_length()
 		var l_stem: float = p_stem.curve.get_baked_length()
 
-		var fwd_stem_2d: Vector2 = -(stem_conn["vector"] as Vector2)
+		var fwd_stem_2d: Vector2 = - (stem_conn["vector"] as Vector2)
 		var fwd_sw_3d: Vector3 = Vector3(fwd_stem_2d.x, 0.0, fwd_stem_2d.y).normalized()
 		if fwd_sw_3d.is_zero_approx():
 			fwd_sw_3d = Vector3.FORWARD
@@ -2853,6 +3514,8 @@ func _generar_aparatos_de_via() -> void:
 
 		_registrar_switch_en_escena(ap_single, j_id_int, sector_tramo, root_owner)
 		procesados_set[j_id_int] = true
+		if not firma_desvio.is_empty():
+			firmas_procesadas[firma_desvio] = true
 
 	_reconstruir_conexiones_adaptativas()
 
@@ -2899,7 +3562,8 @@ func _registrar_switch_en_escena(sw: BaseTurnout, node_id: int, sector_tramo: Ar
 		contenedor_destino.remove_child(nodo_existente)
 		nodo_existente.free()
 	contenedor_destino.add_child(sw)
-	aparatos_de_via[node_id] = sw
+	for nid: int in sw.obtener_ids_uniones():
+		aparatos_de_via[nid] = sw
 
 	if root_owner != null:
 		sw.owner = root_owner
@@ -2914,6 +3578,7 @@ func _reconstruir_conexiones_adaptativas() -> void:
 	_encajar_extremos_a_uniones()
 	_recortes_segmentos.clear()
 	_recortes_extra.clear()
+	_recortes_internos_switch.clear()
 	_conflictos_adaptacion_switch.clear()
 	_segmentos_reemplazados_por_switch.clear()
 
@@ -2937,6 +3602,9 @@ func _reconstruir_conexiones_adaptativas() -> void:
 				ids.append(int(v))
 		if not ids.has(nid):
 			ids.append(nid)
+		for nid_propio: int in sw.obtener_ids_uniones():
+			if nid_propio != 0 and not ids.has(nid_propio):
+				ids.append(nid_propio)
 		junctions_por_aparato[instance_id] = ids
 
 	for instance_id: int in aparatos_unicos.keys():
@@ -2947,6 +3615,12 @@ func _reconstruir_conexiones_adaptativas() -> void:
 		_reconstruir_aparato(sw, jids)
 
 	_conexiones_switch_segmento.erase("_en_proceso")
+	# Los recortes de cada Path3D pueden cambiar al alargar un extremo flexible.
+	# La malla de vías se calcula aparte, por lo que debe regenerarse después de
+	# actualizar los leads para reflejar ese nuevo punto de encuentro.
+	var geo: Node = get_node_or_null("GeometriaVias")
+	if geo != null and geo.has_method("construir_geometria"):
+		geo.call_deferred("construir_geometria")
 	if debug_tiempos:
 		print("TrackNetwork[t]: reconexión completa en %d ms (%d aparatos)" % [
 			Time.get_ticks_msec() - t_debug, aparatos_unicos.size()
@@ -2960,7 +3634,7 @@ func _reconstruir_aparato(sw: BaseTurnout, junction_ids: Array[int]) -> void:
 	if sw == null:
 		return
 	# 1. Mapeo a escala real: el aparato copia la geometría real de las vías.
-	if recalibrar_aparatos_con_via_real:
+	if recalibrar_aparatos_con_via_real and not sw.conservar_al_regenerar:
 		_reubicar_aparato_sobre_via_real(sw)
 	# 2. Metadata de líneas para cruces/tijeras: sin esto, el tren elegía rama al azar.
 	_asegurar_metadata_lineas(sw)
@@ -2984,6 +3658,20 @@ func _reconstruir_aparato(sw: BaseTurnout, junction_ids: Array[int]) -> void:
 				# Los segmentos externos conservan su tramo útil fuera del corte.
 				_segmentos_reemplazados_por_switch[sid] = true
 				_recortes_segmentos[sid] = Vector2.ZERO
+
+	# Un crossover tipo D tiene cuatro puertos físicos. El selector genérico
+	# puede empatar dos puertos paralelos y dejar los otros dos con su longitud
+	# automática; se usa su topología de entrada/salida para anclar cada rama a
+	# su extremo inequívoco.
+	if sw is ProceduralCrossover:
+		_reconstruir_extremos_crossover_tipo_d(sw as ProceduralCrossover, junction_ids, junction_set)
+		return
+	# El cruce diamante tipo C también tiene cuatro puertos físicos. Asignarlos
+	# por proximidad deja dos extremos sin rama cuando las dos vías se cruzan,
+	# por lo que se resuelven de forma explícita como en el tipo D.
+	if sw is ProceduralCrossing:
+		_reconstruir_extremos_cruce_tipo_c(sw as ProceduralCrossing, junction_ids, junction_set)
+		return
 
 	var leads_usados: Dictionary = {}
 	for jid: int in junction_ids:
@@ -3010,11 +3698,433 @@ func _reconstruir_aparato(sw: BaseTurnout, junction_ids: Array[int]) -> void:
 				_registrar_recorte_en_extremo_manual(lead, p_seg, sid, end_tipo)
 				continue
 			var distancia_corte: float = _calcular_distancia_adaptativa(p_seg, end_tipo, lead)
-			_registrar_recorte_segmento(sid, end_tipo, distancia_corte)
 			if lead == null:
+				_registrar_recorte_segmento(sid, end_tipo, distancia_corte)
 				continue
 			leads_usados[lead.get_instance_id()] = true
-			_conectar_lead_a_segmento(sw, lead, p_seg, sid, end_tipo, jid, distancia_corte)
+			# El recorte de la malla debe llegar exactamente al extremo exterior
+			# del flexible. La conexión puede ajustar la distancia para que la
+			# transición sea válida; usar el valor anterior dejaba vía plena debajo
+			# del flexible y ambos modelos se superponían.
+			var distancia_final: float = _conectar_lead_a_segmento(sw, lead, p_seg, sid, end_tipo, jid, distancia_corte)
+			_registrar_recorte_segmento(sid, end_tipo, distancia_final)
+
+
+## Reancla los cuatro extremos de un crossover en H sin depender de una
+## comparación de distancias entre puertos paralelos. Cada unión aporta la vía
+## izquierda/derecha y su sentido; con eso se obtiene un único lead de entrada
+## o salida de Vía 1/Vía 2.
+func _reconstruir_extremos_crossover_tipo_d(sw: ProceduralCrossover, junction_ids: Array[int], junction_set: Dictionary) -> void:
+	if sw == null:
+		return
+	var g_ext: Node = sw.get_node_or_null("ExtremosFlexibles")
+	if g_ext == null:
+		return
+	# Cada unión tiene dos ramas exteriores: una hacia -Z y otra hacia +Z.
+	# La posición transversal de la unión identifica la vía. Esta topología
+	# prevalece sobre la proximidad al borne, ya que los aparatos conservados
+	# pueden tener una separación lateral mayor que su distancia_ejes nominal.
+	var candidatos: Array[Dictionary] = _candidatos_crossover_tipo_d(sw, junction_ids, junction_set)
+	var parejas: Array[Dictionary] = []
+	for hijo: Node in g_ext.get_children():
+		if not (hijo is FlexibleTrackLead):
+			continue
+		var lead: FlexibleTrackLead = hijo as FlexibleTrackLead
+		var borne: Vector3 = lead.global_transform * lead.punto_inicio
+		var direccion: Vector3 = (lead.global_transform.basis * lead.direccion_inicio).normalized()
+		for candidato: Dictionary in candidatos:
+			var pos: Vector3 = candidato["pos"] as Vector3
+			var salida: Vector3 = candidato["salida"] as Vector3
+			var alineacion: float = direccion.dot(salida)
+			var lateral: float = (pos - borne).cross(direccion).length()
+			var avance: float = (pos - borne).dot(direccion)
+			var topologica: bool = bool(candidato["topologica"])
+			if topologica:
+				var local: Vector3 = sw.to_local(pos) - sw.posicion_centro
+				var salida_local: Vector3 = sw.global_transform.basis.inverse() * salida
+				var via_1: bool = local.x < 0.0
+				var entrada: bool = salida_local.z < 0.0
+				var nombre_puerto: String = "Extremo_Via_%d_%s" % [1 if via_1 else 2, "Entrada" if entrada else "Salida"]
+				if String(lead.name) != nombre_puerto:
+					continue
+			else:
+				# Sólo las conexiones de rescate dependen de tolerancias espaciales.
+				if alineacion < 0.35 or lateral > maxf(3.0, sw.distancia_ejes * 0.65):
+					continue
+				if avance < -sw.largo_crossover * 0.75:
+					continue
+			var puntaje: float = lateral * 12.0 + absf(avance) * 0.08 + (1.0 - alineacion) * 35.0
+			parejas.append({"lead": lead, "candidato": candidato, "puntaje": puntaje, "topologica": topologica})
+	parejas.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if bool(a["topologica"]) != bool(b["topologica"]):
+			return bool(a["topologica"])
+		return float(a["puntaje"]) < float(b["puntaje"]))
+	var leads_usados: Dictionary = {}
+	var conexiones_usadas: Dictionary = {}
+	for pareja: Dictionary in parejas:
+		var lead: FlexibleTrackLead = pareja["lead"] as FlexibleTrackLead
+		var candidato: Dictionary = pareja["candidato"] as Dictionary
+		var clave: String = str(candidato["clave"])
+		if leads_usados.has(lead.get_instance_id()) or conexiones_usadas.has(clave):
+			continue
+		var sid: String = str(candidato["sid"])
+		var extremo: String = str(candidato["extremo"])
+		var continuidad: Dictionary = _resolver_continuacion_crossover_d(sw, lead, sid, extremo)
+		if continuidad.is_empty():
+			continue
+		for sid_absorbido_raw: Variant in continuidad["absorbidos"]:
+			var sid_absorbido: String = str(sid_absorbido_raw)
+			_segmentos_reemplazados_por_switch[sid_absorbido] = true
+			_recortes_segmentos[sid_absorbido] = Vector2.ZERO
+			_recortes_extra.erase(sid_absorbido)
+		sid = str(continuidad["sid"])
+		extremo = str(continuidad["extremo"])
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null:
+			continue
+		if lead.respetar_edicion_manual:
+			_registrar_recorte_en_extremo_manual(lead, via, sid, extremo)
+		else:
+			var distancia: float = _calcular_distancia_adaptativa(via, extremo, lead)
+			var distancia_final: float = _conectar_lead_a_segmento(sw, lead, via, sid, extremo, int(candidato["jid"]), distancia)
+			_registrar_recorte_segmento(sid, extremo, distancia_final)
+		leads_usados[lead.get_instance_id()] = true
+		conexiones_usadas[clave] = true
+		conexiones_usadas["%s:%s" % [sid, extremo]] = true
+	_recortar_vias_bajo_crossover_d(sw)
+
+
+## Incluye las conexiones topológicas y los extremos de vía próximos al cuerpo.
+## Estos últimos recuperan aparatos D antiguos cuya segunda unión no quedó en
+## el JSON, sin buscar una vía distante en cualquier punto del mapa.
+func _candidatos_crossover_tipo_d(sw: ProceduralCrossover, junction_ids: Array[int], junction_set: Dictionary) -> Array[Dictionary]:
+	var resultado: Array[Dictionary] = []
+	var claves_topologicas: Dictionary = {}
+	for jid: int in junction_ids:
+		var j_dict: Dictionary = junctions.get(str(jid), {}) as Dictionary
+		for c_raw: Variant in j_dict.get("segments", []):
+			if c_raw is Dictionary:
+				var c: Dictionary = c_raw as Dictionary
+				claves_topologicas["%s:%s" % [str(c.get("segment_id", "")), str(c.get("end", ""))]] = jid
+	var inv_sw: Transform3D = sw.global_transform.affine_inverse()
+	for sid: String in paths.keys():
+		if _segmento_interno_de_aparato(sid, junction_set):
+			continue
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		for extremo: String in ["start", "end"]:
+			var clave: String = "%s:%s" % [sid, extremo]
+			var pos: Vector3 = _obtener_posicion_extremo_segmento_global(via, extremo)
+			var local: Vector3 = inv_sw * pos
+			var topologica: bool = claves_topologicas.has(clave)
+			if not topologica and (absf(local.x - sw.posicion_centro.x) > sw.distancia_ejes + 4.0 or absf(local.z - sw.posicion_centro.z) > sw.largo_crossover * 0.75 + 20.0):
+				continue
+			resultado.append({
+				"clave": clave, "sid": sid, "extremo": extremo, "pos": pos,
+				"salida": _direccion_real_segmento_extremo(sid, extremo),
+				"jid": int(claves_topologicas.get(clave, sw.node_id)),
+				"topologica": topologica
+			})
+	return resultado
+
+
+func _crossover_d_cerca_de_segmentos(sw: ProceduralCrossover, seg_ids: Array[String]) -> bool:
+	var inv_sw: Transform3D = sw.global_transform.affine_inverse()
+	for sid: String in seg_ids:
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		for extremo: String in ["start", "end"]:
+			var local: Vector3 = inv_sw * _obtener_posicion_extremo_segmento_global(via, extremo)
+			if absf(local.x - sw.posicion_centro.x) <= sw.distancia_ejes + 4.0 and absf(local.z - sw.posicion_centro.z) <= sw.largo_crossover * 0.75 + 20.0:
+				return true
+	return false
+
+
+## Sigue una vía corta a través de uniones continuas hasta hallar un Path3D
+## cuyo punto de recorte quede realmente delante del borne. El flexible ocupa
+## los tramos intermedios completos; dejarlos dibujados producía el solapamiento
+## de dos de los cuatro puertos D.
+func _resolver_continuacion_crossover_d(sw: ProceduralCrossover, lead: FlexibleTrackLead, sid_inicial: String, extremo_inicial: String) -> Dictionary:
+	var sid: String = sid_inicial
+	var extremo: String = extremo_inicial
+	var absorbidos: Array[String] = []
+	var visitados: Dictionary = {}
+	var dir_lead: Vector3 = (lead.global_transform.basis * lead.direccion_inicio).normalized()
+	for _paso: int in 8:
+		if visitados.has(sid):
+			break
+		visitados[sid] = true
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			break
+		var distancia: float = _calcular_distancia_adaptativa(via, extremo, lead)
+		var distancia_final: float = _ajustar_distancia_para_transicion_valida(lead, via, extremo, distancia)
+		var punto: Dictionary = _obtener_punto_recorte_segmento(via, extremo, distancia_final)
+		if _avance_local_de_punto(lead, punto["pos"] as Vector3) >= LONGITUD_MINIMA_TRANSICION:
+			return {"sid": sid, "extremo": extremo, "absorbidos": absorbidos}
+		var datos: Dictionary = segments_data.get(sid, {}) as Dictionary
+		var jid_siguiente: int = int(datos.get("node_end", 0)) if extremo == "start" else int(datos.get("node_start", 0))
+		if jid_siguiente == 0:
+			break
+		var extremo_opuesto: String = _extremo_opuesto(extremo)
+		var pos_union: Vector3 = _obtener_posicion_extremo_segmento_global(via, extremo_opuesto)
+		var dir_continuidad: Vector3 = -_direccion_real_segmento_extremo(sid, extremo_opuesto)
+		var mejor_sid: String = ""
+		var mejor_extremo: String = ""
+		var mejor_puntaje: float = -INF
+		var j_dict: Dictionary = junctions.get(str(jid_siguiente), {}) as Dictionary
+		for c_raw: Variant in j_dict.get("segments", []):
+			if not (c_raw is Dictionary):
+				continue
+			var c: Dictionary = c_raw as Dictionary
+			var sid_vecino: String = str(c.get("segment_id", ""))
+			var extremo_vecino: String = str(c.get("end", "start"))
+			if sid_vecino == sid or visitados.has(sid_vecino):
+				continue
+			var via_vecina: Path3D = paths.get(sid_vecino) as Path3D
+			if via_vecina == null or via_vecina.curve == null or via_vecina.curve.point_count < 2:
+				continue
+			var pos_vecina: Vector3 = _obtener_posicion_extremo_segmento_global(via_vecina, extremo_vecino)
+			if pos_vecina.distance_to(pos_union) > 5.0:
+				continue
+			var salida: Vector3 = _direccion_real_segmento_extremo(sid_vecino, extremo_vecino)
+			var continuidad: float = dir_continuidad.dot(salida)
+			var alineacion: float = dir_lead.dot(salida)
+			if continuidad < 0.5 or alineacion < 0.35:
+				continue
+			var puntaje: float = continuidad + alineacion - pos_vecina.distance_to(pos_union) * 0.1
+			if puntaje > mejor_puntaje:
+				mejor_puntaje = puntaje
+				mejor_sid = sid_vecino
+				mejor_extremo = extremo_vecino
+		if mejor_sid.is_empty():
+			break
+		absorbidos.append(sid)
+		sid = mejor_sid
+		extremo = mejor_extremo
+	return {}
+
+
+## El recorte por extremo no cubre un Path3D que cruza el cuerpo del D sin
+## terminar en sus junctions. Se excluye sólo el intervalo interior y se dejan
+## visibles las secciones de vía a ambos lados.
+func _recortar_vias_bajo_crossover_d(sw: ProceduralCrossover) -> void:
+	var vias_de_puertos: Dictionary = _vias_de_puertos_crossover_d(sw)
+	for sid: String in paths.keys():
+		if vias_de_puertos.has(sid) or _segmentos_reemplazados_por_switch.has(sid):
+			continue
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		_registrar_recorte_interno_switch(sid, _intervalo_via_bajo_crossover_d(sw, via))
+
+
+## Las vías que llegan a un puerto ya se recortan en el punto exacto donde
+## termina su flexible. El hueco geométrico interior sólo corresponde a vías
+## continuas sin puerto en este D.
+func _vias_de_puertos_crossover_d(sw: ProceduralCrossover) -> Dictionary:
+	var resultado: Dictionary = {}
+	for jid: int in _junctions_de_aparato(sw):
+		var j_dict: Dictionary = junctions.get(str(jid), {}) as Dictionary
+		for c_raw: Variant in j_dict.get("segments", []):
+			if c_raw is Dictionary:
+				resultado[str((c_raw as Dictionary).get("segment_id", ""))] = true
+	for registro_raw: Variant in _conexiones_switch_segmento.values():
+		if registro_raw is Dictionary:
+			var registro: Dictionary = registro_raw as Dictionary
+			if int(registro.get("switch", 0)) == sw.get_instance_id():
+				resultado[str(registro.get("segment_id", ""))] = true
+	return resultado
+
+
+func _registrar_recorte_interno_switch(sid: String, intervalo: Vector2) -> void:
+	if intervalo.y - intervalo.x < 0.2:
+		return
+	var intervalos: Array[Vector2] = []
+	for previo: Variant in _recortes_internos_switch.get(sid, []):
+		intervalos.append(previo as Vector2)
+	intervalos.append(intervalo)
+	_recortes_internos_switch[sid] = intervalos
+
+
+func _intervalo_via_bajo_crossover_d(sw: ProceduralCrossover, via: Path3D) -> Vector2:
+	var curva: Curve3D = via.curve
+	var largo: float = curva.get_baked_length()
+	if largo < 0.2 or not _via_puede_cruzar_crossover_d(sw, via):
+		return Vector2.ZERO
+	var centro_mundo: Vector3 = sw.global_transform * sw.posicion_centro
+	var medio: float = curva.get_closest_offset(via.to_local(centro_mundo))
+	if not _punto_via_dentro_crossover_d(sw, via, medio):
+		return Vector2.ZERO
+	var inicio: float = medio
+	while inicio > 0.0:
+		var anterior: float = maxf(0.0, inicio - 1.0)
+		if not _punto_via_dentro_crossover_d(sw, via, anterior):
+			var fuera: float = anterior
+			var dentro: float = inicio
+			for _i: int in 7:
+				var mitad: float = (fuera + dentro) * 0.5
+				if _punto_via_dentro_crossover_d(sw, via, mitad):
+					dentro = mitad
+				else:
+					fuera = mitad
+			inicio = minf(largo, dentro + SOLAPE_VISUAL_UNION_SWITCH)
+			break
+		inicio = anterior
+	var fin: float = medio
+	while fin < largo:
+		var siguiente: float = minf(largo, fin + 1.0)
+		if not _punto_via_dentro_crossover_d(sw, via, siguiente):
+			var dentro_fin: float = fin
+			var fuera_fin: float = siguiente
+			for _j: int in 7:
+				var mitad_fin: float = (dentro_fin + fuera_fin) * 0.5
+				if _punto_via_dentro_crossover_d(sw, via, mitad_fin):
+					dentro_fin = mitad_fin
+				else:
+					fuera_fin = mitad_fin
+			fin = maxf(0.0, dentro_fin - SOLAPE_VISUAL_UNION_SWITCH)
+			break
+		fin = siguiente
+	return Vector2(inicio, fin)
+
+
+## El Bézier queda contenido en la caja de sus anclas y manijas. Este filtro
+## evita buscar offsets a lo largo de cientos de vías lejanas en cada edición.
+func _via_puede_cruzar_crossover_d(sw: ProceduralCrossover, via: Path3D) -> bool:
+	var xmin: float = INF
+	var xmax: float = -INF
+	var zmin: float = INF
+	var zmax: float = -INF
+	var curva: Curve3D = via.curve
+	for i: int in curva.point_count:
+		var ancla: Vector3 = curva.get_point_position(i)
+		for control: Vector3 in [ancla, ancla + curva.get_point_in(i), ancla + curva.get_point_out(i)]:
+			var local: Vector3 = sw.to_local(via.to_global(control)) - sw.posicion_centro
+			xmin = minf(xmin, local.x)
+			xmax = maxf(xmax, local.x)
+			zmin = minf(zmin, local.z)
+			zmax = maxf(zmax, local.z)
+	var limite_x: float = sw.distancia_ejes * 0.5 + 1.8
+	var limite_z: float = sw.largo_crossover * 0.5 + 0.25
+	return xmin <= limite_x and xmax >= -limite_x and zmin <= limite_z and zmax >= -limite_z
+
+
+func _punto_via_dentro_crossover_d(sw: ProceduralCrossover, via: Path3D, distancia: float) -> bool:
+	var mundo: Vector3 = via.to_global(via.curve.sample_baked(distancia, true))
+	var local: Vector3 = sw.to_local(mundo) - sw.posicion_centro
+	return absf(local.x) <= sw.distancia_ejes * 0.5 + 1.8 and absf(local.z) <= sw.largo_crossover * 0.5 + 0.25
+
+
+## Reancla los cuatro puertos de un cruce diamante. La vía se determina por
+## el eje local más alineado (A o B), y el signo define su entrada o salida.
+## Así la expansión llega a los cuatro extremos, incluso luego de recargar.
+func _reconstruir_extremos_cruce_tipo_c(sw: ProceduralCrossing, junction_ids: Array[int], junction_set: Dictionary) -> void:
+	if sw == null:
+		return
+	sw._asegurar_geometria()
+	var g_ext: Node = sw.get_node_or_null("ExtremosFlexibles")
+	if g_ext == null:
+		return
+	var fwd_a: Vector3 = sw._obtener_fwd_a()
+	var fwd_b: Vector3 = sw._obtener_fwd_b()
+	if fwd_a.dot(fwd_b) < 0.0:
+		fwd_b = -fwd_b
+	var leads_conectados: Dictionary = {}
+	var conexiones_usadas: Dictionary = {}
+	for jid: int in junction_ids:
+		var j_dict: Dictionary = junctions.get(str(jid), {}) as Dictionary
+		for c_raw: Variant in j_dict.get("segments", []):
+			if not (c_raw is Dictionary):
+				continue
+			var conexion: Dictionary = c_raw as Dictionary
+			var sid: String = str(conexion.get("segment_id", ""))
+			if sid.is_empty() or not paths.has(sid) or _segmento_interno_de_aparato(sid, junction_set):
+				continue
+			var extremo: String = str(conexion.get("end", "start"))
+			var via: Path3D = paths.get(sid) as Path3D
+			if via == null or via.curve == null:
+				continue
+			var salida_mundo: Vector3 = _obtener_vector_salida_global(via, extremo)
+			var salida_local: Vector3 = (sw.global_transform.basis.inverse() * salida_mundo).normalized()
+			var dot_a: float = salida_local.dot(fwd_a)
+			var dot_b: float = salida_local.dot(fwd_b)
+			var usa_via_a: bool = absf(dot_a) >= absf(dot_b)
+			var es_entrada: bool = (dot_a if usa_via_a else dot_b) < 0.0
+			var nombre_lead: String = ""
+			if usa_via_a:
+				nombre_lead = "Extremo_Via_A_Entrada" if es_entrada else "Extremo_Via_A_Salida"
+			else:
+				nombre_lead = "Extremo_Via_B_Entrada" if es_entrada else "Extremo_Via_B_Salida"
+			var lead: FlexibleTrackLead = g_ext.get_node_or_null(nombre_lead) as FlexibleTrackLead
+			if lead == null or leads_conectados.has(lead.get_instance_id()):
+				continue
+			if lead.respetar_edicion_manual:
+				_registrar_recorte_en_extremo_manual(lead, via, sid, extremo)
+			else:
+				var distancia: float = _calcular_distancia_adaptativa(via, extremo, lead)
+				var distancia_final: float = _conectar_lead_a_segmento(sw, lead, via, sid, extremo, jid, distancia)
+				_registrar_recorte_segmento(sid, extremo, distancia_final)
+			leads_conectados[lead.get_instance_id()] = true
+			conexiones_usadas["%s:%s" % [sid, extremo]] = true
+
+	# Escenas anteriores pueden contener topología incompleta; los extremos que
+	# falten usan el mismo respaldo geométrico que los aparatos compuestos.
+	for hijo: Node in g_ext.get_children():
+		if hijo is FlexibleTrackLead:
+			var lead_sin_rama: FlexibleTrackLead = hijo as FlexibleTrackLead
+			if not leads_conectados.has(lead_sin_rama.get_instance_id()):
+				_reanclar_lead_compuesto_por_geometria(sw, lead_sin_rama, junction_set, conexiones_usadas)
+
+
+## Fallback para puertos históricos sin conexión topológica completa.
+func _reanclar_lead_compuesto_por_geometria(sw: BaseTurnout, lead: FlexibleTrackLead, junction_set: Dictionary, conexiones_usadas: Dictionary) -> void:
+	if sw == null or lead == null:
+		return
+	var punto_contacto: Vector3 = lead.global_transform * lead.obtener_posicion_extremo_exterior()
+	var dir_lead: Vector3 = (lead.global_transform.basis * lead.direccion_inicio).normalized()
+	var mejor_sid: String = ""
+	var mejor_extremo: String = ""
+	var mejor_puntaje: float = INF
+	for sid: String in paths.keys():
+		if _segmento_interno_de_aparato(sid, junction_set):
+			continue
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.point_count < 2:
+			continue
+		var largo: float = via.curve.get_baked_length()
+		if largo < MARGEN_FINAL_SEGMENTO_SWITCH:
+			continue
+		var offset: float = via.curve.get_closest_offset(via.to_local(punto_contacto))
+		var p_via: Vector3 = via.to_global(via.curve.sample_baked(offset, true))
+		for extremo: String in ["start", "end"]:
+			var clave: String = "%s:%s" % [sid, extremo]
+			if conexiones_usadas.has(clave):
+				continue
+			var dir_via: Vector3 = _direccion_real_segmento_extremo(sid, extremo)
+			var alineacion: float = dir_lead.dot(dir_via)
+			if alineacion <= 0.05:
+				continue
+			var distancia_extremo: float = offset if extremo == "start" else largo - offset
+			var puntaje: float = punto_contacto.distance_to(p_via) + distancia_extremo * 0.04 + (1.0 - alineacion) * 8.0
+			if puntaje < mejor_puntaje:
+				mejor_puntaje = puntaje
+				mejor_sid = sid
+				mejor_extremo = extremo
+	if mejor_sid.is_empty():
+		return
+	var via_elegida: Path3D = paths.get(mejor_sid) as Path3D
+	if via_elegida == null:
+		return
+	if lead.respetar_edicion_manual:
+		_registrar_recorte_en_extremo_manual(lead, via_elegida, mejor_sid, mejor_extremo)
+	else:
+		var distancia: float = _calcular_distancia_adaptativa(via_elegida, mejor_extremo, lead)
+		var distancia_final: float = _conectar_lead_a_segmento(sw, lead, via_elegida, mejor_sid, mejor_extremo, sw.node_id, distancia)
+		_registrar_recorte_segmento(mejor_sid, mejor_extremo, distancia_final)
+	conexiones_usadas["%s:%s" % [mejor_sid, mejor_extremo]] = true
 
 
 ## Devuelve todos los node_id que apuntan a la MISMA instancia de aparato.
@@ -3023,8 +4133,14 @@ func _junctions_de_aparato(sw: BaseTurnout) -> Array[int]:
 	var ids: Array[int] = []
 	if sw == null:
 		return ids
+	# La fuente de verdad es el aparato: un crossover D representa dos uniones
+	# incluso durante el frame de carga en que su segundo ID todavía no figura
+	# en el diccionario temporal de la red.
+	for nid_propio: int in sw.obtener_ids_uniones():
+		if nid_propio != 0 and not ids.has(nid_propio):
+			ids.append(nid_propio)
 	for nid: int in aparatos_de_via.keys():
-		if aparatos_de_via[nid] == sw:
+		if aparatos_de_via[nid] == sw and not ids.has(nid):
 			ids.append(nid)
 	return ids
 
@@ -3070,6 +4186,8 @@ func _reconstruir_conexiones_locales(seg_ids: Array[String]) -> void:
 			continue
 		if segs_afectados.has(sw.via_comun_id) or segs_afectados.has(sw.via_directa_id) or segs_afectados.has(sw.via_desviada_id):
 			aparatos_afectados.append(sw)
+		elif sw is ProceduralCrossover and _crossover_d_cerca_de_segmentos(sw as ProceduralCrossover, seg_ids):
+			aparatos_afectados.append(sw)
 
 	# 2. Ampliar a las ramas de sus uniones.
 	_agregar_ramas_de_aparatos(aparatos_afectados, segs_afectados)
@@ -3108,6 +4226,7 @@ func _reconstruir_conexiones_locales(seg_ids: Array[String]) -> void:
 	for s: String in segs_afectados.keys():
 		_recortes_segmentos.erase(s)
 		_recortes_extra.erase(s)
+		_recortes_internos_switch.erase(s)
 		_conflictos_adaptacion_switch.erase(s)
 		_segmentos_reemplazados_por_switch.erase(s)
 		_borrar_conexiones_de_segmento(s)
@@ -3115,6 +4234,21 @@ func _reconstruir_conexiones_locales(seg_ids: Array[String]) -> void:
 	# 6. Reconstruir solo los aparatos afectados.
 	for sw: BaseTurnout in aparatos_afectados:
 		_reconstruir_aparato(sw, _junctions_de_aparato(sw))
+	# Un mismo Path3D puede atravesar dos D. Al limpiar sus recortes para la
+	# actualización local, se recuperan también los del D que no cambió.
+	var d_recuperados: Dictionary = {}
+	for sw_raw: Variant in aparatos_de_via.values():
+		var sw_d: ProceduralCrossover = sw_raw as ProceduralCrossover
+		if sw_d == null or aparatos_afectados.has(sw_d) or d_recuperados.has(sw_d.get_instance_id()):
+			continue
+		d_recuperados[sw_d.get_instance_id()] = true
+		var vias_de_puertos: Dictionary = _vias_de_puertos_crossover_d(sw_d)
+		for sid: String in segs_afectados.keys():
+			if vias_de_puertos.has(sid) or _segmentos_reemplazados_por_switch.has(sid):
+				continue
+			var via: Path3D = paths.get(sid) as Path3D
+			if via != null and via.curve != null:
+				_registrar_recorte_interno_switch(sid, _intervalo_via_bajo_crossover_d(sw_d, via))
 
 	_conexiones_switch_segmento.erase("_en_proceso")
 
@@ -3125,9 +4259,43 @@ func _reconstruir_conexiones_locales(seg_ids: Array[String]) -> void:
 			geo.call_deferred("actualizar_geometria_tramo", s)
 
 
+## Actualiza sólo las vías que tocan al switch editado desde el inspector. Se
+## usa para expandir sus extremos flexibles sin reconstruir toda la red.
+func actualizar_expansion_extremos_switch(sw: BaseTurnout) -> void:
+	if sw == null or not is_instance_valid(sw):
+		return
+	sw.marcar_editado_para_regeneracion()
+	_switches_editados_manualmente[sw.get_instance_id()] = true
+	var segmentos: Dictionary = {}
+	for jid: int in _junctions_de_aparato(sw):
+		var j_dict: Dictionary = junctions.get(str(jid), {}) as Dictionary
+		for conexion_raw: Variant in j_dict.get("segments", []):
+			if conexion_raw is Dictionary:
+				var sid: String = str((conexion_raw as Dictionary).get("segment_id", ""))
+				if not sid.is_empty() and paths.has(sid):
+					segmentos[sid] = true
+	if sw is ProceduralCrossover:
+		_agregar_ramas_crossover_d_para_actualizar(sw as ProceduralCrossover, segmentos)
+	if segmentos.is_empty():
+		return
+	var ids: Array[String] = []
+	for sid: String in segmentos.keys():
+		ids.append(sid)
+	# Se incluye el aparato pedido explícitamente. Así sus extremos traseros se
+	# recalculan aunque el editor esté terminando de registrar el segundo nodo
+	# topológico de un crossover tipo D.
+	for nid: int in sw.obtener_ids_uniones():
+		aparatos_de_via[nid] = sw
+	_reconstruir_conexiones_locales(ids)
+	_persistir_diccionario_switches()
+	_escribir_archivo_ediciones()
+
+
 ## Agrega al conjunto todos los segmentos de las uniones de los aparatos dados.
 func _agregar_ramas_de_aparatos(aparatos: Array[BaseTurnout], segs: Dictionary) -> void:
 	for sw: BaseTurnout in aparatos:
+		if sw is ProceduralCrossover:
+			_agregar_ramas_crossover_d_para_actualizar(sw as ProceduralCrossover, segs)
 		for jid: int in _junctions_de_aparato(sw):
 			var j_dict: Dictionary = junctions.get(str(jid), {}) as Dictionary
 			for c_raw: Variant in j_dict.get("segments", []):
@@ -3135,6 +4303,35 @@ func _agregar_ramas_de_aparatos(aparatos: Array[BaseTurnout], segs: Dictionary) 
 					var sid: String = str((c_raw as Dictionary).get("segment_id", ""))
 					if not sid.is_empty():
 						segs[sid] = true
+
+
+func _agregar_ramas_crossover_d_para_actualizar(sw: ProceduralCrossover, segs: Dictionary) -> void:
+	var ids_d: Array[int] = _junctions_de_aparato(sw)
+	var conjunto_d: Dictionary = {}
+	for jid_d: int in ids_d:
+		conjunto_d[jid_d] = true
+	for candidato: Dictionary in _candidatos_crossover_tipo_d(sw, ids_d, conjunto_d):
+		var sid: String = str(candidato["sid"])
+		segs[sid] = true
+		var via: Path3D = paths.get(sid) as Path3D
+		if via == null or via.curve == null or via.curve.get_baked_length() > sw.largo_crossover + sw.expansion_extremos_flexibles + 20.0:
+			continue
+		var datos: Dictionary = segments_data.get(sid, {}) as Dictionary
+		var jid_siguiente: int = int(datos.get("node_end", 0)) if str(candidato["extremo"]) == "start" else int(datos.get("node_start", 0))
+		var j_dict: Dictionary = junctions.get(str(jid_siguiente), {}) as Dictionary
+		for c_raw: Variant in j_dict.get("segments", []):
+			if c_raw is Dictionary:
+				var sid_vecino: String = str((c_raw as Dictionary).get("segment_id", ""))
+				if paths.has(sid_vecino):
+					segs[sid_vecino] = true
+	# También remallar las vías continuas que atraviesan el cuerpo del D sin
+	# tener un extremo en sus dos junctions.
+	for sid: String in paths.keys():
+		if segs.has(sid):
+			continue
+		var via: Path3D = paths.get(sid) as Path3D
+		if via != null and via.curve != null and _intervalo_via_bajo_crossover_d(sw, via).y > 0.0:
+			segs[sid] = true
 
 
 ## Borra los registros de conexión asociados a un segmento (clave "seg:end:junction").
@@ -3458,7 +4655,7 @@ func _obtener_vector_salida_global(path: Path3D, end_tipo: String) -> Vector3:
 	return Vector3(salida_2d.x, 0.0, salida_2d.y).normalized()
 
 
-func _conectar_lead_a_segmento(sw: BaseTurnout, lead: FlexibleTrackLead, path: Path3D, seg_id: String, end_tipo: String, junction_id: int, distancia_forzada: float = -1.0) -> void:
+func _conectar_lead_a_segmento(sw: BaseTurnout, lead: FlexibleTrackLead, path: Path3D, seg_id: String, end_tipo: String, junction_id: int, distancia_forzada: float = -1.0) -> float:
 	var distancia: float = distancia_forzada if distancia_forzada >= 0.0 else _calcular_distancia_adaptativa(path, end_tipo, lead)
 	distancia = _ajustar_distancia_para_transicion_valida(lead, path, end_tipo, distancia)
 	var punto: Dictionary = _obtener_punto_recorte_segmento(path, end_tipo, distancia)
@@ -3476,9 +4673,6 @@ func _conectar_lead_a_segmento(sw: BaseTurnout, lead: FlexibleTrackLead, path: P
 		}
 	var pos_local: Vector3 = lead.global_transform.affine_inverse() * pos_world
 	var dir_local: Vector3 = (lead.global_transform.basis.inverse() * dir_world).normalized()
-	# NO se vuelve a registrar el corte ajustado: el corte de vía plena es el NATURAL
-	# (el que ya registró la reconciliación). Registrar el ajustado agrandaba el corte
-	# en cada pasada y absorbía tramos de más (415 visibles → 367).
 	lead.conectar_a_via_externa(pos_local, dir_local)
 	var registro: Dictionary = {
 		"switch": sw.get_instance_id(),
@@ -3489,8 +4683,8 @@ func _conectar_lead_a_segmento(sw: BaseTurnout, lead: FlexibleTrackLead, path: P
 		"segment_id": seg_id,
 		"distancia": distancia,
 		"end": end_tipo,
-		"gap": -1.0,
-		"kink_deg": -1.0,
+		"gap": - 1.0,
+		"kink_deg": - 1.0,
 		"p0_local": lead.punto_inicio,
 		"d0_local": lead.direccion_inicio,
 		"p1_local": pos_local,
@@ -3506,10 +4700,11 @@ func _conectar_lead_a_segmento(sw: BaseTurnout, lead: FlexibleTrackLead, path: P
 		registro["gap"] = p_fin.distance_to(pos_local)
 		# La tangente final de la curva la define su manija de entrada; es exacta
 		# incluso en tramos flexibles muy cortos (donde la cuerda engañaría).
-		var manija: Vector3 = -curva.get_point_in(i_fin)
+		var manija: Vector3 = - curva.get_point_in(i_fin)
 		if manija.length_squared() > 1e-10:
 			registro["kink_deg"] = rad_to_deg(acos(clampf(absf(manija.normalized().dot(dir_local)), 0.0, 1.0)))
 	_conexiones_switch_segmento["%s:%s:%d" % [seg_id, end_tipo, junction_id]] = registro
+	return distancia
 
 ## Avance (m) de un punto dado medido sobre el eje de salida de un tramo flexible.
 ## Se mide en coordenadas locales del flexible (no del aparato).
@@ -3524,10 +4719,9 @@ func _avance_local_de_punto(lead: FlexibleTrackLead, pos_world: Vector3) -> floa
 
 
 ## Ajusta el corte para que la transición exista, pero SIN deformar la geometría:
-## el corte nunca supera el largo nominal del propio flexible más
-## `MARGEN_MAX_EXTENSION_LEAD`. Así un puerto desalineado puede cerrar el hueco con
-## un tramo corto y natural (a escala real), y nunca con una curva gigantesca de
-## radio ridículo (antes se estiraba hasta el 100 % del tramo, 157 m en un caso).
+## el corte se limita al alcance del flexible. Un crossover D necesita más
+## margen cuando sus uniones quedan dentro de su cuerpo nominal: de otro modo
+## el punto de recorte nunca llega delante de dos de sus cuatro bornes.
 func _ajustar_distancia_para_transicion_valida(lead: FlexibleTrackLead, path: Path3D, end_tipo: String, distancia: float) -> float:
 	if lead == null or path == null or path.curve == null:
 		return distancia
@@ -3537,8 +4731,18 @@ func _ajustar_distancia_para_transicion_valida(lead: FlexibleTrackLead, path: Pa
 		return distancia
 	var largo: float = path.curve.get_baked_length()
 	var maximo: float = maxf(0.0, largo - MARGEN_FINAL_SEGMENTO_SWITCH)
-	var tope: float = minf(maximo, maxf(MARGEN_FINAL_SEGMENTO_SWITCH, lead.longitud_extension + MARGEN_MAX_EXTENSION_LEAD))
-	var candidata: float = clampf(distancia, 0.0, tope)
+	var alcance_solicitado: float = maxf(
+		lead.longitud_extension + MARGEN_MAX_EXTENSION_LEAD,
+		lead.expansion_sobre_path + MARGEN_FINAL_SEGMENTO_SWITCH
+	)
+	var aparato: Node = lead.get_parent().get_parent() if lead.get_parent() != null else null
+	if aparato is ProceduralCrossover:
+		alcance_solicitado = maxf(alcance_solicitado, lead.longitud_extension * 2.0 + MARGEN_MAX_EXTENSION_LEAD)
+	var tope: float = minf(maximo, maxf(MARGEN_FINAL_SEGMENTO_SWITCH, alcance_solicitado))
+	# La expansión se mide sobre la vía real y no en línea recta. El flexible
+	# conserva así su adaptación automática al Path3D aunque el usuario pida
+	# una transición más larga desde el inspector del switch.
+	var candidata: float = clampf(maxf(distancia, lead.expansion_sobre_path), 0.0, tope)
 	var inv_lead: Transform3D = lead.global_transform.affine_inverse()
 	var pasos: int = 0
 	while pasos < 40:
@@ -3577,8 +4781,6 @@ func _calcular_distancia_adaptativa(path: Path3D, _end_tipo: String, lead: Flexi
 	var offset: float = completa.get_closest_offset(local)
 	var distancia: float = offset if _end_tipo == "start" else (longitud - offset)
 	return clampf(distancia, MARGEN_MINIMO_UNION_M, maximo)
-
-
 
 
 ## Registra un recorte longitudinal en metros para un extremo de segmento que conecta a un switch.
@@ -3651,13 +4853,48 @@ func obtener_rangos_utiles_tramo(seg_id: String) -> Array[Vector2]:
 		var ini: float = clampf(float(reg.get("ini", 0.0)), 0.0, l_total)
 		var fin: float = clampf(float(reg.get("fin", l_total)), 0.0, l_total)
 		if fin - ini >= 0.2:
-			resultado.append(Vector2(ini, fin))
-		return resultado
+			resultado.append(_aplicar_solape_visual_recorte(ini, fin, l_total))
+		return _restar_recortes_internos_switch(seg_id, resultado)
 	var r_legacy: Vector2 = _recortes_segmentos.get(seg_id, Vector2(0.0, l_total)) as Vector2
 	if r_legacy == Vector2.ZERO:
 		return resultado
-	resultado.append(Vector2(clampf(r_legacy.x, 0.0, l_total), clampf(r_legacy.y, 0.0, l_total)))
-	return resultado
+	resultado.append(_aplicar_solape_visual_recorte(
+		clampf(r_legacy.x, 0.0, l_total),
+		clampf(r_legacy.y, 0.0, l_total),
+		l_total
+	))
+	return _restar_recortes_internos_switch(seg_id, resultado)
+
+
+func _restar_recortes_internos_switch(seg_id: String, rangos: Array[Vector2]) -> Array[Vector2]:
+	if not _recortes_internos_switch.has(seg_id):
+		return rangos
+	for hueco_raw: Variant in _recortes_internos_switch[seg_id]:
+		var hueco: Vector2 = hueco_raw as Vector2
+		var restantes: Array[Vector2] = []
+		for rango: Vector2 in rangos:
+			if hueco.y <= rango.x or hueco.x >= rango.y:
+				restantes.append(rango)
+			else:
+				if hueco.x - rango.x >= 0.2:
+					restantes.append(Vector2(rango.x, hueco.x))
+				if rango.y - hueco.y >= 0.2:
+					restantes.append(Vector2(hueco.y, rango.y))
+		rangos = restantes
+	return rangos
+
+
+## Extiende sólo el extremo que fue recortado, manteniendo el solape dentro de
+## la curva de vía. Así los rieles y el balasto del Path3D se encuentran con los
+## del flexible sin modificar la ruta que usan los trenes.
+func _aplicar_solape_visual_recorte(ini: float, fin: float, l_total: float) -> Vector2:
+	var inicio: float = ini
+	var final: float = fin
+	if inicio > 0.0:
+		inicio = maxf(0.0, inicio - SOLAPE_VISUAL_UNION_SWITCH)
+	if final < l_total:
+		final = minf(l_total, final + SOLAPE_VISUAL_UNION_SWITCH)
+	return Vector2(inicio, final)
 
 
 ## Registra el recorte de la vía real hasta donde llega un extremo fijado a mano.
@@ -3836,8 +5073,6 @@ func get_switches_disponibles() -> Array[Dictionary]:
 
 
 ## Devuelve el nodo del switch dado (BaseTurnout, o null si no existe).
-
-
 
 
 func _seleccionar_switch_por_indice(idx: int) -> void:
@@ -4444,7 +5679,7 @@ func planificar_ruta(segmento_origen: String, offset_origen: float, sentido_inve
 		return _planificar_override_dirigido(segmento_origen, offset_origen, sentido_invertido, segmento_destino, offset_destino, override_segmentos)
 
 	var dir_inicial: String = "reversed" if sentido_invertido else "forward"
-	var cola: Array[Dictionary] = [{"seg": segmento_origen, "dir": dir_inicial, "entrada": offset_origen, "costo": 0.0}]
+	var cola: Array[Dictionary] = [ {"seg": segmento_origen, "dir": dir_inicial, "entrada": offset_origen, "costo": 0.0}]
 	var costos: Dictionary = {"%s|%s" % [segmento_origen, dir_inicial]: 0.0}
 	var anterior: Dictionary = {}
 	var visitados: Dictionary = {}
@@ -4543,7 +5778,7 @@ func _planificar_override_dirigido(segmento_origen: String, offset_origen: float
 	var entrada: float = offset_origen
 	var distancia: float = 0.0
 	var cambios_aguja: int = 0
-	var pasos: Array[Dictionary] = [{"segmento": segmento_origen, "direccion": direccion}]
+	var pasos: Array[Dictionary] = [ {"segmento": segmento_origen, "direccion": direccion}]
 
 	for indice: int in range(forzada.size() - 1):
 		var actual_id: String = forzada[indice]
@@ -4764,8 +5999,15 @@ func descartar_edicion_estacion(id_estacion: String) -> void:
 
 ## Aplica a las estaciones de la escena las ediciones guardadas en el journal.
 func aplicar_estaciones_guardadas() -> void:
+	if not is_inside_tree():
+		return
+	# Al abrir una escena editada, sus estaciones son la fuente vigente. El
+	# journal puede ser anterior a un guardado del editor y no debe pisarlas.
+	if Engine.is_editor_hint() and _tiene_vias_en_arbol():
+		_sincronizar_estaciones_serializadas_con_journal()
+		return
 	var ests: Dictionary = _ediciones_guardadas.get("_estaciones", {}) as Dictionary
-	if ests.is_empty() or not is_inside_tree():
+	if ests.is_empty():
 		return
 	var lista: Array[Node] = get_tree().get_nodes_in_group("estaciones")
 	var aplicadas: int = 0
@@ -4778,6 +6020,29 @@ func aplicar_estaciones_guardadas() -> void:
 			aplicadas += 1
 	if aplicadas > 0:
 		print("TrackNetwork: %d estaciones restauradas desde el journal." % aplicadas)
+
+
+## Mantiene el respaldo de estaciones al día con las ediciones del inspector.
+func _sincronizar_estaciones_serializadas_con_journal() -> void:
+	if not Engine.is_editor_hint() or not is_inside_tree():
+		return
+	var ests: Dictionary = _ediciones_guardadas.get("_estaciones", {}) as Dictionary
+	var cambio: bool = false
+	for e: Node in get_tree().get_nodes_in_group("estaciones"):
+		if not is_instance_valid(e) or not e.has_method("obtener_id_edicion") or not e.has_method("serializar_datos"):
+			continue
+		var id_est: String = str(e.call("obtener_id_edicion"))
+		var datos: Dictionary = e.call("serializar_datos") as Dictionary
+		if _huellas_estaciones.get(id_est, {}) == datos:
+			continue
+		_huellas_estaciones[id_est] = datos.duplicate(true)
+		if ests.get(id_est, {}) != datos:
+			ests[id_est] = datos
+			cambio = true
+	if cambio:
+		_ediciones_guardadas["_estaciones"] = ests
+		_autoguardado_pendiente = true
+		_tiempo_autoguardado = 0.0
 
 
 ## Guarda todas las vías y switches que hayan sido modificados en el archivo persistente.
@@ -4794,13 +6059,13 @@ func guardar_todas_las_ediciones() -> void:
 	_sincronizar_lista_eliminados_en_ediciones()
 	_persistir_diccionario_switches()
 
-	# Estaciones editadas (misma mecánica que los tramos).
+	# Respaldar todas las estaciones, incluidas las editadas sólo en el inspector.
 	var ests: Dictionary = _ediciones_guardadas.get("_estaciones", {}) as Dictionary
 	if is_inside_tree():
 		for e: Node in get_tree().get_nodes_in_group("estaciones"):
 			if not is_instance_valid(e):
 				continue
-			if e.get("esta_editada") == true and e.has_method("serializar_datos") and e.has_method("obtener_id_edicion"):
+			if e.has_method("serializar_datos") and e.has_method("obtener_id_edicion"):
 				ests[str(e.call("obtener_id_edicion"))] = e.call("serializar_datos") as Dictionary
 	_ediciones_guardadas["_estaciones"] = ests
 
@@ -4874,6 +6139,8 @@ func _escribir_archivo_ediciones() -> void:
 	if f != null:
 		f.store_string(JSON.stringify(contenido, "\t"))
 		f.close()
+	else:
+		push_error("TrackNetwork: No se pudieron guardar las ediciones en '%s' (error %d)." % [ruta, FileAccess.get_open_error()])
 
 
 ## Encaja milimétricamente el extremo ("start" o "end") de un tramo con el switch o tramo vecino conectado.
@@ -4953,11 +6220,23 @@ func encajar_segmento_con_vecino(seg_id: String, extremo: String) -> void:
 func _on_segmento_geometria_modificada(seg_id: String) -> void:
 	if not paths.has(seg_id) or not is_inside_tree():
 		return
+	_on_segmento_datos_modificados(seg_id)
 	_segmentos_edicion_pendientes[seg_id] = true
 	if _edicion_diferida_programada:
 		return
 	_edicion_diferida_programada = true
 	call_deferred("_procesar_ediciones_pendientes")
+
+
+func _on_segmento_datos_modificados(seg_id: String) -> void:
+	if not Engine.is_editor_hint():
+		return
+	var via: EditableTrackSegment = paths.get(seg_id) as EditableTrackSegment
+	if via == null or not is_instance_valid(via):
+		return
+	_ediciones_guardadas[seg_id] = via.serializar_datos()
+	_autoguardado_pendiente = true
+	_tiempo_autoguardado = 0.0
 
 
 func _procesar_ediciones_pendientes() -> void:
@@ -4975,7 +6254,8 @@ func _procesar_ediciones_pendientes() -> void:
 func _recalcular_conexion_switch_segmento(sw: BaseTurnout, p_seg: Path3D, seg_id: String, extremo: String, lead: FlexibleTrackLead) -> void:
 	if sw == null or p_seg == null or p_seg.curve == null or lead == null:
 		return
-	_conectar_lead_a_segmento(sw, lead, p_seg, seg_id, extremo, sw.node_id)
+	var distancia_final: float = _conectar_lead_a_segmento(sw, lead, p_seg, seg_id, extremo, sw.node_id)
+	_registrar_recorte_segmento(seg_id, extremo, distancia_final)
 
 
 func _buscar_lead_de_switch_para_segmento(sw: BaseTurnout, seg_id: String) -> FlexibleTrackLead:

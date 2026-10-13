@@ -103,7 +103,15 @@ var _s_obtuso: float = 0.095
 
 func _ready() -> void:
 	_asegurar_materiales()
-	if _nodo_rieles == null:
+	_asegurar_geometria()
+
+
+## Los cruces creados por versiones anteriores dejaban sus mallas como hijos
+## directos del aparato. Se reconstruyen una vez bajo GeometriaFija para que la
+## geometría visible y su ciclo de limpieza sean siempre el mismo.
+func _asegurar_geometria() -> void:
+	var grupo: Node = get_node_or_null("GeometriaFija")
+	if grupo == null or grupo.get_node_or_null("RielesCruce") == null:
 		construir_geometria()
 
 
@@ -310,7 +318,7 @@ func _construir_balasto(semi_largo: float) -> void:
 		_nodo_balasto.name = "BalastoRombo"
 		_nodo_balasto.mesh = m
 		_nodo_balasto.material_override = material_balasto
-		add_child(_nodo_balasto)
+		agregar_a_geometria_fija(_nodo_balasto)
 
 
 func _construir_durmientes(semi_largo: float) -> void:
@@ -338,7 +346,7 @@ func _construir_durmientes(semi_largo: float) -> void:
 		_nodo_durmientes.name = "DurmientesCruce"
 		_nodo_durmientes.mesh = m
 		_nodo_durmientes.material_override = material_durmiente
-		add_child(_nodo_durmientes)
+		agregar_a_geometria_fija(_nodo_durmientes)
 
 
 func _construir_rieles_cruce(
@@ -407,7 +415,7 @@ func _construir_rieles_cruce(
 		_nodo_rieles.name = "RielesCruce"
 		_nodo_rieles.mesh = m
 		_nodo_rieles.material_override = material_riel
-		add_child(_nodo_rieles)
+		agregar_a_geometria_fija(_nodo_rieles)
 
 
 func _construir_corazones(
@@ -434,7 +442,7 @@ func _construir_corazones(
 		_nodo_corazones.name = "CorazonesMecanizados"
 		_nodo_corazones.mesh = m
 		_nodo_corazones.material_override = material_riel
-		add_child(_nodo_corazones)
+		agregar_a_geometria_fija(_nodo_corazones)
 
 
 func _agregar_punta_corazon_v(st: SurfaceTool, pos_vertice: Vector3, dir_apunta: Vector3, dir_trans: Vector3) -> void:
@@ -522,7 +530,7 @@ func _construir_contrarrieles(
 		_nodo_contrarrieles.name = "ContrarrielesProtectores"
 		_nodo_contrarrieles.mesh = m
 		_nodo_contrarrieles.material_override = material_riel
-		add_child(_nodo_contrarrieles)
+		agregar_a_geometria_fija(_nodo_contrarrieles)
 
 
 func _agregar_contrarriel_curvado(
@@ -613,7 +621,7 @@ func _construir_marcador_central() -> void:
 		_nodo_marcador_centro.name = "MarcadorCentroInterseccion"
 		_nodo_marcador_centro.mesh = m
 		_nodo_marcador_centro.material_override = material_metal
-		add_child(_nodo_marcador_centro)
+		agregar_a_geometria_fija(_nodo_marcador_centro)
 
 
 func _construir_indicador_ruta(fwd: Vector3) -> void:

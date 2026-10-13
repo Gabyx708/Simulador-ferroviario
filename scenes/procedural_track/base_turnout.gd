@@ -25,6 +25,9 @@ const _FlexibleTrackLeadScript = preload("res://scenes/procedural_track/flexible
 @export var via_desviada_id: String = ""
 ## Clasificación de aparato asignada por la red (TIPO_A, TIPO_B, TIPO_C, TIPO_D, TIPO_E).
 @export var tipo_aparato_override: String = ""
+## Marca que este aparato fue ajustado desde el editor. La regeneración de
+## switches lo conserva y sólo vuelve a crear los que no tienen esta marca.
+@export_storage var conservar_al_regenerar: bool = false
 @export_group("Extremos Flexibles")
 ## Si es verdadero, genera y sincroniza automáticamente los extremos de vía adaptativos en los puertos del switch.
 @export var generar_extremos_flexibles: bool = true:
@@ -38,6 +41,14 @@ const _FlexibleTrackLeadScript = preload("res://scenes/procedural_track/flexible
 				if g != null:
 					remove_child(g)
 					g.queue_free()
+
+## Extiende todos los extremos de este switch sobre sus Path3D conectados.
+## El valor es una distancia mínima, no una posición fija: cada lead sigue
+## tomando de la vía su punto y su tangente final.
+@export_range(0.0, 250.0, 0.5, "suffix:m") var expansion_extremos_flexibles: float = 0.0:
+	set(v):
+		expansion_extremos_flexibles = maxf(0.0, v)
+		_aplicar_expansion_extremos_flexibles()
 
 @export_group("Edición Manual")
 ## Pulsador: elimina permanentemente este aparato de vía de la red y persiste la baja.
@@ -72,6 +83,7 @@ var _palanca_contrapeso: Node3D = null
 
 # Tween compartido para animaciones de agujas
 var _tween_agujas: Tween = null
+var _actualizacion_expansion_pendiente: bool = false
 
 ## Flag de re-entrada para evitar reconstrucciones recursivas.
 ## Debe ser leída/escrita exclusivamente desde subclases dentro de construir_geometria().
@@ -154,6 +166,19 @@ func get_tipo_aparato() -> String:
 	if not tipo_aparato_override.is_empty():
 		return tipo_aparato_override
 	return "BASE"
+
+
+## IDs de unión que representa este aparato dentro de TrackNetwork. Los
+## aparatos simples ocupan un único nodo; los compuestos pueden sobrescribirlo.
+func obtener_ids_uniones() -> Array[int]:
+	var ids: Array[int] = []
+	if node_id != 0:
+		ids.append(node_id)
+	return ids
+
+
+func marcar_editado_para_regeneracion() -> void:
+	conservar_al_regenerar = true
 
 
 ## Devuelve una descripción legible del estado actual del aparato.
@@ -271,12 +296,40 @@ func sincronizar_extremos_flexibles(longitud_defecto: float = 20.0) -> Node3D:
 			lead.material_riel = material_riel
 			lead.material_balasto = material_balasto
 			lead.material_durmiente = material_durmiente
+		lead.expansion_sobre_path = expansion_extremos_flexibles
 
 		var pos_b: Vector3 = p.get("posicion", Vector3.ZERO) as Vector3
 		var dir_b: Vector3 = p.get("direccion", Vector3.FORWARD) as Vector3
 		lead.conectar_a_borne(pos_b, dir_b)
 
 	return grupo
+
+
+func _aplicar_expansion_extremos_flexibles() -> void:
+	sincronizar_expansion_extremos_flexibles()
+	if _actualizacion_expansion_pendiente:
+		return
+	_actualizacion_expansion_pendiente = true
+	call_deferred("_actualizar_expansion_en_red")
+
+
+func _actualizar_expansion_en_red() -> void:
+	_actualizacion_expansion_pendiente = false
+	var red: Node = obtener_track_network()
+	if red != null and red.has_method("actualizar_expansion_extremos_switch"):
+		red.call("actualizar_expansion_extremos_switch", self)
+
+
+## Al cargar una escena, Godot restaura primero las propiedades del switch y
+## después agrega sus hijos flexibles. Esta sincronización se invoca desde la
+## red cuando esos hijos ya existen.
+func sincronizar_expansion_extremos_flexibles() -> void:
+	var grupo: Node = get_node_or_null("ExtremosFlexibles")
+	if grupo == null:
+		return
+	for hijo: Node in grupo.get_children():
+		if hijo is FlexibleTrackLead:
+			(hijo as FlexibleTrackLead).expansion_sobre_path = expansion_extremos_flexibles
 
 
 func _limpiar_hijos_de(nodo: Node) -> void:

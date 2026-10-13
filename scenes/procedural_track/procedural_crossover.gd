@@ -16,6 +16,11 @@ extends BaseTurnout
 
 signal estado_cambiado(ruta_cruzada: bool)
 
+@export_group("Topología de Crossover")
+## Segundo nodo topológico del escape. Un tipo D cubre dos uniones físicas y
+## debe conservar ambas al guardar y volver a abrir la escena.
+@export_storage var node_id_secundario: int = 0
+
 @export_group("Geometría de Trazado")
 ## Centro longitudinal y transversal del aparato de vía en el espacio local.
 @export var posicion_centro: Vector3 = Vector3.ZERO:
@@ -107,8 +112,32 @@ var _curva_directa_2: Curve3D = null
 
 func _ready() -> void:
 	_asegurar_materiales()
+	_inferir_nodo_secundario_desde_nombre()
 	if _desvio_1 == null:
 		construir_geometria()
+
+
+## Compatibilidad con escenas creadas antes de serializar node_id_secundario.
+## Los crossovers generados por la red llevan ambos IDs en su nombre estable.
+func _inferir_nodo_secundario_desde_nombre() -> void:
+	if node_id_secundario != 0:
+		return
+	var partes: PackedStringArray = String(name).split("_", false)
+	if partes.size() < 2:
+		return
+	var candidato: int = partes[partes.size() - 1].to_int()
+	if candidato != 0 and candidato != node_id:
+		node_id_secundario = candidato
+
+
+## Registra los dos extremos topológicos del escape para que los cuatro leads
+## se reconstruyan y actualicen al editar la expansión desde el inspector.
+func obtener_ids_uniones() -> Array[int]:
+	_inferir_nodo_secundario_desde_nombre()
+	var ids: Array[int] = super.obtener_ids_uniones()
+	if node_id_secundario != 0 and not ids.has(node_id_secundario):
+		ids.append(node_id_secundario)
+	return ids
 
 
 func conmutar() -> void:

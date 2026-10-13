@@ -54,7 +54,7 @@ func _run() -> void:
 	tren.salio_de_estacion.connect(func(_datos_tren: Dictionary, datos_estacion: Dictionary) -> void: _salidas_publicas.append(str(datos_estacion.get("nombre", ""))))
 
 	var limite := Time.get_ticks_msec() + 120000
-	while Time.get_ticks_msec() < limite and not tren.servicio_finalizado():
+	while Time.get_ticks_msec() < limite and (_detenciones.size() < ESPERADAS.size() - 1 or tren.pasajeros_actuales > 0):
 		await process_frame
 
 	Engine.time_scale = 1.0
@@ -67,22 +67,11 @@ func _run() -> void:
 	assert(_salidas_publicas == salidas_esperadas, "Las salidas públicas no deben incluir Bosques: %s" % str(_salidas_publicas))
 	assert(tren.esta_detenido(), "El tren debe quedar detenido en Bosques")
 	assert(tren.proxima_estacion_nombre() == "Bosques", "El último destino debe ser Bosques")
-	assert(tren.servicio_finalizado(), "Bosques debe cerrar el servicio de ida")
+	assert(not tren.servicio_finalizado(), "Bosques debe permitir el regreso")
 	assert(tren.pasajeros_actuales == 0, "En Bosques deben descender todos los pasajeros")
-	assert(not tren.visible, "La formación finalizada debe quedar oculta")
-	assert(is_zero_approx(tren.velocidad_actual()), "La formación finalizada debe publicar velocidad cero")
-	assert(is_zero_approx(tren.distancia_a_proxima_estacion()), "Bosques debe publicar distancia cero")
-	var reanudaciones_al_final: int = _reanudaciones
-	await create_timer(0.5, true, false, true).timeout
-	assert(_reanudaciones == reanudaciones_al_final, "Un tren finalizado no debe reanudar la marcha")
-	for coche_raw: Node in tren.get_children():
-		var coche := coche_raw as Node3D
-		if coche == null:
-			continue
-		var selector := coche.get_node_or_null("SelectorClic") as Area3D
-		if selector != null:
-			assert(not selector.input_ray_pickable, "La formación finalizada no debe poder seleccionarse")
-	print("OK: recorrido completo finalizado en Bosques (%d estaciones)" % _detenciones.size())
+	assert(tren.visible, "La formación debe permanecer visible para el regreso")
+	assert(is_zero_approx(tren.velocidad_actual()), "La formación debe detenerse en Bosques")
+	print("OK: ida completa hasta Bosques (%d estaciones); regreso habilitado" % _detenciones.size())
 	quit()
 
 

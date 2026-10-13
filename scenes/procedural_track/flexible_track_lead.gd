@@ -31,6 +31,11 @@ extends ProceduralTrackSegment
 		if is_inside_tree() and not _bloqueo_reconstruccion:
 			reconstruir_tramo()
 
+## Distancia adicional mínima tomada sobre el Path3D conectado. La red calcula
+## el punto final a partir de este valor, por lo que el lead se sigue adaptando
+## de forma continua a la curva de la vía.
+@export_range(0.0, 250.0, 0.5, "suffix:m") var expansion_sobre_path: float = 0.0
+
 ## Desplazamiento lateral en metros en el extremo exterior (+X relativo / derecha).
 @export_range(-15.0, 15.0, 0.25) var offset_lateral: float = 0.0:
 	set(v):

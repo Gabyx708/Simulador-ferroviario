@@ -27,9 +27,11 @@ func _run() -> void:
 	var servicio: ServicioFerroviario = raiz.find_child("ServicioConstitucionBosques", true, false) as ServicioFerroviario
 	assert(servicio != null, "No existe ServicioConstitucionBosques")
 	assert(servicio.cantidad_paradas() == ITINERARIO.size(), "El servicio debe contener las 16 estaciones físicas")
-	assert(servicio.solo_ida, "Constitución–Bosques debe configurarse como servicio de ida")
-	assert(servicio.finaliza_en(ITINERARIO.size() - 1, 1), "Bosques debe ser el final operativo del servicio")
-	assert(not servicio.finaliza_en(0, 1), "Constitución no debe finalizar el servicio de ida")
+	assert(not servicio.solo_ida and not servicio.finalizar_al_volver, "El servicio debe alternar continuamente entre las dos cabeceras")
+	assert(not servicio.finaliza_en(ITINERARIO.size() - 1, 1), "Bosques debe iniciar el regreso")
+	assert(not servicio.finaliza_en(0, -1), "Constitución debe iniciar una nueva ida")
+	assert((servicio.obtener_parada(0) as Estacion).es_terminal, "Plaza Constitución debe estar marcada como terminal")
+	assert((servicio.obtener_parada(ITINERARIO.size() - 1) as Estacion).es_terminal, "Bosques debe estar marcada como terminal")
 	for indice: int in ITINERARIO.size():
 		var parada: Node = servicio.obtener_parada(indice)
 		assert(parada != null, "La parada %d debe resolver su NodePath" % indice)

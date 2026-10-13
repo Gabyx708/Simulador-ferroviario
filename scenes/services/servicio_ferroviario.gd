@@ -15,6 +15,8 @@ class_name ServicioFerroviario
 @export var finalizar_al_volver: bool = false
 ## Derecha/izquierda mirando hacia la primera parada (Constitución).
 @export var separar_vias_por_sentido: bool = false
+## Usa el sentido configurado en cada Path3D para elegir una vía compatible.
+@export var usar_sentido_de_vias: bool = true
 
 @export_group("Horario previsto")
 @export_range(1.0, 200.0, 1.0) var velocidad_horario_kmh: float = 50.0
@@ -39,6 +41,17 @@ var _validacion_ida_cache: Dictionary = {}
 func _ready() -> void:
 	if not Engine.is_editor_hint() and separar_vias_por_sentido:
 		call_deferred("_configurar_destinos_andenes")
+
+
+func _obtener_red_ferroviaria() -> Node:
+	var raiz: Node = get_tree().edited_scene_root if Engine.is_editor_hint() else get_tree().current_scene
+	if raiz != null:
+		var red_escena: Node = raiz.find_child("TrackNetwork", true, false)
+		if red_escena != null:
+			return red_escena
+	# Los tests y las vistas previas pueden instanciar el nivel sin marcarlo
+	# como `current_scene`; en ese caso se busca desde el árbol completo.
+	return get_tree().root.find_child("TrackNetwork", true, false)
 
 
 ## La demanda de cada andén lateral acompaña a la vía que lo sirve.
@@ -160,6 +173,9 @@ func finaliza_en(indice: int, direccion: int) -> bool:
 ## Selecciona la vía del lado indicado sin depender de la orientación de cada Path3D.
 ## Las playas de Constitución conservan sus accesos propios de terminal.
 func filtrar_vias_sentido(estacion: Node, candidatos: Array[Dictionary], sentido_ida: bool) -> Array[Dictionary]:
+	var configuradas: Dictionary = _filtrar_vias_por_sentido_configurado(candidatos, sentido_ida)
+	if bool(configuradas.get("hay_asignacion", false)):
+		return configuradas.get("candidatos", []) as Array[Dictionary]
 	var estacion_datos: Estacion = estacion as Estacion
 	if sentido_ida and estacion_datos != null and estacion_datos.usar_traza_como_via_ida:
 		var candidatos_asignados: Array[Dictionary] = []
@@ -167,40 +183,79 @@ func filtrar_vias_sentido(estacion: Node, candidatos: Array[Dictionary], sentido
 			if candidato.get("traza") == estacion_datos.traza:
 				candidatos_asignados.append(candidato)
 		return candidatos_asignados
-	if not separar_vias_por_sentido or estacion == obtener_parada(0):
+	if not separar_vias_por_sentido:
 		return candidatos
 	if candidatos.size() < 2:
-		return []
+		return candidatos
 	var indice: int = -1
 	for i: int in paradas.size():
 		if obtener_parada(i) == estacion:
 			indice = i
 			break
-	if indice <= 0 or not (estacion is Node3D):
+	if indice < 0 or not (estacion is Node3D):
 		return candidatos
-	var anterior: Node3D = obtener_parada(indice - 1) as Node3D
-	if anterior == null:
+	var referencia: Node3D = obtener_parada(indice - 1 if indice > 0 else 1) as Node3D
+	if referencia == null:
 		return candidatos
-	var hacia_constitucion: Vector3 = anterior.global_position - (estacion as Node3D).global_position
+	var hacia_constitucion: Vector3 = referencia.global_position - (estacion as Node3D).global_position if indice > 0 else (estacion as Node3D).global_position - referencia.global_position
 	hacia_constitucion.y = 0.0
 	var derecha: Vector3 = hacia_constitucion.normalized().cross(Vector3.UP)
-	var extremo: float = -INF if sentido_ida else INF
-	var minimo: float = INF
-	var maximo: float = -INF
-	for candidato: Dictionary in candidatos:
-		var punto: Vector3 = candidato.get("punto_global", (estacion as Node3D).global_position)
-		var lateral: float = punto.dot(derecha)
-		minimo = minf(minimo, lateral)
-		maximo = maxf(maximo, lateral)
-		extremo = maxf(extremo, lateral) if sentido_ida else minf(extremo, lateral)
-	if maximo - minimo <= 1.0:
+	if derecha.length_squared() < 0.001:
 		return []
-	var resultado: Array[Dictionary] = []
+	var grupo: Array[Dictionary] = vias_asignadas_a_sentido(estacion, candidatos, sentido_ida)
+	# El itinerario usa la vía exterior del grupo: es la que está conectada al
+	# corredor pasante. Las restantes siguen señalizadas y quedan disponibles
+	# para futuras reglas de adelantamiento o de reserva.
+	if grupo.is_empty():
+		return grupo
+	return [grupo.back() if sentido_ida else grupo.front()]
+
+
+## El propio Path3D define su uso. Las vías comunes permiten ambos sentidos.
+func _filtrar_vias_por_sentido_configurado(candidatos: Array[Dictionary], sentido_ida: bool) -> Dictionary:
+	if not usar_sentido_de_vias:
+		return {"hay_asignacion": false, "candidatos": candidatos}
+	var permitidas: Array[Dictionary] = []
+	var hay_asignacion: bool = false
 	for candidato: Dictionary in candidatos:
-		var punto: Vector3 = candidato.get("punto_global", (estacion as Node3D).global_position)
-		if absf(punto.dot(derecha) - extremo) <= 1.0:
-			resultado.append(candidato)
-	return resultado
+		var via: Path3D = candidato.get("traza") as Path3D
+		if via == null:
+			continue
+		if via.has_method("tiene_sentido_asignado") and bool(via.call("tiene_sentido_asignado")):
+			hay_asignacion = true
+		if not via.has_method("permite_sentido_servicio") or bool(via.call("permite_sentido_servicio", sentido_ida)):
+			permitidas.append(candidato)
+	return {"hay_asignacion": hay_asignacion, "candidatos": permitidas}
+
+
+## Devuelve todas las vías reservadas para un sentido. Esta es la fuente de
+## verdad que usa la señalización: con 12, 4 y 2 vías genera 6/6, 2/2 y 1/1.
+func vias_asignadas_a_sentido(estacion: Node, candidatos: Array[Dictionary], sentido_ida: bool) -> Array[Dictionary]:
+	if candidatos.size() < 2 or not (estacion is Node3D):
+		return candidatos
+	var indice: int = -1
+	for i: int in paradas.size():
+		if obtener_parada(i) == estacion:
+			indice = i
+			break
+	if indice < 0:
+		return candidatos
+	var referencia: Node3D = obtener_parada(indice - 1 if indice > 0 else 1) as Node3D
+	if referencia == null:
+		return candidatos
+	var hacia_constitucion: Vector3 = referencia.global_position - (estacion as Node3D).global_position if indice > 0 else (estacion as Node3D).global_position - referencia.global_position
+	hacia_constitucion.y = 0.0
+	var derecha: Vector3 = hacia_constitucion.normalized().cross(Vector3.UP)
+	if derecha.length_squared() < 0.001:
+		return []
+	var ordenados: Array[Dictionary] = candidatos.duplicate()
+	ordenados.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return (a.get("punto_global", (estacion as Node3D).global_position) as Vector3).dot(derecha) < (b.get("punto_global", (estacion as Node3D).global_position) as Vector3).dot(derecha)
+	)
+	var corte: int = ordenados.size() / 2
+	# El lado derecho mirando hacia Bosques queda reservado para la ida; el
+	# izquierdo para la vuelta.
+	return ordenados.slice(corte, ordenados.size()) if sentido_ida else ordenados.slice(0, corte)
 
 
 ## Horario relativo al alta del tren. Se copia una vez antes de medir las llegadas.

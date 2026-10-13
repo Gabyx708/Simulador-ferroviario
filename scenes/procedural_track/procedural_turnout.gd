@@ -645,4 +645,3 @@ func conmutar_a(modo: int = 0) -> void:
 
 func get_largo_aparato() -> float:
 	return largo_turnout
-

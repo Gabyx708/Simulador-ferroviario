@@ -9,6 +9,7 @@ extends Path3D
 ## y permite guardar o resetear las modificaciones a la forma original base de la red.
 
 signal geometria_modificada(segment_id: String)
+signal datos_modificados(segment_id: String)
 signal edicion_guardada(segment_id: String)
 signal tramo_reseteado(segment_id: String)
 
@@ -16,6 +17,19 @@ const TIEMPO_DEBOUNCE: float = 0.10
 ## Intervalo (s) entre sondeos de la curva para detectar ediciones manuales.
 const INTERVALO_POLLING_S: float = 0.2
 
+enum UsoDireccion { IDA, VUELTA, USO_COMUN }
+## Uso operativo de este tramo. Uso común permite trenes en ambos sentidos.
+@export var uso_direccion: UsoDireccion = UsoDireccion.IDA:
+	set(v):
+		uso_direccion = v
+		_actualizar_efecto_sentido()
+		_notificar_datos_modificados()
+## Aplica el color de depuración nativo del Path3D en el editor.
+@export var mostrar_efecto_sentido: bool = true:
+	set(v):
+		mostrar_efecto_sentido = v
+		_actualizar_efecto_sentido()
+		_notificar_datos_modificados()
 @export_group("Identificación de Red")
 ## ID único del segmento en la red topológica (ej: "2659599269_0", "r1").
 @export var segment_id: String = ""
@@ -23,6 +37,9 @@ const INTERVALO_POLLING_S: float = 0.2
 @export var sector_nombre: String = ""
 ## Tramo o estación asignada.
 @export var tramo_nombre: String = ""
+
+
+
 
 @export_group("Ajuste Extremo Inicio (Start)")
 ## Desplazamiento fino (X, Y, Z) aplicado al punto inicial (punto 0) de la curva.
@@ -74,6 +91,7 @@ const INTERVALO_POLLING_S: float = 0.2
 	set(v):
 		anular_recorte_switch = v
 		notificar_geometria_actualizada()
+		_notificar_datos_modificados()
 
 @export_group("Acciones de Vía")
 ## Guarda las modificaciones geométricas de este tramo en el archivo de ediciones persistente.
@@ -126,9 +144,19 @@ var _tiempo_sin_cambios: float = 0.0
 var _acum_polling: float = 0.0
 var _bloqueo_reconstruccion: bool = false
 var _curva_conectada: Curve3D = null
+var _cache_hash_transform: int = 0
 
 
 var _red_cache: TrackNetwork = null
+var _restaurar_geometria_al_reinsertar: bool = false
+
+
+func _enter_tree() -> void:
+	# Sólo se activa tras un Ctrl+Z: la salida previa quitó su geometría visual
+	# sin persistir la baja del tramo.
+	if Engine.is_editor_hint() and _restaurar_geometria_al_reinsertar:
+		_restaurar_geometria_al_reinsertar = false
+		call_deferred("notificar_geometria_actualizada")
 
 
 func _ready() -> void:
@@ -142,9 +170,21 @@ func _ready() -> void:
 		longitud_metros = curve.get_baked_length()
 		if curva_original == null:
 			curva_original = curve.duplicate() as Curve3D
+	_cache_hash_transform = hash(transform)
+	_actualizar_efecto_sentido()
 
 
 func _exit_tree() -> void:
+	# El editor desmonta temporalmente nodos al ejecutar Eliminar/Deshacer.
+	# No se debe tocar la red ni el journal desde esta notificación: el propio
+	# UndoRedo conserva la instancia y puede restaurarla en el siguiente frame.
+	if Engine.is_editor_hint():
+		_restaurar_geometria_al_reinsertar = true
+		var geo_editor: Node = _obtener_track_geometry()
+		if geo_editor != null and geo_editor.has_method("eliminar_geometria_tramo"):
+			geo_editor.call("eliminar_geometria_tramo", segment_id)
+		return
+
 	if _curva_conectada != null and is_instance_valid(_curva_conectada):
 		if _curva_conectada.changed.is_connected(_on_curve_resource_changed):
 			_curva_conectada.changed.disconnect(_on_curve_resource_changed)
@@ -189,6 +229,11 @@ func _process(delta: float) -> void:
 	_acum_polling += delta
 	if _acum_polling >= INTERVALO_POLLING_S:
 		_acum_polling = 0.0
+		var h_transform: int = hash(transform)
+		if h_transform != _cache_hash_transform:
+			_cache_hash_transform = h_transform
+			_notificar_datos_modificados()
+			geometria_modificada.emit(segment_id)
 		if curve != null:
 			var h: int = _obtener_hash_curva()
 			if h != _cache_hash_curva:
@@ -247,6 +292,7 @@ func _al_modificar_curva_desde_editor() -> void:
 	_bloqueo_reconstruccion = false
 	if curve != null:
 		longitud_metros = curve.get_baked_length()
+	_actualizar_efecto_sentido()
 
 	notificar_geometria_actualizada()
 	geometria_modificada.emit(segment_id)
@@ -291,6 +337,36 @@ func notificar_geometria_actualizada() -> void:
 		geo.call("actualizar_geometria_tramo", segment_id)
 
 
+func _notificar_datos_modificados() -> void:
+	if not Engine.is_editor_hint() or not is_inside_tree() or _bloqueo_reconstruccion or segment_id.is_empty():
+		return
+	esta_modificada = true
+	estado_edicion = "Modificado"
+	datos_modificados.emit(segment_id)
+
+
+func permite_sentido_servicio(sentido_ida: bool) -> bool:
+	return uso_direccion == UsoDireccion.USO_COMUN or (uso_direccion == UsoDireccion.IDA) == sentido_ida
+
+
+func tiene_sentido_asignado() -> bool:
+	return uso_direccion != UsoDireccion.USO_COMUN
+
+
+func _actualizar_efecto_sentido() -> void:
+	# Path3D ya dibuja su curva en el editor. Color.BLACK delega nuevamente en
+	# el color global de depuración y, por tanto, oculta este efecto personalizado.
+	if not mostrar_efecto_sentido:
+		debug_custom_color = Color.BLACK
+		return
+	var color := Color("f5c542")
+	if uso_direccion == UsoDireccion.IDA:
+		color = Color("2ecc71")
+	elif uso_direccion == UsoDireccion.VUELTA:
+		color = Color("27b9ff")
+	debug_custom_color = color
+
+
 func _obtener_track_network() -> TrackNetwork:
 	var candidato: Node = get_parent()
 	while candidato != null:
@@ -327,6 +403,9 @@ func encajar_con_vecino(extremo: String) -> void:
 
 ## Guarda las modificaciones geométricas de este tramo en el archivo persistente de la red.
 func guardar_edicion() -> void:
+	if _curva_sucia and curve != null:
+		_curva_sucia = false
+		_al_modificar_curva_desde_editor()
 	var red: TrackNetwork = _obtener_track_network()
 	if red != null and red.has_method("guardar_edicion_segmento"):
 		red.call("guardar_edicion_segmento", segment_id)
@@ -379,8 +458,19 @@ func _obtener_hash_curva() -> int:
 
 ## Serializa la curva actual a un diccionario reproducible en formato JSON.
 func serializar_datos() -> Dictionary:
+	if _curva_sucia and curve != null and not _bloqueo_reconstruccion:
+		_curva_sucia = false
+		_al_modificar_curva_desde_editor()
 	return {
 		"modificado": esta_modificada,
+		"uso_direccion": int(uso_direccion),
+		"mostrar_efecto_sentido": mostrar_efecto_sentido,
+		"transform": [
+			transform.basis.x.x, transform.basis.x.y, transform.basis.x.z,
+			transform.basis.y.x, transform.basis.y.y, transform.basis.y.z,
+			transform.basis.z.x, transform.basis.z.y, transform.basis.z.z,
+			transform.origin.x, transform.origin.y, transform.origin.z
+		],
 		"anular_recorte_switch": anular_recorte_switch,
 		"offset_inicio": [offset_inicio.x, offset_inicio.y, offset_inicio.z],
 		"tangente_inicio": [tangente_inicio.x, tangente_inicio.y, tangente_inicio.z],
@@ -394,6 +484,15 @@ func serializar_datos() -> Dictionary:
 ## Deserializa y aplica datos guardados en este tramo.
 func deserializar_datos(data: Dictionary) -> void:
 	_bloqueo_reconstruccion = true
+	uso_direccion = clampi(int(data.get("uso_direccion", int(uso_direccion))), 0, 2)
+	mostrar_efecto_sentido = bool(data.get("mostrar_efecto_sentido", mostrar_efecto_sentido))
+	var tr: Array = data.get("transform", []) as Array
+	if tr.size() >= 12:
+		transform = Transform3D(Basis(
+			Vector3(float(tr[0]), float(tr[1]), float(tr[2])),
+			Vector3(float(tr[3]), float(tr[4]), float(tr[5])),
+			Vector3(float(tr[6]), float(tr[7]), float(tr[8]))
+		), Vector3(float(tr[9]), float(tr[10]), float(tr[11])))
 	anular_recorte_switch = bool(data.get("anular_recorte_switch", false))
 
 	var o_ini: Array = data.get("offset_inicio", [0.0, 0.0, 0.0]) as Array
@@ -423,6 +522,7 @@ func deserializar_datos(data: Dictionary) -> void:
 	if curve != null:
 		longitud_metros = curve.get_baked_length()
 	_cache_hash_curva = _obtener_hash_curva()
+	_cache_hash_transform = hash(transform)
 	_bloqueo_reconstruccion = false
 
 

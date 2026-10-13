@@ -1515,6 +1515,7 @@ func serializar_datos() -> Dictionary:
 	var o: Vector3 = global_transform.origin
 	return {
 		"segment_id": traza.name if (traza != null and is_instance_valid(traza)) else "",
+		"alinear_a_via": alinear_a_via,
 		"progreso_en_via": progreso_en_via,
 		"invertir_sentido": invertir_sentido,
 		"desfasaje_vertical": desfasaje_vertical,
@@ -1536,6 +1537,19 @@ func serializar_datos() -> Dictionary:
 		"terminal_parada_vuelta": terminal_parada_vuelta,
 		"tiempo_espera": tiempo_espera,
 		"activa": activa,
+		"capacidad_maxima_espera": capacidad_maxima_espera,
+		"incluir_anden_b_pasajeros": incluir_anden_b_pasajeros,
+		"desfasaje_vertical_pasajeros_anden_a": desfasaje_vertical_pasajeros_anden_a,
+		"ajuste_lateral_pasajeros_anden_a": ajuste_lateral_pasajeros_anden_a,
+		"tasa_generacion_pasajeros": tasa_generacion_pasajeros,
+		"maximo_pasajeros_visibles": maximo_pasajeros_visibles,
+		"tiempo_salida_pasajeros": tiempo_salida_pasajeros,
+		"mostrar_estructura_andenes": mostrar_estructura_andenes,
+		"demanda_pasajeros": demanda_pasajeros.resource_path if demanda_pasajeros != null else "",
+		"destino_anden_a": destino_anden_a,
+		"destino_anden_b": destino_anden_b,
+		"destino_anden_central_1": destino_anden_central_1,
+		"destino_anden_central_2": destino_anden_central_2,
 		"transform": [b.x.x, b.x.y, b.x.z, b.y.x, b.y.y, b.y.z, b.z.x, b.z.y, b.z.z, o.x, o.y, o.z]
 	}
 
@@ -1544,6 +1558,7 @@ func serializar_datos() -> Dictionary:
 func deserializar_datos(data: Dictionary) -> void:
 	_ajustando_transform = true
 	_autodetectar_traza_segun_datos(str(data.get("segment_id", "")))
+	alinear_a_via = bool(data.get("alinear_a_via", alinear_a_via))
 	progreso_en_via = float(data.get("progreso_en_via", progreso_en_via))
 	invertir_sentido = bool(data.get("invertir_sentido", invertir_sentido))
 	desfasaje_vertical = float(data.get("desfasaje_vertical", desfasaje_vertical))
@@ -1567,6 +1582,31 @@ func deserializar_datos(data: Dictionary) -> void:
 		es_terminal = bool(data.get("es_terminal", es_terminal))
 	tiempo_espera = maxf(0.0, float(data.get("tiempo_espera", tiempo_espera)))
 	activa = bool(data.get("activa", activa))
+	capacidad_maxima_espera = int(data.get("capacidad_maxima_espera", capacidad_maxima_espera))
+	incluir_anden_b_pasajeros = bool(data.get("incluir_anden_b_pasajeros", incluir_anden_b_pasajeros))
+	desfasaje_vertical_pasajeros_anden_a = float(data.get("desfasaje_vertical_pasajeros_anden_a", desfasaje_vertical_pasajeros_anden_a))
+	ajuste_lateral_pasajeros_anden_a = float(data.get("ajuste_lateral_pasajeros_anden_a", ajuste_lateral_pasajeros_anden_a))
+	tasa_generacion_pasajeros = float(data.get("tasa_generacion_pasajeros", tasa_generacion_pasajeros))
+	maximo_pasajeros_visibles = int(data.get("maximo_pasajeros_visibles", maximo_pasajeros_visibles))
+	tiempo_salida_pasajeros = float(data.get("tiempo_salida_pasajeros", tiempo_salida_pasajeros))
+	mostrar_estructura_andenes = bool(data.get("mostrar_estructura_andenes", mostrar_estructura_andenes))
+	var ruta_demanda: String = str(data.get("demanda_pasajeros", ""))
+	if not ruta_demanda.is_empty() and ResourceLoader.exists(ruta_demanda):
+		demanda_pasajeros = load(ruta_demanda) as DemandaEstacion
+	destino_anden_a = int(data.get("destino_anden_a", destino_anden_a))
+	destino_anden_b = int(data.get("destino_anden_b", destino_anden_b))
+	destino_anden_central_1 = int(data.get("destino_anden_central_1", destino_anden_central_1))
+	destino_anden_central_2 = int(data.get("destino_anden_central_2", destino_anden_central_2))
+	var valores_transform: Array = data.get("transform", []) as Array
+	if valores_transform.size() == 12:
+		global_transform = Transform3D(
+			Basis(
+				Vector3(float(valores_transform[0]), float(valores_transform[1]), float(valores_transform[2])),
+				Vector3(float(valores_transform[3]), float(valores_transform[4]), float(valores_transform[5])),
+				Vector3(float(valores_transform[6]), float(valores_transform[7]), float(valores_transform[8]))
+			),
+			Vector3(float(valores_transform[9]), float(valores_transform[10]), float(valores_transform[11]))
+		)
 	_ajustando_transform = false
 	_actualizar_dimensiones_anden()
 	_actualizar_posicion_postes()

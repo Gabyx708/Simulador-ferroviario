@@ -1880,6 +1880,10 @@ func _process(delta: float) -> void:
 					return
 				_detenido = false
 				_esperando_reserva = false
+				# En cada cabecera, la formación sale por la misma vía en sentido
+				# contrario. La primera salida de Constitución ya mira hacia Bosques.
+				if _servicio_ferroviario.es_terminal(_indice_servicio) and not (_indice_servicio == 0 and _direccion_servicio > 0):
+					invertir_sentido = not invertir_sentido
 				var estacion_salida: Dictionary = _resumen_estacion(_parada_objetivo_servicio())
 				_establecer_estado(EstadoOperacion.EN_MARCHA)
 				salio_de_estacion.emit(obtener_resumen_operativo(), estacion_salida)
