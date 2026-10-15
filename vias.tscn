@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://di24cfwbrvy3b"]
+
+[ext_resource type="Script" uid="uid://bdq48uksvil70" path="res://path_generador.gd" id="1_vjgly"]
+
+[node name="Node3D" type="Node3D" unique_id=1606470940]
+script = ExtResource("1_vjgly")
+mostrar_en_arbol_editor = false

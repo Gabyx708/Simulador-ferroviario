@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://cm0qpprfuap4"]
+
+[ext_resource type="PackedScene" uid="uid://bbrjdbvvbi7yc" path="res://assets/models/trenes_argentinos/tren_argentino_intermedio.glb" id="1_vm4ji"]
+
+[node name="tren_argentino_intermedio" unique_id=470369865 instance=ExtResource("1_vm4ji")]

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c66e6mt8a2rqk"]
+
+[resource]
+resource_name = "Franja_celeste.002"
+albedo_color = Color(0.5924487, 0.8338193, 0.9389339, 1)
+metallic = 0.3
+roughness = 0.4

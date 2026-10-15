@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c73woidxnbu2p"]
+
+[resource]
+resource_name = "Faro.001"
+albedo_color = Color(1, 0.9913309, 0.9556032, 1)
+metallic = 0.1
+roughness = 0.25

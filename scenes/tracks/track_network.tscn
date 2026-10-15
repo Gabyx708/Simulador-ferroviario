@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://b7xtracknet01"]
+
+[ext_resource type="Script" uid="uid://ctufcbbry6w3g" path="res://scenes/tracks/track_network.gd" id="1_tracknet"]
+[ext_resource type="Script" uid="uid://bs7nc42e22aot" path="res://scenes/tracks/track_geometry.gd" id="2_trackgeo"]
+[ext_resource type="Texture2D" uid="uid://b04tyq1judvps" path="res://map.png" id="3_3qogf"]
+
+[node name="TrackNetwork" type="Node3D" unique_id=1228197083]
+script = ExtResource("1_tracknet")
+tramos_excluidos = PackedStringArray()
+switch_id_inspeccion = 1957896612
+info_switch_actual = "=== CAMBIO DE VÍA [1 / 214] (TIPO_B) ===
+Nodo OSM ID: 1957896612
+Posición 3D: X=152.4 m | Y=0.0 m | Z=691.0 m
+Vía Común (Entrada / Stem): seg_471
+Vía Directa (Recta): seg_470
+Vía Desviada (Curva): seg_662
+Estado Aguja: RAMA_IZQUIERDA
+Segmento de Salida Conectado: seg_470"
+
+[node name="Vias" type="Node3D" parent="." unique_id=1568285590]
+
+[node name="Switches" type="Node3D" parent="." unique_id=1595745192]
+
+[node name="GeometriaVias" type="Node3D" parent="." unique_id=1498273615]
+script = ExtResource("2_trackgeo")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1276284569]
+transform = Transform3D(3124.65, 0, 0, 0, -0.00013658279, 1, 0, -3124.65, -4.371139e-08, 7224.0703, 0, 12803.464)
+visible = false
+modulate = Color(1, 1, 1, 0.2784314)
+texture = ExtResource("3_3qogf")

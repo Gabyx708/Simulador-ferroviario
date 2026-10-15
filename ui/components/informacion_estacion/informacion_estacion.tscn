@@ -1,0 +1,113 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/components/informacion_estacion/informacion_estacion.gd" id="1_estacion"]
+
+[node name="InformacionEstacion" type="PanelContainer"]
+visible = false
+custom_minimum_size = Vector2(320, 0)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -340.0
+offset_top = -20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("1_estacion")
+
+[node name="Margen" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="Contenido" type="VBoxContainer" parent="Margen"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Encabezado" type="HBoxContainer" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="Titulo" type="Label" parent="Margen/Contenido/Encabezado"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.756863, 0.278431, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 2
+text = "Estación"
+
+[node name="BotonCerrar" type="Button" parent="Margen/Contenido/Encabezado"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Cerrar información de estación (Esc)"
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_font_sizes/font_size = 12
+text = "✕"
+flat = true
+
+[node name="SeparadorOcupacion" type="HSeparator" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="Esperando" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "En espera: 0 / 0"
+
+[node name="BarraOcupacion" type="ProgressBar" parent="Margen/Contenido"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+show_percentage = false
+
+[node name="SeparadorAndenes" type="HSeparator" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="TituloAndenes" type="Label" parent="Margen/Contenido"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_font_sizes/font_size = 10
+text = "ANDENES DE ABORDAJE"
+
+[node name="PasajerosPorAnden" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.92, 0.97, 1)
+theme_override_font_sizes/font_size = 10
+text = ""
+
+[node name="SeparadorHistorico" type="HSeparator" parent="Margen/Contenido"]
+layout_mode = 2
+
+[node name="TituloInformacionExtra" type="Label" parent="Margen/Contenido"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_font_sizes/font_size = 10
+text = "INFORMACIÓN EXTRA"
+
+[node name="Historico" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.68, 0.75, 1)
+theme_override_font_sizes/font_size = 10
+text = "Histórico: 0 pasajeros"
+
+[node name="Subieron" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
+theme_override_font_sizes/font_size = 10
+text = "Subieron al tren: 0"
+
+[node name="Bajaron" type="Label" parent="Margen/Contenido"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 0.55, 1)
+theme_override_font_sizes/font_size = 10
+text = "Bajaron del tren: 0"

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/camera/camara_libre.gd" id="1_cam"]
+
+[node name="CamaraLibre" type="Camera3D"]
+current = true
+far = 3000.0
+script = ExtResource("1_cam")

@@ -1,0 +1,82 @@
+[gd_scene format=3 uid="uid://8dy14wqqo0eo"]
+
+[ext_resource type="PackedScene" uid="uid://cqxvxsq3680pj" path="res://assets/models/train/csr_roca_coche_motriz.glb" id="1_d6puj"]
+[ext_resource type="Material" uid="uid://vk3il0gokdrn" path="res://assets/models/train/motriz/Bastidor.002.tres" id="2_11cmf"]
+[ext_resource type="Material" uid="uid://b5ubedo3xl2sk" path="res://assets/models/train/motriz/Techo.002.tres" id="3_sxkml"]
+[ext_resource type="Material" uid="uid://cyjjaqckg2p7w" path="res://assets/models/train/motriz/Eje_0.002.tres" id="4_edpme"]
+[ext_resource type="Material" uid="uid://u155rdkrryx3" path="res://assets/models/train/motriz/Enganches.002.tres" id="5_uhhqp"]
+[ext_resource type="Material" uid="uid://c66e6mt8a2rqk" path="res://assets/models/train/motriz/Franja_celeste.002.tres" id="6_a7mvj"]
+[ext_resource type="Material" uid="uid://j2s40rmd3gwo" path="res://assets/models/train/motriz/Interior_asientos.002.tres" id="7_fjf3d"]
+[ext_resource type="Material" uid="uid://ew8b6wi0akay" path="res://assets/models/train/motriz/Interior_barras.002.tres" id="8_y2wn6"]
+[ext_resource type="Material" uid="uid://dfrdmfosxf3qt" path="res://assets/models/train/motriz/Interior_cielorraso.002.tres" id="9_admru"]
+[ext_resource type="Material" uid="uid://bvhyys65wfcg8" path="res://assets/models/train/motriz/Interior_estructura.002.tres" id="10_y2x0j"]
+[ext_resource type="Material" uid="uid://bvykk1orgexau" path="res://assets/models/train/motriz/Interior_piso.002.tres" id="11_65put"]
+[ext_resource type="Material" uid="uid://clskruuy463e1" path="res://assets/models/train/motriz/Puertas.002.tres" id="12_0aedg"]
+[ext_resource type="Material" uid="uid://tvew74ify4yd" path="res://assets/models/train/motriz/Vidrios.002.tres" id="13_c7jie"]
+[ext_resource type="Material" uid="uid://dj336rlkj5sxa" path="res://assets/models/train/motriz/Zocalo_azul.002.tres" id="14_28ihi"]
+
+[node name="csr_roca_coche_motriz" unique_id=276237776 instance=ExtResource("1_d6puj")]
+
+[node name="Bastidor" parent="." index="0" unique_id=633433546]
+surface_material_override/0 = ExtResource("2_11cmf")
+
+[node name="Bogie_0_bastidor" parent="." index="1" unique_id=843371100]
+surface_material_override/0 = ExtResource("2_11cmf")
+
+[node name="Bogie_1_bastidor" parent="." index="2" unique_id=660828653]
+surface_material_override/0 = ExtResource("2_11cmf")
+
+[node name="Carroceria" parent="." index="3" unique_id=1465216757]
+surface_material_override/0 = ExtResource("3_sxkml")
+
+[node name="Eje_0" parent="." index="4" unique_id=299995189]
+surface_material_override/0 = ExtResource("4_edpme")
+
+[node name="Eje_1" parent="." index="5" unique_id=1751432310]
+surface_material_override/0 = ExtResource("4_edpme")
+
+[node name="Eje_2" parent="." index="6" unique_id=170755876]
+surface_material_override/0 = ExtResource("4_edpme")
+
+[node name="Eje_3" parent="." index="7" unique_id=1872857404]
+surface_material_override/0 = ExtResource("4_edpme")
+
+[node name="Enganches" parent="." index="8" unique_id=1507006112]
+surface_material_override/0 = ExtResource("5_uhhqp")
+
+[node name="Equipos_techo" parent="." index="9" unique_id=1204258136]
+surface_material_override/0 = ExtResource("5_uhhqp")
+
+[node name="Franja_celeste" parent="." index="12" unique_id=1442073686]
+visible = false
+surface_material_override/0 = ExtResource("6_a7mvj")
+
+[node name="Interior_asientos" parent="." index="13" unique_id=1438465970]
+surface_material_override/0 = ExtResource("7_fjf3d")
+
+[node name="Interior_barras" parent="." index="14" unique_id=187060665]
+surface_material_override/0 = ExtResource("8_y2wn6")
+
+[node name="Interior_cielorraso" parent="." index="15" unique_id=1469558602]
+surface_material_override/0 = ExtResource("9_admru")
+
+[node name="Interior_estructura" parent="." index="16" unique_id=62681264]
+surface_material_override/0 = ExtResource("10_y2x0j")
+
+[node name="Interior_piso" parent="." index="17" unique_id=2140679224]
+surface_material_override/0 = ExtResource("11_65put")
+
+[node name="Pantografo" parent="." index="18" unique_id=1183665163]
+surface_material_override/0 = ExtResource("5_uhhqp")
+
+[node name="Puertas" parent="." index="19" unique_id=295976158]
+surface_material_override/0 = ExtResource("12_0aedg")
+
+[node name="Techo" parent="." index="20" unique_id=1521074677]
+surface_material_override/0 = ExtResource("3_sxkml")
+
+[node name="Vidrios" parent="." index="21" unique_id=20645302]
+surface_material_override/0 = ExtResource("13_c7jie")
+
+[node name="Zocalo_azul" parent="." index="22" unique_id=1466215292]
+surface_material_override/0 = ExtResource("14_28ihi")

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bvhyys65wfcg8"]
+
+[resource]
+resource_name = "Interior_estructura.002"
+albedo_color = Color(0.7977378, 0.80924034, 0.8205324, 1)
+metallic = 0.8
+roughness = 0.3

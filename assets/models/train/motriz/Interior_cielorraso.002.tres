@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dfrdmfosxf3qt"]
+
+[resource]
+resource_name = "Interior_cielorraso.002"
+albedo_color = Color(0.9665055, 0.9701036, 0.9718961, 1)
+metallic = 0.05
+roughness = 0.75

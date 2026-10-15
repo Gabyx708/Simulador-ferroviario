@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dk3spdeu1328t"]
+
+[resource]
+resource_name = "Pantografo.001"
+albedo_color = Color(0.7977378, 0.80924034, 0.8205324, 1)
+metallic = 0.85
+roughness = 0.3

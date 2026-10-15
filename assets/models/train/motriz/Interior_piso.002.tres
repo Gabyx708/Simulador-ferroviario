@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bvykk1orgexau"]
+
+[resource]
+resource_name = "Interior_piso.002"
+albedo_color = Color(0.5642772, 0.57504845, 0.5855679, 1)
+metallic = 0.05
+roughness = 0.85
