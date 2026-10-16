@@ -87,14 +87,14 @@ existen en `SimulacionController` (`detener_tren_temporalmente`,
 `reanudar_tren`, `finalizar_tren_incompleto`). No toca `Tren`,
 `TrackNetwork` ni reservas directamente.
 
-| | Falla eléctrica | Piquete | Desperfecto mecánico |
+| | Falla eléctrica | Piquete | Avería mecánica |
 | --- | --- | --- | --- |
 | Alcance | Un tramo (identificado por su estación de salida) | Una estación puntual | Un único tren |
-| Tipo | Zona activa, reanudable | Zona activa, reanudable | Inmediato, definitivo |
+| Tipo | Zona activa, reanudable | Zona activa, reanudable | Un tren detenido con plazo aleatorio de retiro |
 | Disparo | `disparar_falla_electrica(estacion_origen, duracion_s=-1)` | `disparar_piquete(estacion, duracion_s=-1)` | `disparar_desperfecto_mecanico(id_tren, motivo="...")` |
 | Duración por defecto | `duracion_falla_electrica_s = 90.0` | `duracion_piquete_s = 120.0` | No aplica |
 | Se aplica en | `salio_de_estacion` (nombre de origen == zona) | `llego_a_estacion` (nombre == zona) | Al llamar, sobre ese tren |
-| Resolución | Automática al vencer, o `reanudar_tren` manual | Igual | Ninguna -- no se puede reanudar |
+| Resolución | Automática al vencer, o `reanudar_tren` manual | Igual | A los 15–30 minutos simulados; al finalizar se registra la duración, se libera la reserva y se retira el tren |
 | Color | `COLOR_FALLA_ELECTRICA` (amarillo) | `COLOR_PIQUETE` (naranja) | `COLOR_DESPERFECTO_MECANICO` (rojo), vía `color_evento_activo(id_tren)` |
 
 ### Zonas activas: lo importante
@@ -110,19 +110,30 @@ lo da la reserva FIFO de `TrackNetwork` que ya existe (un tren detenido
 mantiene su reserva de vía), no hace falta programar nada acá. Ver la nota
 de alcance de bloqueo en la sección de Limitaciones.
 
-### Desperfecto mecánico: qué hace en concreto
+### Avería mecánica: qué hace en concreto
 
-No elimina el tren. Lo deja parado donde se rompió, visible,
-permanentemente (`_vel = 0.0` para siempre) -- libera sus reservas de vía
-(`liberar_reservas_tren`), así que **no bloquea a los trenes de atrás**,
-a diferencia de los eventos de zona. Queda como snapshot consultable
-(`INCOMPLETO`) hasta que alguien lo saque de servicio a mano con
-`eliminar_tren()`, que es un comando aparte.
+La detección automática conserva el umbral de 15 minutos simulados sin
+desplazamiento mientras el tren está en marcha. Las averías disparadas desde
+el panel/F3 siguen el mismo ciclo: el tren se detiene, conserva ruta y reservas,
+y bloquea el paso mediante el mecanismo FIFO existente. No se agrega demora
+artificial. El gestor elige un plazo uniforme entre 15 y 30 minutos simulados;
+la pausa congela el plazo y los cambios de velocidad lo escalan con el reloj de
+simulación. Al vencer, el tren pasa a `INCOMPLETO`, libera la vía y se elimina.
+
+El evento queda en el historial en memoria después de retirar el tren. Su
+registro incluye `plazo_retiro_s` (plazo sorteado), `inicio_s`, `fin_s`,
+`duracion_s` (tiempo simulado real hasta el retiro) y `activo`. La duración se
+muestra en la tabla de eventos de Métricas; el panel de Control indica que la
+avería está activa y muestra la duración al retirarse, sin un contador en vivo.
+Si el usuario elimina manualmente un tren averiado antes del plazo, el historial
+guarda la duración real hasta esa baja.
 
 ### Historial y color (para Persona 2)
 
 - `obtener_historial() -> Array[Dictionary]`: todos los eventos disparados
-  desde que arrancó el nivel, en memoria (no persiste entre sesiones).
+  desde que arrancó el nivel, en memoria (no persiste entre sesiones). Las
+  averías conservan su plazo aleatorio y duración real aun después de eliminar
+  la formación.
 - `color_evento_activo(id_tren: int) -> Color`: color del evento activo
   de ese tren, o `Color.TRANSPARENT` si no tiene ninguno. Este módulo no
   dibuja nada -- expone el dato para que el panel de Persona 2 pinte la

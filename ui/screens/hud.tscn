@@ -32,7 +32,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
 
 [node name="Paneles" type="VBoxContainer" parent="."]
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 60.0
 offset_right = 300.0
 offset_bottom = 720.0
 theme_override_constants/separation = 4
@@ -162,6 +162,7 @@ value = 3.0
 custom_minimum_size = Vector2(280, 28)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+visible = false
 
 [node name="Margen" type="MarginContainer" parent="Paneles/PanelSwitches"]
 layout_mode = 2

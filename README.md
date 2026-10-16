@@ -91,7 +91,7 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 
 En `ramal_roca_main.tscn`, el nodo `ServicioConstitucionBosques` guarda la secuencia operacional, no el orden visual de las vías. Después de crear cada andén `Estacion`, asignalo a su `Path3D`, ajustá `progreso_en_via` y arrastralo a `paradas` en el Inspector del servicio, en orden Constitución → Bosques. El `TrenCSR` ya está vinculado al servicio.
 
-Al hacer clic sobre una formación, la cámara cambia a una vista cenital y la sigue. `WASD` desplaza el encuadre relativo al tren, `Q/E` acerca o aleja la cámara, `Shift` acelera ese desplazamiento y `C` alterna entre seguimiento cenital y cámara libre; el seguimiento no se pierde al mover el encuadre.
+Al hacer clic sobre una formación, la cámara la sigue desde arriba con una inclinación inicial de 45°. La rueda del mouse acerca o aleja la cámara; el botón derecho permite ajustar la mirada y `C` alterna entre seguimiento y cámara libre.
 
 Cada andén es una parada independiente: para vías distintas de ida y vuelta agregá dos estaciones con el mismo `nombre_estacion`. El planificador resuelve el camino por el grafo de `TrackNetwork` y mueve las agujas necesarias. Si un par de paradas debe tomar un itinerario no mínimo, agregá en `overrides_json` una entrada como `{"0>1": ["seg_470", "seg_471"]}`.
 
@@ -281,6 +281,13 @@ Las estaciones sin perfil conservan el porcentaje de bajada anterior.
 
 El panel «Métricas» conserva la comparación de eventos, el retraso acumulado,
 su evolución y la tabla por evento. Además muestra:
+
+Las averías detectadas por inmovilidad se confirman tras 15 minutos simulados
+sin desplazamiento mientras el tren figura en marcha. Tanto esas averías como
+las disparadas manualmente mantienen el tren detenido y su reserva de vía por
+un plazo aleatorio de 15–30 minutos simulados. Los trenes detrás se retrasan por
+las reservas existentes; no se suma demora artificial. Al retirarse, el evento
+conserva en Métricas su duración real y el plazo sorteado en el historial.
 
 - Pasajeros transportados: total de embarques; «En viaje» cuenta pasajeros a
   bordo de servicios activos y, debajo, «Completados» cuenta a quienes ya

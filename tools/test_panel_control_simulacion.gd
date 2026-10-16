@@ -61,9 +61,9 @@ func _run() -> void:
 	assert(panel._etiqueta_mensaje.get_theme_color("font_color") == panel.COLOR_OK, "El mensaje de éxito debe ir en verde")
 	var fila_averia: String = _buscar_fila_con(panel, "Tren %d" % id_tren_averiado)
 	assert(fila_averia != "", "La avería debe aparecer en el feedback")
-	assert(fila_averia.contains("1 tren") and fila_averia.contains("definitivo"),
-		"La fila de avería debe mostrar 1 tren afectado y estado definitivo: '%s'" % fila_averia)
-	print("OK: la avería se dispara desde el formulario y aparece en el feedback como definitiva")
+	assert(fila_averia.contains("1 tren") and fila_averia.contains("avería activa"),
+		"La fila debe mostrar 1 tren afectado y la avería activa: '%s'" % fila_averia)
+	print("OK: la avería se dispara desde el formulario y aparece activa en el feedback")
 
 	# --- Disparar falla eléctrica (tipo = tramo) ---
 	panel._opcion_tipo.select(0)
