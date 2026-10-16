@@ -165,6 +165,9 @@ func _alternar(clave: String) -> void:
 	if clave in PANELES_MODAL:
 		_panel_actual = _construir_modal(contenido)
 		add_child(_panel_actual)
+		# El fondo del modal ocupa toda la pantalla. Mantener la fila de accesos
+		# rápidos al frente para que siga visible y reciba clics.
+		move_child(_fila_botones, get_child_count() - 1)
 		_animar_apertura_modal(_panel_actual)
 	else:
 		_panel_actual = _envolver_en_hoja(contenido)

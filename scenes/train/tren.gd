@@ -262,6 +262,7 @@ var _motivo_resultado: String = ""
 var _estado_previo_evento: EstadoOperacion = EstadoOperacion.EN_TERMINAL_INICIAL
 var _tiempo_evento_restante: float = 0.0
 var _motivo_evento: String = ""
+var _averia_sin_reanudacion_automatica: bool = false
 
 var _avance: float = 0.0
 var _vel: float = 0.0
@@ -617,8 +618,26 @@ func detener_por_evento(motivo: String, duracion_s: float) -> bool:
 		return false
 	if motivo.strip_edges().is_empty() or not is_finite(duracion_s) or duracion_s <= 0.0:
 		return false
+	return _iniciar_detencion_por_evento(motivo, duracion_s, false)
+
+
+## Detiene el tren conservando su ruta y reservas hasta que el controlador
+## resuelva la avería. A diferencia de `detener_por_evento`, no se reanuda
+## automáticamente: el gestor retira el tren al vencer el plazo de avería.
+func detener_por_averia(motivo: String) -> bool:
+	if Engine.is_editor_hint() or _eliminado or _servicio_finalizado or _ruta_invalida:
+		return false
+	if _estado_operacion in [EstadoOperacion.DETENIDO_POR_EVENTO, EstadoOperacion.INCOMPLETO, EstadoOperacion.FINALIZADO_EN_BOSQUES, EstadoOperacion.FINALIZADO_IDA_VUELTA]:
+		return false
+	if motivo.strip_edges().is_empty():
+		return false
+	return _iniciar_detencion_por_evento(motivo, 0.0, true)
+
+
+func _iniciar_detencion_por_evento(motivo: String, duracion_s: float, indefinida: bool) -> bool:
 	_estado_previo_evento = _estado_operacion
 	_tiempo_evento_restante = duracion_s
+	_averia_sin_reanudacion_automatica = indefinida
 	_motivo_evento = motivo.strip_edges()
 	_vel = 0.0
 	# Al reanudar se vuelve a evaluar la distancia de frenado desde velocidad
@@ -634,7 +653,10 @@ func detener_por_evento(motivo: String, duracion_s: float) -> bool:
 func reanudar_por_evento() -> bool:
 	if _eliminado or _ruta_invalida or _servicio_finalizado or _estado_operacion != EstadoOperacion.DETENIDO_POR_EVENTO:
 		return false
+	if _averia_sin_reanudacion_automatica:
+		return false
 	_tiempo_evento_restante = 0.0
+	_averia_sin_reanudacion_automatica = false
 	_motivo_evento = ""
 	_establecer_estado(_estado_previo_evento)
 	evento_temporal_finalizado.emit(obtener_resumen_operativo())
@@ -645,6 +667,7 @@ func finalizar_incompleto(motivo: String) -> bool:
 	if Engine.is_editor_hint() or _eliminado or _servicio_finalizado or _ruta_invalida or motivo.strip_edges().is_empty():
 		return false
 	_tiempo_evento_restante = 0.0
+	_averia_sin_reanudacion_automatica = false
 	_motivo_evento = ""
 	_detener_por_ruta_invalida(motivo.strip_edges(), "evento_terminal")
 	return true
@@ -699,6 +722,7 @@ func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida")
 	_odometro_destino_ruta = -1.0
 	activar_opciones_switch(false)
 	_tiempo_evento_restante = 0.0
+	_averia_sin_reanudacion_automatica = false
 	_motivo_evento = ""
 	var red: Node = _obtener_red()
 	if red != null and red.has_method("liberar_reservas_tren"):
@@ -2140,9 +2164,10 @@ func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() and delta <= 0.0:
 		return
 	if _estado_operacion == EstadoOperacion.DETENIDO_POR_EVENTO and not Engine.is_editor_hint():
-		_tiempo_evento_restante = maxf(0.0, _tiempo_evento_restante - delta)
-		if _tiempo_evento_restante <= 0.0:
-			reanudar_por_evento()
+		if not _averia_sin_reanudacion_automatica:
+			_tiempo_evento_restante = maxf(0.0, _tiempo_evento_restante - delta)
+			if _tiempo_evento_restante <= 0.0:
+				reanudar_por_evento()
 		return
 	if not Engine.is_editor_hint() and _opciones_switch_activas:
 		_procesar_validacion_switch()

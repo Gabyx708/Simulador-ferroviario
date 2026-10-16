@@ -20,10 +20,9 @@ class_name IndicadorEventos
 ## - Piquete: humo + baliza naranja intermitente en la estación afectada,
 ##   no en un tren puntual -- el piquete bloquea el andén, no depende de
 ##   quién esté ahí. Dura mientras la zona esté activa.
-## - Desperfecto mecánico: humo gris + baliza roja intermitente sobre el
-##   tren roto. Permanente, como el evento mismo (se va solo si el tren se
-##   elimina del todo); la etiqueta muestra "Definitivo" en vez de un
-##   tiempo restante.
+## - Avería mecánica: humo gris + baliza roja intermitente sobre el tren
+##   detenido. El efecto permanece mientras corre el plazo aleatorio de
+##   retiro; la etiqueta indica si la avería sigue activa o si fue retirado.
 
 var _gestor: GestorEventos
 var _reloj: RelojSimulacion
@@ -151,7 +150,7 @@ func _actualizar_etiqueta(registro: Dictionary, ahora: float) -> void:
 		return
 	var tipo: int = int(evento.get("tipo", -1))
 	if tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
-		etiqueta.text = "%s · definitivo" % GestorEventos.nombre_tipo(tipo)
+		etiqueta.text = "%s · activa" % GestorEventos.nombre_tipo(tipo) if bool(evento.get("activo", false)) else "%s · retiro" % GestorEventos.nombre_tipo(tipo)
 		return
 	var restante: int = maxi(0, roundi(float(evento.get("fin_s", 0.0)) - ahora))
 	etiqueta.text = "%s · %ds restantes" % [GestorEventos.nombre_tipo(tipo), restante]
@@ -310,8 +309,8 @@ func _crear_luz_parpadeante(color: Color) -> OmniLight3D:
 	return luz
 
 
-## Etiqueta flotante con el tipo de evento y el tiempo restante (o
-## "definitivo" para una avería) -- se actualiza en vivo desde _process().
+## Etiqueta flotante con el tipo de evento y el tiempo restante, o el estado
+## activo/retiro de una avería -- se actualiza en vivo desde _process().
 ## Billboard para que siempre mire a la cámara, sin importar el ángulo.
 func _crear_etiqueta() -> Label3D:
 	var etiqueta := Label3D.new()

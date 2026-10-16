@@ -96,9 +96,9 @@ func _run() -> void:
 	, "la etiqueta de la avería se actualiza"):
 		quit(1); return
 	var etiqueta_averia: Label3D = _buscar_etiqueta(tren)
-	assert(etiqueta_averia != null and etiqueta_averia.text.contains("definitivo"),
-		"La etiqueta de la avería debe mostrar 'definitivo' en vez de un tiempo restante: '%s'" % (etiqueta_averia.text if etiqueta_averia != null else "(ninguna)"))
-	print("OK: desperfecto mecánico agrega efecto de partículas y etiqueta 'definitivo' permanentes al tren")
+	assert(etiqueta_averia != null and etiqueta_averia.text.contains("activa"),
+		"La etiqueta debe indicar que la avería sigue activa: '%s'" % (etiqueta_averia.text if etiqueta_averia != null else "(ninguna)"))
+	print("OK: la avería agrega humo y etiqueta mientras mantiene detenido al tren")
 
 	nivel.queue_free()
 	await process_frame

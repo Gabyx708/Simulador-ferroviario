@@ -27,12 +27,17 @@ var _titulos_switch: Dictionary = {}
 var _firma_switches: String = ""
 var _switch_seleccionado: int = 0
 var _paneles_abiertos: Dictionary = {"pruebas": false, "switches": false}
+var _reloj_simulacion: RelojSimulacion
+var _etiqueta_hora_simulada: Label
 const ALTURA_PANEL_CERRADO := 28.0
 const ALTURAS_PANELES := {"pruebas": 230.0, "switches": 230.0}
 
 
 func _ready() -> void:
 	_aplicar_estilo_minimalista(self)
+	_crear_reloj_simulacion()
+	_panel_pruebas.hide()
+	_panel_switches.hide()
 	_velocidad_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_aceleracion_prueba.value_changed.connect(_cambiar_parametros_prueba)
 	_frenado_prueba.value_changed.connect(_cambiar_parametros_prueba)
@@ -48,6 +53,36 @@ func _ready() -> void:
 	_actualizar_panel_pruebas()
 	_aplicar_estado_paneles()
 	call_deferred("_conectar_trenes")
+
+
+func _crear_reloj_simulacion() -> void:
+	var nivel: Node = get_parent()
+	_reloj_simulacion = nivel.get_node_or_null("RelojSimulacion") as RelojSimulacion if nivel != null else null
+	if _reloj_simulacion == null:
+		return
+	_etiqueta_hora_simulada = Label.new()
+	_etiqueta_hora_simulada.name = "HoraSimulacion"
+	_etiqueta_hora_simulada.offset_left = 20.0
+	_etiqueta_hora_simulada.offset_top = 16.0
+	_etiqueta_hora_simulada.offset_right = 260.0
+	_etiqueta_hora_simulada.offset_bottom = 52.0
+	_etiqueta_hora_simulada.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_etiqueta_hora_simulada.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_etiqueta_hora_simulada.add_theme_font_size_override("font_size", 22)
+	_etiqueta_hora_simulada.add_theme_color_override("font_color", Color(1.0, 0.756863, 0.278431, 1.0))
+	_etiqueta_hora_simulada.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
+	_etiqueta_hora_simulada.add_theme_constant_override("shadow_offset_x", 1)
+	_etiqueta_hora_simulada.add_theme_constant_override("shadow_offset_y", 1)
+	_etiqueta_hora_simulada.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_etiqueta_hora_simulada)
+	_reloj_simulacion.minuto_simulado_cambiado.connect(_actualizar_hora_simulada)
+	var fecha: Dictionary = _reloj_simulacion.fecha_hora_simulada()
+	_actualizar_hora_simulada(int(fecha.get("dia", 1)), int(fecha.get("hora", 6)), int(fecha.get("minuto", 0)))
+
+
+func _actualizar_hora_simulada(dia: int, hora: int, minuto: int) -> void:
+	if _etiqueta_hora_simulada != null:
+		_etiqueta_hora_simulada.text = "Día %d · %02d:%02d" % [dia, hora, minuto]
 
 
 func _aplicar_estilo_minimalista(nodo: Node) -> void:
