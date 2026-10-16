@@ -44,7 +44,8 @@ func _run() -> void:
 	tren.tiempo_parada = 0.1
 	tren.capacidad_pasajeros = 80
 	tren.cantidad_pasajeros_por_tanda = 80
-	tren.intervalo_pasajeros = 0.02
+	tren.tasa_bajada_pasajeros = 4000.0
+	tren.tasa_subida_pasajeros = 4000.0
 	for estacion_raw: Node in get_nodes_in_group("estaciones"):
 		if estacion_raw is Estacion:
 			(estacion_raw as Estacion).tiempo_espera = 0.1

@@ -160,8 +160,10 @@ var pasajeros_actuales: int = 0
 ## Cantidad de pasajeros que suben o bajan en cada tanda.
 @export_range(1, 100, 1) var cantidad_pasajeros_por_tanda: int = 6
 
-## Segundos entre cada paso del embarque o desembarque.
-@export var intervalo_pasajeros: float = 0.15
+## Ritmos máximos del intercambio de pasajeros. Con tandas de seis, equivalen
+## a intervalos de 0,15 s al bajar y 0,20 s al subir.
+@export_range(1.0, 1000.0, 1.0, "suffix:pasajeros/s") var tasa_bajada_pasajeros: float = 40.0
+@export_range(1.0, 1000.0, 1.0, "suffix:pasajeros/s") var tasa_subida_pasajeros: float = 30.0
 
 ## % de pasajeros a bordo que bajan en una parada intermedia yendo en el
 ## sentido "directo" (`invertir_sentido = false`). Bajo a propósito: en la
@@ -180,7 +182,11 @@ var pasajeros_actuales: int = 0
 @export_group("Detección de Paradas")
 ## Servicio ordenado que decide la siguiente estación. Vacío conserva el modo
 ## anterior de detectar paradas sobre la traza actual.
-@export var servicio: ServicioFerroviario
+@export var servicio: Node:
+	set(value):
+		servicio = value
+		if is_inside_tree():
+			_resolver_servicio()
 ## Detecta automáticamente las estaciones en la escena y calcula su progreso métrico en la traza.
 @export var autodetectar_estaciones: bool = true:
 	set(v):
@@ -879,7 +885,7 @@ func _snap_a_posicion_actual() -> void:
 
 
 func _resolver_servicio() -> void:
-	_servicio_ferroviario = servicio
+	_servicio_ferroviario = servicio as ServicioFerroviario
 	_objetivo_servicio_resuelto.clear()
 	_indice_objetivo_resuelto = -1
 	if _servicio_ferroviario != null:
@@ -956,14 +962,14 @@ func _inicializar_origen_servicio() -> bool:
 	_registrar_diagnostico_ruta(origen, candidato_origen, [traza.name], ruta_inicial, "origen")
 	# Constitución también es una parada real: habilita el intercambio inicial
 	# de pasajeros antes de que cada formación salga a Yrigoyen.
-	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0, _espera)
+	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0)
 	parada_alcanzada.emit(_idx_parada)
 	llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(origen))
 	return true
 
 
 func _usa_servicio() -> bool:
-	return _servicio_ferroviario != null and _servicio_ferroviario.cantidad_paradas() >= 2
+	return is_instance_valid(_servicio_ferroviario) and _servicio_ferroviario.has_method("cantidad_paradas") and int(_servicio_ferroviario.call("cantidad_paradas")) >= 2
 
 
 func _parada_objetivo_servicio() -> Node:
@@ -2402,7 +2408,7 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 				_odometro_ferroviario,
 				obtener_largo_formacion()
 			)
-	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
+	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion)
 	_establecer_estado(EstadoOperacion.DETENIDO_EN_ESTACION)
 	parada_alcanzada.emit(_idx_parada)
 	if not llegada_de_maniobra:
@@ -2786,15 +2792,6 @@ func eliminar() -> void:
 	queue_free()
 
 
-## Intervalo mínimo entre pasajeros, aunque haya muchísima gente para
-## procesar en poco tiempo (nunca "instantáneo", pero tampoco irreal).
-const INTERVALO_PASAJEROS_MINIMO: float = 0.02
-
-## Fracción del tiempo de parada que se le puede dedicar al intercambio de
-## pasajeros (deja un colchón antes de la salida real).
-const MARGEN_TIEMPO_PASAJEROS: float = 0.85
-
-
 ## Orquesta el intercambio de pasajeros al llegar a una parada: primero
 ## bajan (todos, si es terminal; un % sorteado según el sentido si no), y
 ## recién cuando termina de bajar toda esa gente, sube lo que entre según
@@ -3114,7 +3111,7 @@ func _embarcar_pasajeros_del_anden(estacion: Node, cantidad: int, id_anden: Stri
 	return maxi(0, int(estacion.call("embarcar_pasajeros", cantidad)))
 
 
-func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direccion: float, tiempo_disponible: float) -> void:
+func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direccion: float) -> void:
 	if estacion == null or not is_instance_valid(estacion):
 		return
 
@@ -3125,14 +3122,12 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 
 	var id_anden: String = _resolver_anden_embarque(estacion)
 	var bajan: int = pasajeros_actuales if es_terminal_actual else _calcular_bajan(estacion, direccion)
-	var lugar_estimado: int = maxi(0, capacidad_pasajeros - (pasajeros_actuales - bajan))
 	var cantidad_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
-	var tandas_bajada_estimadas: int = ceili(float(bajan) / float(cantidad_por_tanda))
-	var tandas_subida_estimadas: int = ceili(float(lugar_estimado) / float(cantidad_por_tanda))
-	var intervalo: float = _calcular_intervalo_pasajeros(tandas_bajada_estimadas + tandas_subida_estimadas, tiempo_disponible)
+	var intervalo_bajada: float = _intervalo_por_tasa(tasa_bajada_pasajeros, cantidad_por_tanda)
+	var intervalo_subida: float = _intervalo_por_tasa(tasa_subida_pasajeros, cantidad_por_tanda)
 
 	if bajan > 0:
-		await bajar_pasajeros_escalonado(bajan, estacion, intervalo)
+		await bajar_pasajeros_escalonado(bajan, estacion, intervalo_bajada)
 
 	if _eliminado or _ruta_invalida or not is_instance_valid(self):
 		return
@@ -3150,7 +3145,7 @@ func _procesar_pasajeros_parada(estacion: Node, es_terminal_actual: bool, direcc
 		pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
 		return
 
-	await _embarcar_mientras_en_parada(estacion, intervalo, id_anden)
+	await _embarcar_mientras_en_parada(estacion, intervalo_subida, id_anden)
 
 	_procesando_pasajeros = false
 	pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, false)
@@ -3167,7 +3162,7 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 
 	if id_anden.is_empty():
 		id_anden = _resolver_anden_embarque(estacion)
-	var intervalo_seguro: float = maxf(intervalo, INTERVALO_PASAJEROS_MINIMO)
+	var intervalo_seguro: float = maxf(intervalo, 0.001)
 	var abordaje_informado: bool = false
 	while true:
 		if not (await _intercambio_habilitado()):
@@ -3205,15 +3200,11 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 
 
 ## Calcula el intervalo entre tandas para que todo el intercambio entre
-## cómodo dentro del tiempo de parada, en vez de estirarlo: con poca gente
-## se acerca al ritmo "ideal" (`intervalo_pasajeros`), con mucha gente se
-## acelera para no atrasar al tren.
-func _calcular_intervalo_pasajeros(total_pasos: int, tiempo_disponible: float) -> float:
-	if total_pasos <= 0:
-		return intervalo_pasajeros
-	var margen: float = maxf(0.0, tiempo_disponible) * MARGEN_TIEMPO_PASAJEROS
-	var intervalo_ajustado: float = margen / float(total_pasos)
-	return clampf(intervalo_ajustado, INTERVALO_PASAJEROS_MINIMO, intervalo_pasajeros)
+## Convierte una tasa de pasajeros por segundo en el intervalo entre tandas.
+## El escalonador ya limita el tamaño de cada tanda, así que este intervalo
+## mantiene el mismo ritmo con cargas pequeñas y grandes.
+func _intervalo_por_tasa(tasa: float, cantidad_tanda: int) -> float:
+	return float(maxi(1, cantidad_tanda)) / maxf(tasa, 0.1)
 
 
 ## Usa el promedio por destino cuando la estación tiene un perfil de demanda.
@@ -3237,7 +3228,7 @@ func _calcular_bajan(estacion: Node, direccion: float) -> int:
 
 ## Baja `cantidad` pasajeros en tandas de tamaño configurable, separadas por
 ## `intervalo` segundos, actualizando la estación en cada tanda.
-func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15) -> void:
+func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = -1.0) -> void:
 	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("desembarcar_pasajeros"):
@@ -3245,6 +3236,7 @@ func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 
 	var restante: int = mini(cantidad, pasajeros_actuales)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
+	var intervalo_efectivo: float = intervalo if intervalo > 0.0 else _intervalo_por_tasa(tasa_bajada_pasajeros, maximo_por_tanda)
 	while restante > 0:
 		if not (await _intercambio_habilitado()):
 			return
@@ -3260,14 +3252,14 @@ func bajar_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 		_ultimo_bajan += bajan
 		pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, true)
 		restante -= bajan
-		if restante > 0 and intervalo > 0.0:
-			await get_tree().create_timer(intervalo).timeout
+		if restante > 0:
+			await get_tree().create_timer(intervalo_efectivo).timeout
 
 
 ## Sube hasta `cantidad` pasajeros en tandas de tamaño configurable (limitado
 ## por la capacidad libre y por cuánta gente le entregue la estación), separadas
 ## por `intervalo` segundos. Fire-and-forget: no hace falta esperarla.
-func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = 0.15, id_anden: String = "") -> void:
+func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float = -1.0, id_anden: String = "") -> void:
 	if cantidad <= 0 or estacion == null or not is_instance_valid(estacion):
 		return
 	if not estacion.has_method("embarcar_pasajeros"):
@@ -3278,6 +3270,7 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 	var lugar_disponible: int = maxi(0, capacidad_pasajeros - pasajeros_actuales)
 	var restante: int = mini(cantidad, lugar_disponible)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
+	var intervalo_efectivo: float = intervalo if intervalo > 0.0 else _intervalo_por_tasa(tasa_subida_pasajeros, maximo_por_tanda)
 	while restante > 0:
 		if not (await _intercambio_habilitado()):
 			return
@@ -3294,5 +3287,5 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 			return
 		pasajeros_actuales += suben
 		restante -= suben
-		if restante > 0 and intervalo > 0.0:
-			await get_tree().create_timer(intervalo).timeout
+		if restante > 0:
+			await get_tree().create_timer(intervalo_efectivo).timeout
