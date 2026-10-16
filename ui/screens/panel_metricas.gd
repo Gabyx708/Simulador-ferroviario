@@ -291,7 +291,7 @@ func _construir_datos_globales(padre: VBoxContainer) -> void:
 	var fila2: HBoxContainer = HBoxContainer.new()
 	fila2.add_theme_constant_override("separation", 12)
 	padre.add_child(fila2)
-	_agregar_tarjeta_kpi(fila2, "incompletos_evento", "INCOMPLETOS POR EVENTO TERMINAL", "Los desperfectos definitivos se distinguen de las interrupciones por falta de ruta.")
+	_agregar_tarjeta_kpi(fila2, "incompletos_evento", "INCOMPLETOS POR EVENTO TERMINAL", "Las averías mecánicas se distinguen de las interrupciones por falta de ruta.")
 	_agregar_tarjeta_kpi(fila2, "espera_global", "ESPERA GLOBAL DE PASAJEROS", "Promedio de la espera actual de todas las estaciones. Cada estación tiene el mismo peso; las que no tienen pasajeros en espera aportan cero.")
 	_agregar_tarjeta_kpi(fila2, "tasa_demora", "TASA DE DEMORA POR HORARIO", "Trenes atrasados / servicios activos con horario. Se reinicia en cada cabecera. La demora promedio incluye los que están en tiempo con demora cero; se recalcula en cada llegada y puede disminuir.")
 
@@ -598,7 +598,11 @@ func _actualizar_tabla_eventos() -> void:
 		_tabla_eventos.add_child(_crear_celda(_formatear_duracion(duracion_s) if duracion_s > 0.0 else "—"))
 		_tabla_eventos.add_child(_crear_celda(str(trenes_afectados.size())))
 		_tabla_eventos.add_child(_crear_celda(_formatear_duracion(retraso_total) if retraso_total > 0.0 else "—"))
-		var texto_estado: String = "Definitivo" if tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO else ("Activo" if activo else "Finalizado")
+		var texto_estado: String
+		if tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
+			texto_estado = "Avería activa" if activo else "Tren retirado"
+		else:
+			texto_estado = "Activo" if activo else "Finalizado"
 		var celda_estado := _crear_celda(texto_estado)
 		celda_estado.add_theme_color_override("font_color", COLOR_OK if (activo and tipo != GestorEventos.TipoEvento.DESPERFECTO_MECANICO) else COLOR_TEXTO_SUAVE)
 		_tabla_eventos.add_child(celda_estado)

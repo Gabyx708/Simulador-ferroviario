@@ -98,6 +98,7 @@ o un andén en vía muerta que tiene otro tren, o que frena por un tren adelante
 | `establecer_velocidad_simulacion(factor) -> bool` | Acepta números finitos `>= 0`; `0.0` pausa, positivos escalan el tiempo. Rechaza el resto sin cambiar estado. |
 | `pausar_simulacion()` / `reanudar_simulacion()` | Pausa o restaura el último factor positivo. |
 | `detener_tren_temporalmente(id, motivo, duracion_s) -> bool` | Detiene un tren válido, conserva ruta y reservas, y usa segundos simulados. |
+| `detener_tren_por_averia(id, motivo) -> bool` | Detiene indefinidamente un tren averiado y conserva sus reservas hasta que el gestor finalice la avería. |
 | `reanudar_tren(id) -> bool` | Cancela un evento temporal válido y restaura el estado previo. |
 | `finalizar_tren_incompleto(id, motivo) -> bool` | Detiene el tren, libera reservas y deja el snapshot disponible. |
 

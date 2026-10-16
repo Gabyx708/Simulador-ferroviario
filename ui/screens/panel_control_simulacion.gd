@@ -21,6 +21,8 @@ const COLOR_OK: Color = Color(0.45, 0.85, 0.55, 1.0)
 const COLOR_ERROR: Color = Color(0.9, 0.35, 0.35, 1.0)
 const COLOR_FILA_FONDO: Color = Color(0.14, 0.145, 0.18, 0.85)
 const INTERVALO_REFRESCO_S: float = 0.5
+const ICONO_CIRCLE_PLAY: Texture2D = preload("res://assets/ui/icons/circle-play.svg")
+const ICONO_CIRCLE_PAUSE: Texture2D = preload("res://assets/ui/icons/circle-pause.svg")
 
 var _controlador: SimulacionController
 var _reloj: RelojSimulacion
@@ -30,6 +32,7 @@ var _etiqueta_fecha: Label
 var _etiqueta_flota: Label
 var _etiqueta_demora_promedio: Label
 var _boton_pausa: Button
+var _icono_boton_pausa: TextureRect
 var _slider_velocidad: HSlider
 var _etiqueta_velocidad: Label
 var _opcion_tipo: OptionButton
@@ -202,10 +205,21 @@ func _construir_velocidad(padre: VBoxContainer) -> void:
 	padre.add_child(fila)
 
 	_boton_pausa = Button.new()
-	_boton_pausa.text = "⏸"
+	_boton_pausa.text = ""
 	_boton_pausa.custom_minimum_size = Vector2(36, 28)
 	_boton_pausa.pressed.connect(_on_pausa_pressed)
 	fila.add_child(_boton_pausa)
+	_icono_boton_pausa = TextureRect.new()
+	_icono_boton_pausa.name = "IconoPausa"
+	_icono_boton_pausa.set_anchors_preset(Control.PRESET_CENTER)
+	_icono_boton_pausa.offset_left = -11.0
+	_icono_boton_pausa.offset_top = -11.0
+	_icono_boton_pausa.offset_right = 11.0
+	_icono_boton_pausa.offset_bottom = 11.0
+	_icono_boton_pausa.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icono_boton_pausa.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_icono_boton_pausa.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boton_pausa.add_child(_icono_boton_pausa)
 
 	_slider_velocidad = HSlider.new()
 	_slider_velocidad.min_value = 0.0
@@ -226,9 +240,11 @@ func _actualizar_velocidad() -> void:
 	if _controlador == null or _slider_velocidad == null:
 		return
 	var factor: float = _controlador.obtener_velocidad_simulacion()
+	var pausada: bool = is_zero_approx(factor)
 	_slider_velocidad.set_value_no_signal(clampf(factor, _slider_velocidad.min_value, _slider_velocidad.max_value))
-	_etiqueta_velocidad.text = "Pausada" if is_zero_approx(factor) else "×%.1f" % factor
-	_boton_pausa.text = "▶" if is_zero_approx(factor) else "⏸"
+	_etiqueta_velocidad.text = "Pausada" if pausada else "×%.1f" % factor
+	_icono_boton_pausa.texture = ICONO_CIRCLE_PLAY if pausada else ICONO_CIRCLE_PAUSE
+	_boton_pausa.tooltip_text = "Reanudar simulación" if pausada else "Pausar simulación"
 
 
 func _on_pausa_pressed() -> void:
@@ -418,11 +434,13 @@ func _crear_fila_evento(evento: Dictionary, ahora: float) -> Control:
 	var retraso_total: float = float(evento.get("retraso_total_s", 0.0))
 	var activo: bool = bool(evento.get("activo", false))
 	var estado_txt: String = ""
-	if activo:
+	if tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO and activo:
+		estado_txt = " · avería activa"
+	elif activo:
 		var restante: float = float(evento.get("fin_s", 0.0)) - ahora
 		estado_txt = " · %ds restantes" % maxi(0, roundi(restante))
 	elif tipo == GestorEventos.TipoEvento.DESPERFECTO_MECANICO:
-		estado_txt = " · definitivo"
+		estado_txt = " · retirada tras %s" % _formatear_duracion(float(evento.get("duracion_s", 0.0)))
 	else:
 		estado_txt = " · finalizado"
 

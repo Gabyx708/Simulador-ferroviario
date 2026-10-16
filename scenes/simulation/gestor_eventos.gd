@@ -12,8 +12,8 @@ class_name GestorEventos
 ## que vienen detrás de uno detenido es automático: lo da la reserva FIFO de
 ## `TrackNetwork` que ya existe, no hace falta programarlo acá.
 ##
-## Desperfecto mecánico es un evento de un único tren, inmediato y
-## definitivo (`finalizar_tren_incompleto`); no es una zona.
+## Desperfecto mecánico detiene un único tren conservando su reserva de vía.
+## El gestor lo retira al vencer su plazo aleatorio de avería.
 ##
 ## Alcance de cada zona -- detectado sólo con señales públicas de Tren:
 ## - Incidente en estación: se aplica en `llego_a_estacion` cuando el
@@ -56,6 +56,8 @@ const MENSAJES_INCIDENTE_ESTACION: Array[String] = [
 
 const TIEMPO_MAXIMO_SIN_MOVIMIENTO_S: float = 15.0 * 60.0
 const DISTANCIA_MINIMA_MOVIMIENTO_M: float = 0.1
+const PLAZO_AVERIA_MIN_S: int = 15 * 60
+const PLAZO_AVERIA_MAX_S: int = 30 * 60
 
 ## Un color por evento, consistente para quien construya el panel/ícono.
 const COLOR_FALLA_ELECTRICA: Color = Color(0.95, 0.80, 0.15)  ## amarillo
@@ -92,6 +94,7 @@ var _tipo_activo_por_tren: Dictionary = {}  ## id_tren -> TipoEvento
 var _atribucion_pendiente: Dictionary = {}  ## id_tren -> id_evento
 var _trenes_conectados: Dictionary = {}
 var _seguimiento_movimiento: Dictionary = {}  ## id_tren -> {posicion, desde_s}
+var _averias_por_tren: Dictionary = {}  ## id_tren -> id_evento
 
 
 func _ready() -> void:
@@ -120,6 +123,7 @@ func _process(delta: float) -> void:
 	var ahora: float = _reloj.tiempo_simulado_s()
 	_expirar_zonas(_zonas_estacion, ahora)
 	_expirar_zonas(_zonas_tramo, ahora)
+	_resolver_averias_vencidas(ahora)
 	_revisar_trenes_sin_movimiento(ahora)
 	if aleatorio_activo:
 		# `delta` ya viene escalado por Engine.time_scale (el mismo mecanismo
@@ -343,15 +347,18 @@ func _revisar_trenes_sin_movimiento(ahora: float) -> void:
 
 		_seguimiento_movimiento.erase(id)
 		var motivo: String = "Avería: tren detenido en marcha durante 15 minutos sin desplazarse."
-		if disparar_desperfecto_mecanico(id, motivo):
-			tren.eliminar()
+		disparar_desperfecto_mecanico(id, motivo)
 
 func disparar_desperfecto_mecanico(id_tren: int, motivo: String = "Desperfecto mecánico") -> bool:
-	if _controlador == null:
+	if _controlador == null or _reloj == null or id_tren <= 0 or _averias_por_tren.has(id_tren):
 		return false
 	var datos_antes: Dictionary = _controlador.obtener_tren(id_tren)
+	if datos_antes.is_empty():
+		return false
 	var pasajeros: int = int(datos_antes.get("pasajeros", 0))
-	var ok: bool = _controlador.finalizar_tren_incompleto(id_tren, motivo)
+	var plazo_retiro_s: float = float(randi_range(PLAZO_AVERIA_MIN_S, PLAZO_AVERIA_MAX_S))
+	var ahora: float = _reloj.tiempo_simulado_s()
+	var ok: bool = _controlador.detener_tren_por_averia(id_tren, motivo)
 	if ok:
 		_tipo_activo_por_tren[id_tren] = TipoEvento.DESPERFECTO_MECANICO
 		var id_evento: int = _siguiente_evento_id
@@ -363,15 +370,43 @@ func disparar_desperfecto_mecanico(id_tren: int, motivo: String = "Desperfecto m
 		var evento: Dictionary = {
 			"id": id_evento, "tipo": TipoEvento.DESPERFECTO_MECANICO,
 			"clave": "tren_%d" % id_tren, "motivo": motivo,
-			"inicio_s": _reloj.tiempo_simulado_s() if _reloj != null else 0.0,
-			"fin_s": -1.0, "duracion_s": 0.0, "id_tren": id_tren,
+			"inicio_s": ahora, "fin_s": ahora + plazo_retiro_s,
+			"duracion_s": 0.0, "plazo_retiro_s": plazo_retiro_s, "id_tren": id_tren,
 			"trenes_afectados": {id_tren: true}, "retraso_total_s": 0.0,
-			"pasajeros_minuto_perdidos": float(pasajeros) * minutos_restantes_estimados, "activo": false,
+			"pasajeros_minuto_perdidos": float(pasajeros) * minutos_restantes_estimados, "activo": true,
 		}
 		_eventos[id_evento] = evento
+		_averias_por_tren[id_tren] = id_evento
 		evento_disparado.emit(evento)
 		evento_individual_disparado.emit(evento.duplicate())
 	return ok
+
+
+func _resolver_averias_vencidas(ahora: float) -> void:
+	var vencidas: Array[int] = []
+	for id_tren: int in _averias_por_tren:
+		var id_evento: int = int(_averias_por_tren[id_tren])
+		var evento: Dictionary = _eventos.get(id_evento, {})
+		if evento.is_empty() or float(evento.get("fin_s", INF)) <= ahora:
+			vencidas.append(id_tren)
+	for id_tren: int in vencidas:
+		_finalizar_averia(id_tren, ahora, true)
+
+
+func _finalizar_averia(id_tren: int, ahora: float, retirar_tren: bool) -> void:
+	if not _averias_por_tren.has(id_tren):
+		return
+	var id_evento: int = int(_averias_por_tren[id_tren])
+	_averias_por_tren.erase(id_tren)
+	if _eventos.has(id_evento):
+		var evento: Dictionary = _eventos[id_evento]
+		evento["fin_s"] = ahora
+		evento["duracion_s"] = maxf(0.0, ahora - float(evento.get("inicio_s", ahora)))
+		evento["activo"] = false
+		evento_finalizado.emit(evento)
+	if retirar_tren and _controlador != null:
+		_controlador.finalizar_tren_incompleto(id_tren, "Avería: plazo de retiro cumplido.")
+		_controlador.eliminar_tren(id_tren)
 
 
 ## Todos los eventos disparados, más recientes primero, enriquecidos con
@@ -508,6 +543,9 @@ func _on_retraso_tramo_sumado(id_tren: int, aporte_s: float) -> void:
 
 
 func _on_tren_eliminado(id: int) -> void:
+	# Si alguien retira manualmente un tren averiado, conservar en el historial
+	# la duración real hasta esa baja temprana.
+	_finalizar_averia(id, _reloj.tiempo_simulado_s() if _reloj != null else 0.0, false)
 	_tipo_activo_por_tren.erase(id)
 	_atribucion_pendiente.erase(id)
 	_trenes_conectados.erase(id)

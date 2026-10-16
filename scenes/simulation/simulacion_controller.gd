@@ -324,6 +324,13 @@ func detener_tren_temporalmente(id_tren: int, motivo: String, duracion_s: float)
 	return tren.detener_por_evento(motivo, duracion_s) if is_instance_valid(tren) else false
 
 
+## Detiene un tren por avería conservando sus reservas hasta que el gestor
+## finalice el incidente. El tren no se reanuda por temporizador propio.
+func detener_tren_por_averia(id_tren: int, motivo: String) -> bool:
+	var tren: Tren = _trenes.get(id_tren) as Tren
+	return tren.detener_por_averia(motivo) if is_instance_valid(tren) else false
+
+
 func reanudar_tren(id_tren: int) -> bool:
 	var tren: Tren = _trenes.get(id_tren) as Tren
 	return tren.reanudar_por_evento() if is_instance_valid(tren) else false

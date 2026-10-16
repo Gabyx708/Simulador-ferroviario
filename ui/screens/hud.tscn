@@ -1,4 +1,6 @@
-[gd_scene load_steps=11 format=3 uid="uid://w3ge5g3k2vgds"]
+
+[gd_scene load_steps=14 format=3 uid="uid://w3ge5g3k2vgds"]
+
 
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
 [ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
@@ -8,7 +10,14 @@
 [ext_resource type="PackedScene" path="res://ui/components/informacion_estacion/informacion_estacion.tscn" id="6_estacion"]
 [ext_resource type="PackedScene" path="res://ui/screens/panel_estaciones.tscn" id="7_panel_estaciones"]
 [ext_resource type="PackedScene" path="res://ui/screens/panel_trenes.tscn" id="8_panel_trenes"]
+
 [ext_resource type="Script" path="res://ui/screens/popup_eventos.gd" id="9_popup_eventos"]
+
+[ext_resource type="Texture2D" path="res://assets/icons/ui/general.svg" id="9_icono_general"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui/metricas.svg" id="10_icono_metricas"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui/estacion.svg" id="11_icono_estacion"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui/tren.svg" id="12_icono_tren"]
+
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
 bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
@@ -32,7 +41,7 @@ script = ExtResource("9_popup_eventos")
 
 [node name="Paneles" type="VBoxContainer" parent="."]
 offset_left = 20.0
-offset_top = 20.0
+offset_top = 60.0
 offset_right = 300.0
 offset_bottom = 720.0
 theme_override_constants/separation = 4
@@ -162,6 +171,7 @@ value = 3.0
 custom_minimum_size = Vector2(280, 28)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+visible = false
 
 [node name="Margen" type="MarginContainer" parent="Paneles/PanelSwitches"]
 layout_mode = 2
@@ -205,8 +215,87 @@ text = "Mostrar 2 switches más"
 visible = false
 
 [node name="NavegacionPaneles" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("3_navegacion")
 escena_panel_control = ExtResource("4_panel_control")
 escena_panel_metricas = ExtResource("5_panel_metricas")
 escena_panel_estaciones = ExtResource("7_panel_estaciones")
 escena_panel_trenes = ExtResource("8_panel_trenes")
+
+[node name="ContenedorPanel" type="Control" parent="NavegacionPaneles"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -210.0
+offset_top = -558.0
+offset_right = 210.0
+offset_bottom = -98.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="FilaBotones" type="HBoxContainer" parent="NavegacionPaneles"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -86.0
+offset_right = 130.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 1
+theme_override_constants/separation = 12
+
+[node name="BotonControl" type="Button" parent="NavegacionPaneles/FilaBotones"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Control de simulación"
+icon = ExtResource("9_icono_general")
+icon_alignment = 1
+vertical_icon_alignment = 1
+expand_icon = true
+theme_override_constants/icon_max_width = 26
+
+[node name="BotonMetricas" type="Button" parent="NavegacionPaneles/FilaBotones"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Métricas"
+icon = ExtResource("10_icono_metricas")
+icon_alignment = 1
+vertical_icon_alignment = 1
+expand_icon = true
+theme_override_constants/icon_max_width = 26
+
+[node name="BotonEstaciones" type="Button" parent="NavegacionPaneles/FilaBotones"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Estaciones"
+icon = ExtResource("11_icono_estacion")
+icon_alignment = 1
+vertical_icon_alignment = 1
+expand_icon = true
+theme_override_constants/icon_max_width = 26
+
+[node name="BotonTrenes" type="Button" parent="NavegacionPaneles/FilaBotones"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Trenes"
+icon = ExtResource("12_icono_tren")
+icon_alignment = 1
+vertical_icon_alignment = 1
+expand_icon = true
+theme_override_constants/icon_max_width = 26
