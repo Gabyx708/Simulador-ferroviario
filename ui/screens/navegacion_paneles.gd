@@ -124,7 +124,7 @@ func _aplicar_estilo_boton(boton: Button, activo: bool) -> void:
 func _estilo_circular(color: Color) -> StyleBoxFlat:
 	var estilo := StyleBoxFlat.new()
 	estilo.bg_color = color
-	estilo.set_corner_radius_all(int(DIAMETRO_BOTON / 2.0))
+	estilo.set_corner_radius_all(int(DIAMETRO_BOTON / 2.1))
 	estilo.border_width_left = 1
 	estilo.border_width_top = 1
 	estilo.border_width_right = 1
@@ -138,7 +138,7 @@ func _estilo_circular(color: Color) -> StyleBoxFlat:
 func _estilo_foco_circular() -> StyleBoxFlat:
 	var estilo := StyleBoxFlat.new()
 	estilo.bg_color = Color.TRANSPARENT
-	estilo.set_corner_radius_all(int(DIAMETRO_BOTON / 2.0))
+	estilo.set_corner_radius_all(int(DIAMETRO_BOTON / 2.1))
 	estilo.set_border_width_all(2)
 	estilo.border_color = COLOR_ACENTO
 	return estilo
