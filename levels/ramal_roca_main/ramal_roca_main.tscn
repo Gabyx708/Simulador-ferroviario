@@ -98,8 +98,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.3104661, 0.3104661)
-shader_parameter/cirrus_position2 = Vector2(0.3104661, 0.3104661)
+shader_parameter/cirrus_position1 = Vector2(0.4146505, 0.4146505)
+shader_parameter/cirrus_position2 = Vector2(0.4146505, 0.4146505)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -109,7 +109,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(6.5521674, 6.5521674)
+shader_parameter/cumulus_position = Vector2(2.0732758, 2.0732758)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -1122,14 +1122,6 @@ _data = {
 "tilts": PackedFloat32Array(0, 0, 0)
 }
 point_count = 3
-
-[sub_resource type="Curve3D" id="Curve3D_88nfk"]
-bake_interval = 2.0
-_data = {
-"points": PackedVector3Array(0, 0, 0, 0.23575722, 0, 15.61464, 140.23882, 0, 999.442, -0.24475098, 0, -15.614502, 0, 0, 0, 139.667, 0, 1061.9),
-"tilts": PackedFloat32Array(0, 0)
-}
-point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_e4ddl"]
 bake_interval = 2.0
@@ -3690,7 +3682,7 @@ transform = Transform3D(1.1249382, 0, 0.0117807565, 0, 1.125, 0, -0.0117807565, 
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=479191820]
+[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=1648845219]
 visible = false
 
 [node name="TrackNetwork" type="Node3D" parent="." unique_id=541304712]
@@ -3716,7 +3708,7 @@ total_vias_editadas = 388
 
 [node name="seg_1" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=1748448247]
 curve = SubResource("Curve3D_hiqb5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_1"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3727,7 +3719,7 @@ longitud_metros = 1279.9387
 
 [node name="seg_441" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=2141149471]
 curve = SubResource("Curve3D_so8vn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_441"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3762,7 +3754,7 @@ longitud_metros = 1280.482
 
 [node name="seg_742" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=1450909113]
 curve = SubResource("Curve3D_uji7r")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_742"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3785,7 +3777,7 @@ longitud_metros = 384.28885
 
 [node name="seg_744" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=1422556616]
 curve = SubResource("Curve3D_12tge")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_744"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3820,7 +3812,7 @@ longitud_metros = 24.293972
 
 [node name="seg_747" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=964926220]
 curve = SubResource("Curve3D_4as0p")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_747"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3843,7 +3835,7 @@ longitud_metros = 22.593079
 
 [node name="seg_749" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=2009595096]
 curve = SubResource("Curve3D_a85us")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_749"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3854,7 +3846,7 @@ longitud_metros = 22.082045
 
 [node name="seg_750" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=2012318500]
 curve = SubResource("Curve3D_64k2f")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_750"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3877,7 +3869,7 @@ longitud_metros = 329.42413
 
 [node name="seg_752" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/02_Constitucion_Yrigoyen" unique_id=1233595218]
 curve = SubResource("Curve3D_gcs7o")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_752"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3950,7 +3942,7 @@ longitud_metros = 111.5553
 
 [node name="seg_484" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1491947710]
 curve = SubResource("Curve3D_0efao")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_484"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -3961,7 +3953,7 @@ longitud_metros = 111.63519
 
 [node name="seg_485" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1235856459]
 curve = SubResource("Curve3D_cu1c1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_485"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4008,7 +4000,7 @@ longitud_metros = 39.744904
 
 [node name="seg_489" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1545956774]
 curve = SubResource("Curve3D_nroba")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_489"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4019,7 +4011,7 @@ longitud_metros = 547.9862
 
 [node name="seg_490" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=509977744]
 curve = SubResource("Curve3D_yq2vn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_490"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4030,7 +4022,7 @@ longitud_metros = 532.1025
 
 [node name="seg_497" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1424710458]
 curve = SubResource("Curve3D_b58xl")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_497"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4041,7 +4033,7 @@ longitud_metros = 151.06425
 
 [node name="seg_504" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1670479254]
 curve = SubResource("Curve3D_2ytdk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_504"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4064,7 +4056,7 @@ longitud_metros = 551.60864
 
 [node name="seg_521" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1381938980]
 curve = SubResource("Curve3D_87mup")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_521"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4087,7 +4079,7 @@ longitud_metros = 536.48096
 
 [node name="seg_523" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=520770746]
 curve = SubResource("Curve3D_usn06")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_523"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4098,7 +4090,7 @@ longitud_metros = 69.749954
 
 [node name="seg_524" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=989106748]
 curve = SubResource("Curve3D_y5jkb")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_524"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4109,7 +4101,7 @@ longitud_metros = 41.213223
 
 [node name="seg_526" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1672605521]
 curve = SubResource("Curve3D_e7rbb")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_526"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4120,7 +4112,7 @@ longitud_metros = 39.900715
 
 [node name="seg_701" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=800037588]
 curve = SubResource("Curve3D_hx4rc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_701"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4131,7 +4123,7 @@ longitud_metros = 81.28038
 
 [node name="seg_702" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1042007714]
 curve = SubResource("Curve3D_ih8xt")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_702"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4178,7 +4170,7 @@ longitud_metros = 27.781782
 
 [node name="seg_708" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=301450042]
 curve = SubResource("Curve3D_ca6vu")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_708"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4201,7 +4193,7 @@ longitud_metros = 20.191376
 
 [node name="seg_729" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=1023449227]
 curve = SubResource("Curve3D_8fgng")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_729"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4224,7 +4216,7 @@ longitud_metros = 19.889277
 
 [node name="seg_731" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/03_Yrigoyen_Avellaneda" unique_id=2077354561]
 curve = SubResource("Curve3D_ndnxx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_731"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4249,7 +4241,7 @@ longitud_metros = 227.91055
 
 [node name="seg_93" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2050008999]
 curve = SubResource("Curve3D_q74cx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_93"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4272,7 +4264,7 @@ longitud_metros = 331.7424
 
 [node name="seg_167" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1856326131]
 curve = SubResource("Curve3D_kfssj")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_167"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4283,7 +4275,7 @@ longitud_metros = 363.81818
 
 [node name="seg_175" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1405835841]
 curve = SubResource("Curve3D_mmsoh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_175"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4294,7 +4286,7 @@ longitud_metros = 136.7201
 
 [node name="seg_176" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1259305517]
 curve = SubResource("Curve3D_rnv4w")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_176"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4305,7 +4297,7 @@ longitud_metros = 137.24019
 
 [node name="seg_178" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=13600055]
 curve = SubResource("Curve3D_t70qg")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_178"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4328,7 +4320,7 @@ longitud_metros = 173.94273
 
 [node name="seg_180" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1625745202]
 curve = SubResource("Curve3D_eey4o")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_180"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4375,7 +4367,7 @@ longitud_metros = 46.442436
 
 [node name="seg_184" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=535431784]
 curve = SubResource("Curve3D_tslsp")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_184"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4386,7 +4378,7 @@ longitud_metros = 115.148056
 
 [node name="seg_185" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=120439764]
 curve = SubResource("Curve3D_ixkqa")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_185"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4469,7 +4461,7 @@ longitud_metros = 41.109833
 
 [node name="seg_308" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1892361848]
 curve = SubResource("Curve3D_spcei")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_308"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4492,7 +4484,7 @@ longitud_metros = 57.672176
 
 [node name="seg_310" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1077647247]
 curve = SubResource("Curve3D_sx8cf")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_310"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4515,7 +4507,7 @@ longitud_metros = 69.15819
 
 [node name="seg_313" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1114669349]
 curve = SubResource("Curve3D_yyglp")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_313"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4562,7 +4554,7 @@ longitud_metros = 117.287445
 
 [node name="seg_350" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=510607994]
 curve = SubResource("Curve3D_shsrd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_350"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4585,7 +4577,7 @@ longitud_metros = 18.09184
 
 [node name="seg_367" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1411917011]
 curve = SubResource("Curve3D_vr584")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_367"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4596,7 +4588,7 @@ longitud_metros = 143.19489
 
 [node name="seg_368" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=906199215]
 curve = SubResource("Curve3D_85djc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_368"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4607,7 +4599,7 @@ longitud_metros = 65.60465
 
 [node name="seg_369" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=486595657]
 curve = SubResource("Curve3D_u5ia7")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_369"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4774,7 +4766,7 @@ longitud_metros = 342.88882
 
 [node name="seg_416" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=721622651]
 curve = SubResource("Curve3D_05b6w")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_416"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4881,7 +4873,7 @@ longitud_metros = 268.21942
 
 [node name="seg_445" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1748393733]
 curve = SubResource("Curve3D_ivjqh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_445"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4916,7 +4908,7 @@ longitud_metros = 93.045105
 
 [node name="seg_454" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=955372555]
 curve = SubResource("Curve3D_5teui")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_454"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4939,7 +4931,7 @@ longitud_metros = 250.57423
 
 [node name="seg_458" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1765751429]
 curve = SubResource("Curve3D_2n6cd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_458"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4950,7 +4942,7 @@ longitud_metros = 79.421585
 
 [node name="seg_459" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=720929713]
 curve = SubResource("Curve3D_buc42")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_459"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4973,7 +4965,7 @@ longitud_metros = 154.11604
 
 [node name="seg_465" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=364517309]
 curve = SubResource("Curve3D_wcdpn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_465"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -4996,7 +4988,7 @@ longitud_metros = 332.05194
 
 [node name="seg_467" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2029353717]
 curve = SubResource("Curve3D_q5ale")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_467"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5019,7 +5011,7 @@ longitud_metros = 331.76062
 
 [node name="seg_469" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=578720793]
 curve = SubResource("Curve3D_2ri3n")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_469"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5030,7 +5022,7 @@ longitud_metros = 118.417404
 
 [node name="seg_470" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2085311432]
 curve = SubResource("Curve3D_7w2xj")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_470"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5041,7 +5033,7 @@ longitud_metros = 50.299366
 
 [node name="seg_471" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1769251167]
 curve = SubResource("Curve3D_ekgv7")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_471"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5064,7 +5056,7 @@ longitud_metros = 331.78064
 
 [node name="seg_473" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1726587216]
 curve = SubResource("Curve3D_v466v")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_473"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5087,7 +5079,7 @@ longitud_metros = 332.38623
 
 [node name="seg_475" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2033220547]
 curve = SubResource("Curve3D_mamgl")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_475"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5134,7 +5126,7 @@ longitud_metros = 137.02176
 
 [node name="seg_479" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=367699340]
 curve = SubResource("Curve3D_cljvm")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_479"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5143,20 +5135,9 @@ esta_modificada = true
 estado_edicion = "Modificado"
 longitud_metros = 244.20784
 
-[node name="seg_495" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=937987641]
-curve = SubResource("Curve3D_88nfk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
-script = ExtResource("4_7yiem")
-segment_id = "seg_495"
-sector_nombre = "Sector_01_Constitucion_Avellaneda"
-tramo_nombre = "01_Plaza_Constitucion"
-esta_modificada = true
-estado_edicion = "Modificado"
-longitud_metros = 62.462948
-
 [node name="seg_496" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1040065193]
 curve = SubResource("Curve3D_e4ddl")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_496"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5167,7 +5148,7 @@ longitud_metros = 257.96686
 
 [node name="seg_510" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=898933871]
 curve = SubResource("Curve3D_ybryo")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_510"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5214,7 +5195,7 @@ longitud_metros = 76.412415
 
 [node name="seg_530" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=13040415]
 curve = SubResource("Curve3D_eqvr3")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_530"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5297,7 +5278,7 @@ longitud_metros = 75.60882
 
 [node name="seg_575" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=663163498]
 curve = SubResource("Curve3D_62ix1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_575"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5308,7 +5289,7 @@ longitud_metros = 4.25951
 
 [node name="seg_576" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=127065578]
 curve = SubResource("Curve3D_ada6d")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_576"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5319,7 +5300,7 @@ longitud_metros = 53.07708
 
 [node name="seg_583" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=935019167]
 curve = SubResource("Curve3D_hm3hh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_583"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5342,7 +5323,7 @@ longitud_metros = 137.29222
 
 [node name="seg_585" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1119375093]
 curve = SubResource("Curve3D_s6yy8")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_585"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5365,7 +5346,7 @@ longitud_metros = 137.5799
 
 [node name="seg_587" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=240043482]
 curve = SubResource("Curve3D_mbvys")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_587"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5388,7 +5369,7 @@ longitud_metros = 137.54031
 
 [node name="seg_589" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=181171424]
 curve = SubResource("Curve3D_f0a1p")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_589"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5411,7 +5392,7 @@ longitud_metros = 137.80782
 
 [node name="seg_591" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1168158056]
 curve = SubResource("Curve3D_esjlq")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_591"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5434,7 +5415,7 @@ longitud_metros = 138.07796
 
 [node name="seg_593" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1804296018]
 curve = SubResource("Curve3D_6gat1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_593"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5469,7 +5450,7 @@ longitud_metros = 137.57251
 
 [node name="seg_622" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=82657728]
 curve = SubResource("Curve3D_5hpr1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_622"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5504,7 +5485,7 @@ longitud_metros = 63.998386
 
 [node name="seg_669" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1472008155]
 curve = SubResource("Curve3D_wry0h")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_669"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5514,7 +5495,7 @@ estado_edicion = "Modificado"
 
 [node name="seg_670" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=341488859]
 curve = SubResource("Curve3D_x3ajm")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_670"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5525,7 +5506,7 @@ longitud_metros = 264.60727
 
 [node name="seg_671" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=596418730]
 curve = SubResource("Curve3D_ck264")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_671"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5536,7 +5517,7 @@ longitud_metros = 34.32894
 
 [node name="seg_672" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=658547104]
 curve = SubResource("Curve3D_0sxn7")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_672"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5559,7 +5540,7 @@ longitud_metros = 20.53461
 
 [node name="seg_735" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=2119263901]
 curve = SubResource("Curve3D_fmlfv")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_735"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5582,7 +5563,7 @@ longitud_metros = 21.435608
 
 [node name="seg_737" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=46894898]
 curve = SubResource("Curve3D_jwnjd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_737"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5593,7 +5574,7 @@ longitud_metros = 21.800486
 
 [node name="seg_738" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=847507414]
 curve = SubResource("Curve3D_2yiqe")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_738"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5604,7 +5585,7 @@ longitud_metros = 80.12678
 
 [node name="seg_739" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=744584850]
 curve = SubResource("Curve3D_l84el")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_739"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5627,7 +5608,7 @@ longitud_metros = 36.713383
 
 [node name="seg_741" type="Path3D" parent="TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion" unique_id=1808957068]
 curve = SubResource("Curve3D_f8bg6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_741"
 sector_nombre = "Sector_01_Constitucion_Avellaneda"
@@ -5641,7 +5622,7 @@ estado_edicion = "Modificado"
 
 [node name="seg_4" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=1360987546]
 curve = SubResource("Curve3D_fvstk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_4"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5664,7 +5645,7 @@ longitud_metros = 623.3849
 
 [node name="seg_141" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=1956393611]
 curve = SubResource("Curve3D_w28mo")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_141"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5675,7 +5656,7 @@ longitud_metros = 19.644043
 
 [node name="seg_142" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=118657190]
 curve = SubResource("Curve3D_870ec")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_142"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5686,7 +5667,7 @@ longitud_metros = 3228.4424
 
 [node name="seg_281" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/05_Gerli_Lanus" unique_id=285614465]
 curve = SubResource("Curve3D_ao2nu")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_281"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5843,7 +5824,7 @@ longitud_metros = 394.24643
 
 [node name="seg_140" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=2052955456]
 curve = SubResource("Curve3D_d1qe1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_140"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5890,7 +5871,7 @@ longitud_metros = 197.5759
 
 [node name="seg_155" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=2033591224]
 curve = SubResource("Curve3D_yk17u")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_155"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5901,7 +5882,7 @@ longitud_metros = 171.93596
 
 [node name="seg_156" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1984910349]
 curve = SubResource("Curve3D_y7axe")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_156"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5912,7 +5893,7 @@ longitud_metros = 1101.0607
 
 [node name="seg_157" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1819823681]
 curve = SubResource("Curve3D_3ftbk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_157"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5923,7 +5904,7 @@ longitud_metros = 919.4152
 
 [node name="seg_158" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1879959071]
 curve = SubResource("Curve3D_dw22i")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_158"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5934,7 +5915,7 @@ longitud_metros = 27.387306
 
 [node name="seg_159" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1603928400]
 curve = SubResource("Curve3D_aqonx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_159"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5945,7 +5926,7 @@ longitud_metros = 27.175838
 
 [node name="seg_160" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=107126027]
 curve = SubResource("Curve3D_5ckbh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_160"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5956,7 +5937,7 @@ longitud_metros = 219.43918
 
 [node name="seg_218" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=373640075]
 curve = SubResource("Curve3D_r6tkn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_218"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5967,7 +5948,7 @@ longitud_metros = 305.42862
 
 [node name="seg_219" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1595460934]
 curve = SubResource("Curve3D_nwst0")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_219"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5978,7 +5959,7 @@ longitud_metros = 410.85382
 
 [node name="seg_220" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=348508936]
 curve = SubResource("Curve3D_mp205")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_220"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -5989,7 +5970,7 @@ longitud_metros = 47.207703
 
 [node name="seg_221" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=484804055]
 curve = SubResource("Curve3D_k80b3")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_221"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6000,7 +5981,7 @@ longitud_metros = 2222.8657
 
 [node name="seg_288" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=2126448976]
 curve = SubResource("Curve3D_s0u8f")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_288"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6035,7 +6016,7 @@ longitud_metros = 2951.8074
 
 [node name="seg_505" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=685018178]
 curve = SubResource("Curve3D_qbhnj")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_505"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6046,7 +6027,7 @@ longitud_metros = 264.5785
 
 [node name="seg_657" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=662581462]
 curve = SubResource("Curve3D_db23m")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_657"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6057,7 +6038,7 @@ longitud_metros = 259.86255
 
 [node name="seg_658" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=769438187]
 curve = SubResource("Curve3D_8g056")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_658"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6068,7 +6049,7 @@ longitud_metros = 236.3762
 
 [node name="seg_659" type="Path3D" parent="TrackNetwork/Vias/Sector_02_Avellaneda_Lanus/04_Avellaneda_Gerli" unique_id=1073017654]
 curve = SubResource("Curve3D_av652")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_659"
 sector_nombre = "Sector_02_Avellaneda_Lanus"
@@ -6131,7 +6112,7 @@ longitud_metros = 453.5241
 
 [node name="seg_5" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield" unique_id=1721528040]
 curve = SubResource("Curve3D_cdfft")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_5"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6142,7 +6123,7 @@ longitud_metros = 2720.165
 
 [node name="seg_143" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield" unique_id=130652833]
 curve = SubResource("Curve3D_u7jkf")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_143"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6177,7 +6158,7 @@ longitud_metros = 14.759886
 
 [node name="seg_557" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield" unique_id=1527048651]
 curve = SubResource("Curve3D_hwc4w")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_557"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6188,7 +6169,7 @@ longitud_metros = 15.599869
 
 [node name="seg_559" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/07_Escalada_Banfield" unique_id=733805752]
 curve = SubResource("Curve3D_kbxdn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_559"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6213,7 +6194,7 @@ longitud_metros = 15.840677
 
 [node name="seg_76" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1330891856]
 curve = SubResource("Curve3D_gf6y1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_76"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6224,7 +6205,7 @@ longitud_metros = 51.717415
 
 [node name="seg_77" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1355719252]
 curve = SubResource("Curve3D_vkd7s")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_77"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6235,7 +6216,7 @@ longitud_metros = 552.6963
 
 [node name="seg_78" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1202437436]
 curve = SubResource("Curve3D_lqowl")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_78"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6246,7 +6227,7 @@ longitud_metros = 293.23016
 
 [node name="seg_81" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=48480639]
 curve = SubResource("Curve3D_1fhi6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_81"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6257,7 +6238,7 @@ longitud_metros = 66.77403
 
 [node name="seg_82" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=726863216]
 curve = SubResource("Curve3D_n0uwy")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_82"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6268,7 +6249,7 @@ longitud_metros = 292.48334
 
 [node name="seg_83" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=2103918132]
 curve = SubResource("Curve3D_uk5bn")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_83"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6279,7 +6260,7 @@ longitud_metros = 61.507412
 
 [node name="seg_84" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=467190073]
 curve = SubResource("Curve3D_gqo6b")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_84"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6302,7 +6283,7 @@ longitud_metros = 4.0046167
 
 [node name="seg_86" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=703243362]
 curve = SubResource("Curve3D_rvtq4")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_86"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6313,7 +6294,7 @@ longitud_metros = 333.66562
 
 [node name="seg_87" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1300711721]
 curve = SubResource("Curve3D_xhvk2")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_87"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6324,7 +6305,7 @@ longitud_metros = 333.15265
 
 [node name="seg_88" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=589573201]
 curve = SubResource("Curve3D_bvfqp")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_88"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6335,7 +6316,7 @@ longitud_metros = 7.004228
 
 [node name="seg_92" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1941567963]
 curve = SubResource("Curve3D_xqdhk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_92"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6346,7 +6327,7 @@ longitud_metros = 40.030518
 
 [node name="seg_100" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1065480123]
 curve = SubResource("Curve3D_dtldd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_100"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6357,7 +6338,7 @@ longitud_metros = 202.7147
 
 [node name="seg_101" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=11889081]
 curve = SubResource("Curve3D_ksy4f")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_101"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6368,7 +6349,7 @@ longitud_metros = 28.777111
 
 [node name="seg_107" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1706826786]
 curve = SubResource("Curve3D_q0eid")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_107"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6379,7 +6360,7 @@ longitud_metros = 41.22861
 
 [node name="seg_108" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1732240587]
 curve = SubResource("Curve3D_ychvk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_108"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6414,7 +6395,7 @@ longitud_metros = 40.40652
 
 [node name="seg_111" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1469211150]
 curve = SubResource("Curve3D_mjfsq")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_111"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6425,7 +6406,7 @@ longitud_metros = 35.217663
 
 [node name="seg_112" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1545064899]
 curve = SubResource("Curve3D_040e1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_112"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6436,7 +6417,7 @@ longitud_metros = 279.37616
 
 [node name="seg_113" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1122483643]
 curve = SubResource("Curve3D_2enbj")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_113"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6447,7 +6428,7 @@ longitud_metros = 41.451992
 
 [node name="seg_117" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=625513634]
 curve = SubResource("Curve3D_88cyi")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_117"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6590,7 +6571,7 @@ longitud_metros = 76.98653
 
 [node name="seg_333" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1461074738]
 curve = SubResource("Curve3D_gplgd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_333"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6601,7 +6582,7 @@ longitud_metros = 260.43362
 
 [node name="seg_334" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=855842508]
 curve = SubResource("Curve3D_j0rp5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_334"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6660,7 +6641,7 @@ longitud_metros = 72.56149
 
 [node name="seg_360" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1607699664]
 curve = SubResource("Curve3D_jlw6v")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_360"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6683,7 +6664,7 @@ longitud_metros = 360.61066
 
 [node name="seg_363" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=481914033]
 curve = SubResource("Curve3D_ojg73")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_363"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6742,7 +6723,7 @@ longitud_metros = 21.858683
 
 [node name="seg_376" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=516624244]
 curve = SubResource("Curve3D_ccnbs")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_376"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6753,7 +6734,7 @@ longitud_metros = 63.28206
 
 [node name="seg_396" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1063795889]
 curve = SubResource("Curve3D_l50ys")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_396"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6764,7 +6745,7 @@ longitud_metros = 47.81492
 
 [node name="seg_397" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=2110933361]
 curve = SubResource("Curve3D_0cvjv")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_397"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6775,7 +6756,7 @@ longitud_metros = 247.76486
 
 [node name="seg_536" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1924202571]
 curve = SubResource("Curve3D_xjs7x")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_536"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6786,7 +6767,7 @@ longitud_metros = 37.451595
 
 [node name="seg_537" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=1797119781]
 curve = SubResource("Curve3D_3x4j4")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_537"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6797,7 +6778,7 @@ longitud_metros = 180.2448
 
 [node name="seg_541" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=2139442960]
 curve = SubResource("Curve3D_cv6yi")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_541"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6808,7 +6789,7 @@ longitud_metros = 1548.4094
 
 [node name="seg_542" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/09_Lomas_Temperley" unique_id=571865650]
 curve = SubResource("Curve3D_d7jlc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_542"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6869,7 +6850,7 @@ longitud_metros = 52.22373
 
 [node name="seg_35" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/06_Lanus_Escalada" unique_id=2004459065]
 curve = SubResource("Curve3D_upeky")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_35"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6880,7 +6861,7 @@ longitud_metros = 111.983986
 
 [node name="seg_36" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/06_Lanus_Escalada" unique_id=773190449]
 curve = SubResource("Curve3D_y228r")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_36"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6927,7 +6908,7 @@ longitud_metros = 3258.7407
 
 [node name="seg_491" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/06_Lanus_Escalada" unique_id=1502806298]
 curve = SubResource("Curve3D_hog1l")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_491"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6938,7 +6919,7 @@ longitud_metros = 530.635
 
 [node name="seg_492" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/06_Lanus_Escalada" unique_id=674399637]
 curve = SubResource("Curve3D_dpuml")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_492"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6963,7 +6944,7 @@ longitud_metros = 1470.7501
 
 [node name="seg_290" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=1588188241]
 curve = SubResource("Curve3D_kbr88")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_290"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -6974,7 +6955,7 @@ longitud_metros = 24.385925
 
 [node name="seg_346" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=625255044]
 curve = SubResource("Curve3D_jc3fc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_346"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7021,7 +7002,7 @@ longitud_metros = 35.855324
 
 [node name="seg_535" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=103228874]
 curve = SubResource("Curve3D_l00q2")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_535"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7032,7 +7013,7 @@ longitud_metros = 1477.4459
 
 [node name="seg_538" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=1635432420]
 curve = SubResource("Curve3D_fx8mh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_538"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7043,7 +7024,7 @@ longitud_metros = 16.706127
 
 [node name="seg_539" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=374253587]
 curve = SubResource("Curve3D_dr30k")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_539"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7066,7 +7047,7 @@ longitud_metros = 16.579363
 
 [node name="seg_558" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=1371080920]
 curve = SubResource("Curve3D_o8wuc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_558"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7077,7 +7058,7 @@ longitud_metros = 1469.5314
 
 [node name="seg_560" type="Path3D" parent="TrackNetwork/Vias/Sector_03_Lanus_Temperley/08_Banfield_Lomas" unique_id=1675255445]
 curve = SubResource("Curve3D_ho8t0")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_560"
 sector_nombre = "Sector_03_Lanus_Temperley"
@@ -7104,7 +7085,7 @@ longitud_metros = 1091.2614
 
 [node name="seg_89" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1372269580]
 curve = SubResource("Curve3D_tkgjh")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_89"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7139,7 +7120,7 @@ longitud_metros = 49.878975
 
 [node name="seg_209" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=285327846]
 curve = SubResource("Curve3D_p8fq6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_209"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7150,7 +7131,7 @@ longitud_metros = 1505.3984
 
 [node name="seg_210" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=170844479]
 curve = SubResource("Curve3D_eltxa")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_210"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7161,7 +7142,7 @@ longitud_metros = 510.5554
 
 [node name="seg_211" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=380778758]
 curve = SubResource("Curve3D_bxkld")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_211"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7172,7 +7153,7 @@ longitud_metros = 88.33762
 
 [node name="seg_212" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=2142089868]
 curve = SubResource("Curve3D_cai7r")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_212"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7195,7 +7176,7 @@ longitud_metros = 1622.8967
 
 [node name="seg_318" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1875593334]
 curve = SubResource("Curve3D_ldsao")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_318"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7206,7 +7187,7 @@ longitud_metros = 38.655853
 
 [node name="seg_344" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1568189233]
 curve = SubResource("Curve3D_70era")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_344"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7217,7 +7198,7 @@ longitud_metros = 55.007027
 
 [node name="seg_345" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=2134017495]
 curve = SubResource("Curve3D_sigbq")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_345"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7240,7 +7221,7 @@ longitud_metros = 65.237755
 
 [node name="seg_391" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1587488807]
 curve = SubResource("Curve3D_batc6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_391"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7251,7 +7232,7 @@ longitud_metros = 53.166767
 
 [node name="seg_392" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1193267817]
 curve = SubResource("Curve3D_3wdpp")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_392"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7262,7 +7243,7 @@ longitud_metros = 474.8034
 
 [node name="seg_393" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1878969980]
 curve = SubResource("Curve3D_vowds")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_393"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7273,7 +7254,7 @@ longitud_metros = 76.26668
 
 [node name="seg_398" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=488505661]
 curve = SubResource("Curve3D_8usbd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_398"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7284,7 +7265,7 @@ longitud_metros = 553.4585
 
 [node name="seg_570" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1286739503]
 curve = SubResource("Curve3D_alttk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_570"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7343,7 +7324,7 @@ longitud_metros = 336.3687
 
 [node name="seg_694" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1780436111]
 curve = SubResource("Curve3D_p68p5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_694"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7378,7 +7359,7 @@ longitud_metros = 50.952934
 
 [node name="seg_697" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1388943684]
 curve = SubResource("Curve3D_ub1ci")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_697"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7389,7 +7370,7 @@ longitud_metros = 183.48242
 
 [node name="seg_698" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=2048187384]
 curve = SubResource("Curve3D_lnjbg")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_698"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7400,7 +7381,7 @@ longitud_metros = 202.49817
 
 [node name="seg_699" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=486181157]
 curve = SubResource("Curve3D_u18y1")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_699"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7411,7 +7392,7 @@ longitud_metros = 415.67377
 
 [node name="seg_700" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/10_Temperley_Marmol" unique_id=1122719529]
 curve = SubResource("Curve3D_u65fm")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_700"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7424,7 +7405,7 @@ longitud_metros = 112.65066
 
 [node name="seg_72" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada" unique_id=1408616652]
 curve = SubResource("Curve3D_qx5w5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_72"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7435,7 +7416,7 @@ longitud_metros = 14.427818
 
 [node name="seg_73" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada" unique_id=1885381215]
 curve = SubResource("Curve3D_klb53")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_73"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7446,7 +7427,7 @@ longitud_metros = 132.78247
 
 [node name="seg_75" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada" unique_id=1168260935]
 curve = SubResource("Curve3D_b4732")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_75"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7505,7 +7486,7 @@ longitud_metros = 384.3198
 
 [node name="seg_688" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada" unique_id=2003273650]
 curve = SubResource("Curve3D_yxil6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_688"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7528,7 +7509,7 @@ longitud_metros = 1126.5026
 
 [node name="seg_690" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/11_Marmol_Calzada" unique_id=1118536363]
 curve = SubResource("Curve3D_v4mnw")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_690"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7553,7 +7534,7 @@ longitud_metros = 94.451744
 
 [node name="seg_68" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/12_Calzada_Claypole" unique_id=1802031268]
 curve = SubResource("Curve3D_5qtvv")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_68"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7588,7 +7569,7 @@ longitud_metros = 33.81912
 
 [node name="seg_283" type="Path3D" parent="TrackNetwork/Vias/Sector_04_Temperley_Claypole/12_Calzada_Claypole" unique_id=853235855]
 curve = SubResource("Curve3D_fbkcd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_283"
 sector_nombre = "Sector_04_Temperley_Claypole"
@@ -7627,7 +7608,7 @@ longitud_metros = 218.45674
 
 [node name="seg_227" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=852493547]
 curve = SubResource("Curve3D_rgyyv")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_227"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7638,7 +7619,7 @@ longitud_metros = 151.46823
 
 [node name="seg_228" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=576130912]
 curve = SubResource("Curve3D_6tgw6")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_228"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7649,7 +7630,7 @@ longitud_metros = 38.67656
 
 [node name="seg_240" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=1628187624]
 curve = SubResource("Curve3D_ippj7")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_240"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7660,7 +7641,7 @@ longitud_metros = 181.90538
 
 [node name="seg_241" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=690553808]
 curve = SubResource("Curve3D_aaglx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_241"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7671,7 +7652,7 @@ longitud_metros = 248.85979
 
 [node name="seg_242" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=2113110404]
 curve = SubResource("Curve3D_yox66")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_242"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7706,7 +7687,7 @@ longitud_metros = 30.757774
 
 [node name="seg_246" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=249322047]
 curve = SubResource("Curve3D_6fehv")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_246"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7741,7 +7722,7 @@ longitud_metros = 23.347977
 
 [node name="seg_402" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=1951340470]
 curve = SubResource("Curve3D_hcbtr")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_402"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7752,7 +7733,7 @@ longitud_metros = 44.07682
 
 [node name="seg_403" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=1111673638]
 curve = SubResource("Curve3D_x413x")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_403"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7787,7 +7768,7 @@ longitud_metros = 47.065884
 
 [node name="seg_409" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=1954464285]
 curve = SubResource("Curve3D_qtw6l")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_409"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7810,7 +7791,7 @@ longitud_metros = 171.01033
 
 [node name="seg_615" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=1729324825]
 curve = SubResource("Curve3D_84ds5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_615"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7821,7 +7802,7 @@ longitud_metros = 47.28756
 
 [node name="seg_617" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=48308324]
 curve = SubResource("Curve3D_0ewpd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_617"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7832,7 +7813,7 @@ longitud_metros = 259.74484
 
 [node name="seg_618" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/16_Zeballos_Bosques" unique_id=247228322]
 curve = SubResource("Curve3D_givnx")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_618"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7881,7 +7862,7 @@ longitud_metros = 23.152517
 
 [node name="seg_27" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/15_Varela_Zeballos" unique_id=1235188092]
 curve = SubResource("Curve3D_ru14c")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_27"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7904,7 +7885,7 @@ longitud_metros = 15.668123
 
 [node name="seg_614" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/15_Varela_Zeballos" unique_id=2130901052]
 curve = SubResource("Curve3D_b4oqs")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_614"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7927,7 +7908,7 @@ longitud_metros = 287.4922
 
 [node name="seg_649" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/15_Varela_Zeballos" unique_id=2135485593]
 curve = SubResource("Curve3D_140sb")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_649"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7938,7 +7919,7 @@ longitud_metros = 83.85354
 
 [node name="seg_650" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/15_Varela_Zeballos" unique_id=1154818828]
 curve = SubResource("Curve3D_6q1y5")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_650"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7975,7 +7956,7 @@ longitud_metros = 15.220937
 
 [node name="seg_69" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1528006532]
 curve = SubResource("Curve3D_t34pd")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_69"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -7986,7 +7967,7 @@ longitud_metros = 2548.7776
 
 [node name="seg_229" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1719253958]
 curve = SubResource("Curve3D_prmbk")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_229"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8057,7 +8038,7 @@ longitud_metros = 2554.109
 
 [node name="seg_636" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1753727492]
 curve = SubResource("Curve3D_biobe")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_636"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8068,7 +8049,7 @@ longitud_metros = 311.46475
 
 [node name="seg_637" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1364631590]
 curve = SubResource("Curve3D_0y33h")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_637"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8079,7 +8060,7 @@ longitud_metros = 119.04486
 
 [node name="seg_638" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1966549485]
 curve = SubResource("Curve3D_powjs")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_638"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8114,7 +8095,7 @@ longitud_metros = 126.29293
 
 [node name="seg_686" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=50269001]
 curve = SubResource("Curve3D_7kymc")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_686"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8125,7 +8106,7 @@ longitud_metros = 466.85278
 
 [node name="seg_711" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/13_Claypole_Ardigo" unique_id=1704435042]
 curve = SubResource("Curve3D_dvjs2")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_711"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8162,7 +8143,7 @@ longitud_metros = 401.73056
 
 [node name="seg_163" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/14_Ardigo_Varela" unique_id=1814708735]
 curve = SubResource("Curve3D_opnf4")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_163"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -8173,7 +8154,7 @@ longitud_metros = 196.4016
 
 [node name="seg_164" type="Path3D" parent="TrackNetwork/Vias/Sector_05_Claypole_Bosques/14_Ardigo_Varela" unique_id=289071178]
 curve = SubResource("Curve3D_u2ive")
-debug_custom_color = Color(0.18039216, 0.8, 0.44313726, 1)
+debug_custom_color = Color(1, 0, 0, 1)
 script = ExtResource("4_7yiem")
 segment_id = "seg_164"
 sector_nombre = "Sector_05_Claypole_Bosques"
@@ -9196,7 +9177,6 @@ alinear_a_via = false
 avance_inicial = 162.3
 tiempo_parada_servicio = 0.0
 sentido_local_inicio_invertido = false
-capacidad_pasajeros = 0
 cantidad_pasajeros_por_tanda = 0
 intervalo_pasajeros = 0.0
 porcentaje_bajada_directo_min = 0.0
@@ -9208,14 +9188,13 @@ autodetectar_estaciones = false
 distancia_maxima_via = 1.0
 
 [node name="TrenCSR_02" parent="Formaciones" unique_id=1933757396 node_paths=PackedStringArray("traza", "servicio") instance=ExtResource("5_tren")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.98481, 0, 248.81627)
-traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_591")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 178.84636, 0, 248.79265)
+traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_583")
 alinear_a_via = false
-avance_inicial = 156.60000000000002
+avance_inicial = 157.3
 demora_salida_inicial = 6.0
 tiempo_parada_servicio = 4.0
 sentido_local_inicio_invertido = false
-capacidad_pasajeros = 0
 cantidad_pasajeros_por_tanda = 0
 intervalo_pasajeros = 0.0
 porcentaje_bajada_directo_min = 0.0
@@ -9234,7 +9213,6 @@ avance_inicial = 162.5
 demora_salida_inicial = 12.0
 tiempo_parada_servicio = 5.0
 sentido_local_inicio_invertido = false
-capacidad_pasajeros = 0
 cantidad_pasajeros_por_tanda = 0
 intervalo_pasajeros = 0.0
 porcentaje_bajada_directo_min = 0.0
@@ -9253,7 +9231,6 @@ avance_inicial = 160.60000000000002
 demora_salida_inicial = 18.0
 tiempo_parada_servicio = 6.0
 sentido_local_inicio_invertido = false
-capacidad_pasajeros = 0
 cantidad_pasajeros_por_tanda = 0
 intervalo_pasajeros = 0.0
 porcentaje_bajada_directo_min = 0.0

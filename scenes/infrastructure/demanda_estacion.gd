@@ -5,7 +5,7 @@ class_name DemandaEstacion
 
 @export_group("Ritmo de simulación")
 ## Intervalo de referencia para convertir pasajeros por formación a pasajeros/s.
-@export_range(0.1, 86400.0, 0.1, "suffix:s") var intervalo_formaciones: float = 12.0
+@export_range(0.1, 86400.0, 0.1, "suffix:s") var intervalo_formaciones: float = 24.0
 @export_range(0.0, 1.0, 0.01) var variacion: float = 0.15
 
 @export_group("Promedios por formación: a Constitución")

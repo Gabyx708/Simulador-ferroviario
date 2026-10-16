@@ -36,6 +36,10 @@ class_name ServicioFerroviario
 ## caché evita repetir quince búsquedas iguales hasta Bosques por cada opción.
 var _continuidad_cache: Dictionary = {}
 var _validacion_ida_cache: Dictionary = {}
+## Una formación por intervalo entre estaciones, con reservas direccionales.
+var _propietarios_intervalos_servicio: Dictionary = {}
+var _intervalos_por_tren: Dictionary = {}
+var _cola_intervalos_servicio: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -160,6 +164,116 @@ func siguiente_indice(indice: int, direccion: int) -> int:
 	if paradas.is_empty():
 		return -1
 	return clampi(indice + direccion, 0, paradas.size() - 1)
+
+
+## Reserva el tramo operacional entre dos paradas consecutivas. Un tren que ya
+## espera en el intervalo conserva prioridad hasta que pueda entrar.
+func reservar_intervalo_servicio(indice_origen: int, direccion: int, tren_id: int) -> bool:
+	_asegurar_estado_intervalos()
+	if tren_id <= 0 or direccion == 0 or indice_origen < 0 or indice_origen >= paradas.size():
+		return false
+	var indice_destino: int = siguiente_indice(indice_origen, direccion)
+	if indice_destino == indice_origen:
+		return false
+	var clave: String = "%d>%d" % [indice_origen, indice_destino]
+	var propietario: int = int(_propietarios_intervalos_servicio.get(clave, 0))
+	if propietario == tren_id:
+		_quitar_solicitud_intervalo(tren_id, clave)
+		return true
+	var indice_solicitud: int = _buscar_solicitud_intervalo(tren_id, clave)
+	if indice_solicitud < 0:
+		_cola_intervalos_servicio.append({"tren": tren_id, "clave": clave})
+		indice_solicitud = _cola_intervalos_servicio.size() - 1
+	if propietario != 0:
+		return false
+	for indice: int in range(indice_solicitud):
+		if str(_cola_intervalos_servicio[indice].get("clave", "")) == clave:
+			return false
+	_propietarios_intervalos_servicio[clave] = tren_id
+	_quitar_solicitud_intervalo(tren_id, clave)
+	var intervalos: Array = _intervalos_por_tren.get(tren_id, []) as Array
+	intervalos.append({"clave": clave, "liberar_en": INF})
+	_intervalos_por_tren[tren_id] = intervalos
+	return true
+
+
+## El bloqueo se conserva hasta que la cola de la formación pasa la estación.
+func registrar_llegada_intervalo_servicio(tren_id: int, indice_origen: int, indice_destino: int, odometro: float, largo_tren: float) -> void:
+	_asegurar_estado_intervalos()
+	var clave: String = "%d>%d" % [indice_origen, indice_destino]
+	var intervalos: Array = _intervalos_por_tren.get(tren_id, []) as Array
+	for intervalo_raw: Variant in intervalos:
+		if not (intervalo_raw is Dictionary):
+			continue
+		var intervalo: Dictionary = intervalo_raw
+		if str(intervalo.get("clave", "")) == clave:
+			intervalo["liberar_en"] = odometro + maxf(0.0, largo_tren)
+			return
+
+
+## Libera intervalos cuya cola ya pasó y conserva los que aún ocupa el tren.
+func actualizar_intervalos_servicio(tren_id: int, odometro: float) -> void:
+	_asegurar_estado_intervalos()
+	var intervalos: Array = _intervalos_por_tren.get(tren_id, []) as Array
+	if intervalos.is_empty():
+		return
+	var restantes: Array = []
+	for intervalo_raw: Variant in intervalos:
+		if not (intervalo_raw is Dictionary):
+			continue
+		var intervalo: Dictionary = intervalo_raw
+		var clave: String = str(intervalo.get("clave", ""))
+		if odometro >= float(intervalo.get("liberar_en", INF)):
+			if int(_propietarios_intervalos_servicio.get(clave, 0)) == tren_id:
+				_propietarios_intervalos_servicio.erase(clave)
+		else:
+			restantes.append(intervalo)
+	if restantes.is_empty():
+		_intervalos_por_tren.erase(tren_id)
+	else:
+		_intervalos_por_tren[tren_id] = restantes
+
+
+## Suelta los intervalos y solicitudes pendientes al eliminar o invalidar un tren.
+func liberar_intervalos_servicio(tren_id: int) -> void:
+	_asegurar_estado_intervalos()
+	for intervalo_raw: Variant in _intervalos_por_tren.get(tren_id, []) as Array:
+		if not (intervalo_raw is Dictionary):
+			continue
+		var intervalo: Dictionary = intervalo_raw
+		var clave: String = str(intervalo.get("clave", ""))
+		if int(_propietarios_intervalos_servicio.get(clave, 0)) == tren_id:
+			_propietarios_intervalos_servicio.erase(clave)
+	_intervalos_por_tren.erase(tren_id)
+	for indice: int in range(_cola_intervalos_servicio.size() - 1, -1, -1):
+		if int(_cola_intervalos_servicio[indice].get("tren", 0)) == tren_id:
+			_cola_intervalos_servicio.remove_at(indice)
+
+
+## Una escena viva puede conservar Nil en campos incorporados durante una recarga del script.
+func _asegurar_estado_intervalos() -> void:
+	if (
+		typeof(_propietarios_intervalos_servicio) != TYPE_DICTIONARY
+		or typeof(_intervalos_por_tren) != TYPE_DICTIONARY
+		or typeof(_cola_intervalos_servicio) != TYPE_ARRAY
+	):
+		_propietarios_intervalos_servicio = {}
+		_intervalos_por_tren = {}
+		_cola_intervalos_servicio = []
+
+
+func _buscar_solicitud_intervalo(tren_id: int, clave: String) -> int:
+	for indice: int in _cola_intervalos_servicio.size():
+		var solicitud: Dictionary = _cola_intervalos_servicio[indice]
+		if int(solicitud.get("tren", 0)) == tren_id and str(solicitud.get("clave", "")) == clave:
+			return indice
+	return -1
+
+
+func _quitar_solicitud_intervalo(tren_id: int, clave: String) -> void:
+	var indice: int = _buscar_solicitud_intervalo(tren_id, clave)
+	if indice >= 0:
+		_cola_intervalos_servicio.remove_at(indice)
 
 
 func es_terminal(indice: int) -> bool:

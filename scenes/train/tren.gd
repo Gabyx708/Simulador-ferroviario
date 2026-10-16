@@ -152,7 +152,7 @@ signal evento_temporal_finalizado(datos_tren: Dictionary)
 
 @export_group("Pasajeros")
 ## Capacidad total de pasajeros de la formación.
-@export_range(0, 100000, 1) var capacidad_pasajeros: int = 500
+@export_range(0, 100000, 1) var capacidad_pasajeros: int = 1800
 
 ## Pasajeros actualmente dentro de la formación.
 var pasajeros_actuales: int = 0
@@ -670,6 +670,8 @@ func obtener_resumen_operativo() -> Dictionary:
 func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida") -> void:
 	if _servicio_finalizado:
 		return
+	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
+		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
 	_ruta_invalida = true
 	_procesando_pasajeros = false
 	_detenido = true
@@ -703,6 +705,8 @@ func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida")
 func _finalizar_servicio_en_terminal() -> void:
 	if _servicio_finalizado:
 		return
+	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
+		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
 	_servicio_finalizado = true
 	_detenido = true
 	_parada_servicio_activa = true
@@ -2099,6 +2103,8 @@ func _on_selector_input_event(_camara: Node, evento: InputEvent, _pos: Vector3, 
 func _process(delta: float) -> void:
 	if _eliminado or _servicio_finalizado:
 		return
+	if _usa_servicio() and _servicio_ferroviario.has_method("actualizar_intervalos_servicio"):
+		_servicio_ferroviario.call("actualizar_intervalos_servicio", get_instance_id(), _odometro_ferroviario)
 	if _apartado_de_via:
 		_desplazamiento_lateral_actual = move_toward(_desplazamiento_lateral_actual, _desplazamiento_lateral_objetivo, 3.5 * delta)
 		_ubicar(0.0)
@@ -2170,6 +2176,16 @@ func _process(delta: float) -> void:
 				if _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio):
 					# Solo ida termina en Bosques; ida y vuelta termina en Constitución.
 					_finalizar_servicio_en_terminal()
+					return
+				var direccion_salida: int = _direccion_servicio
+				if _servicio_ferroviario.es_terminal(_indice_servicio):
+					direccion_salida = 1 if _indice_servicio == 0 else -1
+				if _servicio_ferroviario.has_method("reservar_intervalo_servicio") and not bool(_servicio_ferroviario.call(
+					"reservar_intervalo_servicio", _indice_servicio, direccion_salida, get_instance_id()
+				)):
+					_esperando_reserva = true
+					_establecer_estado(EstadoOperacion.ESPERANDO_RESERVA, "Esperando que se libere el tramo hasta la próxima estación.")
+					_espera = 0.5
 					return
 				_detenido = false
 				_esperando_reserva = false
@@ -2375,6 +2391,17 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 	_espera = maxf(tiempo_est, 1.0)
 	_debe_invertir_en_salida = es_term
 	_parada_servicio_activa = _usa_servicio()
+	if _usa_servicio() and not llegada_de_maniobra and not _servicio_ferroviario.finaliza_en(_indice_servicio, _direccion_servicio):
+		var indice_origen_intervalo: int = _indice_servicio - _direccion_servicio
+		if indice_origen_intervalo >= 0 and indice_origen_intervalo < _servicio_ferroviario.cantidad_paradas():
+			_servicio_ferroviario.call(
+				"registrar_llegada_intervalo_servicio",
+				get_instance_id(),
+				indice_origen_intervalo,
+				_indice_servicio,
+				_odometro_ferroviario,
+				obtener_largo_formacion()
+			)
 	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion, _espera)
 	_establecer_estado(EstadoOperacion.DETENIDO_EN_ESTACION)
 	parada_alcanzada.emit(_idx_parada)
@@ -2753,6 +2780,8 @@ func eliminar() -> void:
 	if _eliminado:
 		return
 	_eliminado = true
+	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
+		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
 	eliminado.emit()
 	queue_free()
 

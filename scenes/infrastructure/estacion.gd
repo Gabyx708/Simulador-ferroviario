@@ -312,7 +312,7 @@ var _datos_originales: Dictionary = {}
 		if is_inside_tree():
 			_sincronizar_pasajeros_visuales()
 
-@export_range(0.0, 1000.0, 0.01) var tasa_generacion_pasajeros: float = 0.75
+@export_range(0.0, 1000.0, 0.01) var tasa_generacion_pasajeros: float = 0.375
 ## Limite de figuras visibles por estacion; el contador conserva la cantidad real.
 @export_range(0, 150, 1) var maximo_pasajeros_visibles: int = 150
 ## Segundos que los pasajeros desembarcados permanecen visibles antes de salir.

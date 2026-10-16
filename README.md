@@ -257,9 +257,9 @@ y Bosques conservan sus perfiles de terminal; allí baja toda la formación.
 
 La simulación usa una variación aleatoria de ±15 % alrededor de los promedios,
 redondeada a pasajeros enteros. La generación continua usa un intervalo de
-referencia de **12 segundos de simulación**, la mitad de la tasa original de
-generación; se puede editar junto con la variación en cada perfil. Las estaciones
-sin perfil usan una tasa base de 0,75 en lugar de 1,5 pasajeros por segundo.
+referencia de **24 segundos de simulación**, que reduce a la mitad la generación
+actual; se puede editar junto con la variación en cada perfil. Las estaciones
+sin perfil usan una tasa base de 0,375 en lugar de 0,75 pasajeros por segundo.
 La tasa de cada destino se reparte entre los andenes que lo sirven. Los
 andenes completos dejan de generar. Los promedios de subida regulan únicamente
 la generación de pasajeros: al llegar un tren suben todos los que esperan en

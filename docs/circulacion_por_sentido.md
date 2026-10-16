@@ -132,11 +132,18 @@ seg_616` (los cuatro primeros, de uso común).
 - **Andén inicial**: las formaciones de la escena reservan su vía de salida en
   Constitución (`reservar_tramo_inicial`).
 
-Las vías IDA o VUELTA comunes, por largas que sean, no se reservan: la
-separación la resuelve la detección de conflictos del tren
-(`_detectar_conflicto_proximo`), que mide la distancia real al tren de adelante
-en la misma vía y en la vía siguiente y frena con su distancia de frenado más
-un margen.
+**Intervalos entre estaciones** (`ServicioFerroviario`): cada tramo operacional
+entre dos paradas consecutivas se reserva para una sola formación y sentido.
+El tren siguiente espera en la estación de origen. Al llegar el tren que ocupa
+el intervalo, la reserva se mantiene hasta que su cola avanza un largo de
+formación más allá de la parada; recién entonces puede salir el siguiente.
+La cola de solicitudes conserva el orden de llegada. Esto deja como mínimo un
+intervalo de servicio entre formaciones en la misma dirección.
+
+La detección local del tren (`_detectar_conflicto_proximo`) sigue activa como
+protección adicional: mide al tren de adelante en la misma vía y en la vía
+siguiente, y frena con su distancia de frenado más un margen. También cubre
+conflictos que no pertenecen al mismo servicio.
 
 **Cola de solicitudes** (`_adquirir_recursos_fifo`): se atienden por orden de
 llegada, con dos excepciones para evitar bloqueos mutuos:

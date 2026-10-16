@@ -361,7 +361,7 @@ func _actualizar_efecto_sentido() -> void:
 		return
 	var color := Color("f5c542")
 	if uso_direccion == UsoDireccion.IDA:
-		color = Color("2ecc71")
+		color = Color("ff0000")
 	elif uso_direccion == UsoDireccion.VUELTA:
 		color = Color("27b9ff")
 	debug_custom_color = color
