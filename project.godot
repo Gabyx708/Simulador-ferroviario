@@ -30,4 +30,5 @@ enabled=PackedStringArray("res://addons/sky_3d/plugin.cfg")
 
 [rendering]
 
+renderer/rendering_method="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2

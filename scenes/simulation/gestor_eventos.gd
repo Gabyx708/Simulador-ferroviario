@@ -33,6 +33,7 @@ class_name GestorEventos
 
 signal evento_disparado(datos: Dictionary)
 signal evento_finalizado(datos: Dictionary)
+signal evento_individual_disparado(datos: Dictionary)
 ## Un tren puntual entró a una zona activa. Distinto de evento_disparado
 ## (que es sobre la zona, no sobre un tren) -- lo necesita IndicadorEventos
 ## para saber recién en este momento a qué tren colgarle el efecto visual,
@@ -327,6 +328,7 @@ func disparar_desperfecto_mecanico(id_tren: int, motivo: String = "Desperfecto m
 		}
 		_eventos[id_evento] = evento
 		evento_disparado.emit(evento)
+		evento_individual_disparado.emit(evento.duplicate())
 	return ok
 
 
@@ -440,6 +442,10 @@ func _aplicar_zona_a_tren(id_tren: int, id_evento: int) -> void:
 		# al evento más reciente, que es el que lo volvió a frenar.
 		_atribucion_pendiente[id_tren] = id_evento
 		tren_afectado_por_evento.emit(id_tren, int(evento["tipo"]))
+		if int(evento["tipo"]) == TipoEvento.FALLA_ELECTRICA:
+			var datos_popup: Dictionary = evento.duplicate()
+			datos_popup["id_tren"] = id_tren
+			evento_individual_disparado.emit(datos_popup)
 
 
 ## El tren completó un tramo (aporte puede ser 0.0). Si ese tramo arrancó
