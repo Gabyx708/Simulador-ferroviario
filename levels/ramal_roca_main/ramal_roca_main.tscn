@@ -55,12 +55,12 @@ shader_parameter/atm_darkness = 0.5
 shader_parameter/atm_sun_intensity = 18.0
 shader_parameter/atm_day_tint = Color(0.807843, 0.909804, 1, 1)
 shader_parameter/atm_horizon_light_tint = Color(0.980392, 0.635294, 0.462745, 1)
-shader_parameter/atm_night_tint = Color(0.0070224726, 0.008329002, 0.010452064, 0.04164501)
+shader_parameter/atm_night_tint = Color(0, 0, 0, 0)
 shader_parameter/atm_level_params = Vector3(1, 0, 0)
 shader_parameter/atm_thickness = 0.7
 shader_parameter/atm_beta_ray = Vector3(5.804544e-06, 1.3562913e-05, 3.311258e-05)
 shader_parameter/atm_beta_mie = Vector3(3.038e-08, 3.038e-08, 3.038e-08)
-shader_parameter/sun_light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
+shader_parameter/sun_light_color = Color(1, 1, 1, 1)
 shader_parameter/sun_disk_color = Color(0.996094, 0.541334, 0.140076, 1)
 shader_parameter/sun_disk_intensity = 30.0
 shader_parameter/sun_disk_size = 0.02
@@ -82,7 +82,7 @@ shader_parameter/starmap_flip_u = false
 shader_parameter/starmap_flip_v = false
 shader_parameter/starmap_alignment = Vector3(2.68288, -0.25891, 0.40101)
 shader_parameter/star_rotation_offset = 9.38899
-shader_parameter/star_rotation = -12.439238260385984
+shader_parameter/star_rotation = -11.738320084401659
 shader_parameter/star_tilt = -1.2915436464758039
 shader_parameter/star_field_color = Color(1, 1, 1, 1)
 shader_parameter/star_field_texture = ExtResource("7_so8vn")
@@ -98,8 +98,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.51554954, 0.51554954)
-shader_parameter/cirrus_position2 = Vector2(0.51554954, 0.51554954)
+shader_parameter/cirrus_position1 = Vector2(0.05753428, 0.05753428)
+shader_parameter/cirrus_position2 = Vector2(0.05753428, 0.05753428)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -109,7 +109,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(2.5774868, 2.5774868)
+shader_parameter/cumulus_position = Vector2(0.2876736, 0.2876736)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -119,7 +119,7 @@ shader_parameter/azimuthal_grid_rotation_offset = 0.03
 shader_parameter/show_equatorial_grid = false
 shader_parameter/equatorial_grid_color = Color(0, 0.75, 1, 1)
 shader_parameter/equatorial_grid_rotation_offset = 0.03
-shader_parameter/moon_matrix = Basis(0.9955214, -0.090874165, -0.026057746, 0.0018809289, 0.29462275, -0.95561177, 0.09451763, 0.95128304, 0.29347417)
+shader_parameter/moon_matrix = Basis(0.7174114, -0.6696627, -0.19202268, 0.023288248, 0.29853657, -0.9541141, 0.69626033, 0.6800204, 0.22976878)
 
 [sub_resource type="Sky" id="Sky_sky3d"]
 sky_material = SubResource("ShaderMaterial_12tge")
@@ -128,7 +128,7 @@ sky_material = SubResource("ShaderMaterial_12tge")
 background_mode = 2
 sky = SubResource("Sky_sky3d")
 ambient_light_source = 3
-ambient_light_color = Color(0.6543907, 0.5094304, 0.43729335, 1)
+ambient_light_color = Color(1, 1, 1, 1)
 reflected_light_source = 2
 tonemap_mode = 3
 tonemap_white = 6.0
@@ -3639,18 +3639,17 @@ camera_attributes = SubResource("CameraAttributesPractical_nbeed")
 script = ExtResource("9_faksr")
 editor_time_enabled = false
 game_time_enabled = false
-current_time = 16.28
+current_time = 13.61
 wind_direction = 2.35619451204804
 metadata/_custom_type_script = "uid://deo0gxkmk2ahd"
 
 [node name="SunLight" type="DirectionalLight3D" parent="Entorno/Entorno/Sky3D" unique_id=966941617]
-transform = Transform3D(0.48922414, 0.2253264, -0.8425484, 0, 0.96605, 0.258355, 0.8721581, -0.1263935, 0.472615, -0.8425484, 0.258355, 0.472615)
-light_color = Color(0.9903342, 0.7694707, 0.65879726, 1)
+transform = Transform3D(0.830132, 0.3869108, -0.4014735, 0, 0.7200454, 0.693927, 0.557567, -0.576051, 0.59773266, -0.4014735, 0.693927, 0.59773266)
 shadow_enabled = true
 directional_shadow_max_distance = 350.0
 
 [node name="MoonLight" type="DirectionalLight3D" parent="Entorno/Entorno/Sky3D" unique_id=748959423]
-transform = Transform3D(0, -0.9955232, 0.094517626, 0.2947939, 0.090317346, 0.951283, -0.95556086, 0.02786322, 0.29347417, 0.094517626, 0.951283, 0.29347417)
+transform = Transform3D(0, -0.7177893, 0.69626045, 0.32010618, 0.65962434, 0.68002045, -0.9473816, 0.22287728, 0.2297688, 0.6962604, 0.6800204, 0.22976878)
 light_color = Color(0.572549, 0.776471, 0.956863, 1)
 light_energy = 0.0
 directional_shadow_max_distance = 450.0
@@ -3658,10 +3657,10 @@ directional_shadow_pancake_size = 50.0
 
 [node name="SkyDome" type="Node" parent="Entorno/Entorno/Sky3D" unique_id=383149433]
 script = ExtResource("10_uji7r")
-sun_azimuth = -4.201189
-sun_altitude = -1.3094773
-moon_azimuth = -2.830018
-moon_altitude = -0.31342554
+sun_azimuth = -3.7330446
+sun_altitude = -0.8038677
+moon_azimuth = -1.8895476
+moon_altitude = -0.82300586
 wind_direction = 2.35619451204804
 
 [node name="TimeOfDay" type="Node" parent="Entorno/Entorno/Sky3D" unique_id=1304742985]
@@ -3669,7 +3668,7 @@ script = ExtResource("11_x20jw")
 editor_time_enabled = false
 game_time_enabled = false
 dome_path = NodePath("../SkyDome")
-current_time = 16.28
+current_time = 13.61
 day = 5
 
 [node name="Terreno" type="MeshInstance3D" parent="." unique_id=1428047352]
@@ -3682,7 +3681,7 @@ transform = Transform3D(1.1249382, 0, 0.0117807565, 0, 1.125, 0, -0.0117807565, 
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=479191820]
+[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=1648845219]
 visible = false
 
 [node name="TrackNetwork" type="Node3D" parent="." unique_id=541304712]
@@ -9189,7 +9188,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 178.84636, 0, 248.79265)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_583")
 alinear_a_via = false
 avance_inicial = 157.3
-demora_salida_inicial = 0.0
 sentido_local_inicio_invertido = false
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
@@ -9204,7 +9202,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 195.77872, 0, 254.0668)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_622")
 alinear_a_via = false
 avance_inicial = 162.5
-demora_salida_inicial = 0.0
 sentido_local_inicio_invertido = false
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
@@ -9219,7 +9216,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144.1524, 0, 252.25522)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_587")
 alinear_a_via = false
 avance_inicial = 160.60000000000002
-demora_salida_inicial = 0.0
 sentido_local_inicio_invertido = false
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
@@ -9272,12 +9268,12 @@ ajuste_lateral_anden_ida = -0.1999999999999993
 ajuste_lateral_anden_vuelta = 18.65
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.450000000000005
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 ancho_cobertura_vias = 67.0
 nombre_estacion = "Hipólito Yrigoyen"
 tiempo_espera = 3.0
 esta_editada = true
 capacidad_maxima_espera = 1000
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_hipolito_yrigoyen")
 
 [node name="EstacionDarioSantillanKosteki" parent="." unique_id=141049134 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9288,10 +9284,10 @@ ajuste_lateral_anden_ida = -0.8500000000000014
 ajuste_lateral_anden_vuelta = 20.0
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.9
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 nombre_estacion = "Darío Santillán y Maximiliano Kosteki"
 tiempo_espera = 3.0
 capacidad_maxima_espera = 2300
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_dario_santillan_kosteki")
 
 [node name="EstacionGerli" parent="." unique_id=141049135 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9304,12 +9300,12 @@ ajuste_lateral_anden_ida = -3.1000000000000014
 ajuste_lateral_anden_vuelta = 15.9
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 4.850000000000001
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 ancho_cobertura_vias = 47.0
 nombre_estacion = "Gerli"
 tiempo_espera = 3.0
 esta_editada = true
 capacidad_maxima_espera = 1200
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_gerli")
 
 [node name="EstacionLanus" parent="." unique_id=141049136 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9320,12 +9316,12 @@ ajuste_lateral_anden_ida = -2.3999999999999986
 ajuste_lateral_anden_vuelta = 17.15
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.25
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 ancho_cobertura_vias = 47.0
 nombre_estacion = "Lanús"
 tiempo_espera = 3.0
 esta_editada = true
 capacidad_maxima_espera = 2500
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_lanus")
 
 [node name="EstacionRemediosDeEscalada" parent="." unique_id=141049137 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9336,10 +9332,10 @@ ajuste_lateral_anden_ida = -11.0
 ajuste_lateral_anden_vuelta = 4.199999999999999
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = -3.8500000000000014
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 nombre_estacion = "Remedios de Escalada"
 tiempo_espera = 3.0
 capacidad_maxima_espera = 1600
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_remedios_de_escalada")
 
 [node name="EstacionBanfield" parent="." unique_id=141049138 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9352,10 +9348,10 @@ ajuste_lateral_anden_vuelta = 18.25
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 8.899999999999999
 posicion_lateral_anden_central_2 = 13.200000000000005
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 nombre_estacion = "Banfield"
 tiempo_espera = 3.0
 capacidad_maxima_espera = 1900
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_banfield")
 
 [node name="EstacionLomasDeZamora" parent="." unique_id=141049139 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
@@ -9367,10 +9363,10 @@ ajuste_lateral_anden_ida = 3.75
 ajuste_lateral_anden_vuelta = 16.65
 cantidad_andenes_centrales = 1
 posicion_lateral_anden_central_1 = 9.35
-andenes_excluidos_pasajeros = Array[String](["AndenB"])
 nombre_estacion = "Lomas de Zamora"
 tiempo_espera = 3.0
 capacidad_maxima_espera = 2200
+andenes_excluidos_pasajeros = Array[String](["AndenB"])
 demanda_pasajeros = ExtResource("demanda_lomas_de_zamora")
 
 [node name="EstacionTemperley" parent="." unique_id=141049140 node_paths=PackedStringArray("traza") instance=ExtResource("12_0io5y")]
