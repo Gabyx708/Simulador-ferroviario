@@ -187,6 +187,9 @@ var pasajeros_actuales: int = 0
 		servicio = value
 		if is_inside_tree():
 			_resolver_servicio()
+## Permite iniciar una formación en otra cabecera del mismo servicio. -1 usa
+## el índice configurado por ServicioFerroviario.
+@export_range(-1, 999, 1) var indice_parada_inicial_servicio: int = -1
 ## Detecta automáticamente las estaciones en la escena y calcula su progreso métrico en la traza.
 @export var autodetectar_estaciones: bool = true:
 	set(v):
@@ -290,6 +293,12 @@ var _aceleracion_actual: float = 0.0
 var _servicio_ferroviario: ServicioFerroviario
 var _indice_servicio: int = 0
 var _direccion_servicio: int = 1
+var _indice_origen_servicio: int = 0
+var _direccion_origen_servicio: int = 1
+## El nivel puede retener una salida inicial hasta que el tren anterior llegue
+## a la siguiente estación. La condición sólo afecta la salida desde origen.
+var _salida_inicial_habilitada: bool = true
+var _alcanzo_primera_estacion_servicio: bool = false
 var _ruta_segmentos: Array[String] = []
 ## Pasos dirigidos de la ruta vigente. Conservan el sentido local de cada
 ## Path3D y evitan que una búsqueda por nombre elija otra rama repetida.
@@ -463,8 +472,20 @@ func activar_opciones_switch(activa: bool) -> void:
 func configurar_tiempos_servicio(demora_salida: float, espera_estaciones: float) -> void:
 	demora_salida_inicial = maxf(0.0, demora_salida)
 	tiempo_parada_servicio = maxf(1.0, espera_estaciones)
-	if _origen_servicio_inicializado and _detenido and _indice_servicio == 0:
+	if _origen_servicio_inicializado and _detenido and _indice_servicio == _indice_origen_servicio:
 		_espera = tiempo_parada_servicio + demora_salida_inicial
+
+
+## Permite al despachador del nivel controlar la salida inicial sin alterar las
+## esperas normales en las estaciones.
+func establecer_salida_inicial_habilitada(habilitada: bool) -> void:
+	_salida_inicial_habilitada = habilitada
+
+
+## Informa si el tren ya llegó a la primera estación después de su terminal de
+## origen, condición usada para mantener una estación de separación.
+func cumplio_distancia_seguridad_estacion() -> bool:
+	return _alcanzo_primera_estacion_servicio
 
 
 ## Ajusta el avance de una cabecera para que toda la formación quede dentro del
@@ -701,13 +722,12 @@ func obtener_resumen_operativo() -> Dictionary:
 
 
 ## Inmoviliza una formación de servicio ante un itinerario inconsistente. El
-## objetivo lógico no se borra: HUD y diagnóstico conservan la estación que no
-## pudo alcanzarse. La señal se emite una única vez por incidente.
+## objetivo lógico y las reservas físicas se conservan mientras el tren siga
+## sobre la vía; HUD y diagnóstico mantienen la estación que no pudo alcanzar.
+## La señal se emite una única vez por incidente.
 func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida") -> void:
 	if _servicio_finalizado:
 		return
-	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
-		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
 	_ruta_invalida = true
 	_procesando_pasajeros = false
 	_detenido = true
@@ -724,9 +744,6 @@ func _detener_por_ruta_invalida(motivo: String, causa: String = "ruta_invalida")
 	_tiempo_evento_restante = 0.0
 	_averia_sin_reanudacion_automatica = false
 	_motivo_evento = ""
-	var red: Node = _obtener_red()
-	if red != null and red.has_method("liberar_reservas_tren"):
-		red.call("liberar_reservas_tren", get_instance_id())
 	velocidad_cambiada.emit(0.0)
 	_resultado_recorrido = "incompleto"
 	_causa_resultado = causa
@@ -821,6 +838,8 @@ func _exit_tree() -> void:
 	if traza != null and is_instance_valid(traza) and traza.curve != null:
 		if traza.curve.changed.is_connected(_on_curva_cambiada):
 			traza.curve.changed.disconnect(_on_curva_cambiada)
+	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
+		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
 	var red: Node = _obtener_red()
 	if red != null and red.has_method("liberar_reservas_tren"):
 		red.call("liberar_reservas_tren", get_instance_id())
@@ -920,15 +939,18 @@ func _resolver_servicio() -> void:
 	_objetivo_servicio_resuelto.clear()
 	_indice_objetivo_resuelto = -1
 	if _servicio_ferroviario != null:
-		_indice_servicio = clampi(_servicio_ferroviario.indice_parada_inicial, 0, max(0, _servicio_ferroviario.cantidad_paradas() - 1))
+		var indice_configurado: int = _servicio_ferroviario.indice_parada_inicial if indice_parada_inicial_servicio < 0 else indice_parada_inicial_servicio
+		_indice_servicio = clampi(indice_configurado, 0, max(0, _servicio_ferroviario.cantidad_paradas() - 1))
+		_indice_origen_servicio = _indice_servicio
+		_direccion_origen_servicio = -1 if _indice_servicio == _servicio_ferroviario.cantidad_paradas() - 1 else 1
+		_direccion_servicio = _direccion_origen_servicio
 
 
 ## Posiciona una formación de servicio en su estación de origen. El sentido de
-## la línea (ida) y el sentido local de cada Curve3D son conceptos distintos:
-## aquí se prueba una vez cuál de los dos offsets locales conduce a la segunda
-## estación, sin permitir esa prueba como una reversa durante la marcha.
+## la línea y el sentido local de cada Curve3D son conceptos distintos: aquí se
+## prueba cuál de los dos offsets locales conduce a la siguiente estación.
 func _inicializar_origen_servicio() -> bool:
-	if Engine.is_editor_hint() or _origen_servicio_inicializado or not _usa_servicio() or _indice_servicio != 0:
+	if Engine.is_editor_hint() or _origen_servicio_inicializado or not _usa_servicio() or not _servicio_ferroviario.es_terminal(_indice_servicio):
 		return false
 	var red: Node = _obtener_red()
 	if red == null or not red.has_method("planificar_ruta") or traza == null:
@@ -936,7 +958,9 @@ func _inicializar_origen_servicio() -> bool:
 	var origen: Node = _parada_objetivo_servicio()
 	if origen == null:
 		return false
-	var candidatos_origen: Array[Dictionary] = _candidatos_estacion_servicio(origen, red, true)
+	_direccion_servicio = _direccion_origen_servicio
+	var sentido_ida_origen: bool = _direccion_origen_servicio > 0
+	var candidatos_origen: Array[Dictionary] = _candidatos_estacion_servicio(origen, red, sentido_ida_origen)
 	var candidato_origen: Dictionary = {}
 	for candidato: Dictionary in candidatos_origen:
 		if candidato.get("traza") == traza:
@@ -947,13 +971,15 @@ func _inicializar_origen_servicio() -> bool:
 		# por un margen geométrico mínimo. Se proyecta el poste sobre la vía de
 		# esta formación; nunca se copia el offset de una traza paralela.
 		var offset_origen: float = _avance
-		var poste_origen: Node3D = origen.get_node_or_null("PosteParadaIda") as Node3D
+		var nombre_poste: String = "PosteParadaIda" if sentido_ida_origen else "PosteParadaVuelta"
+		var poste_origen: Node3D = origen.get_node_or_null(nombre_poste) as Node3D
 		if poste_origen != null and traza.curve != null:
 			offset_origen = traza.curve.get_closest_offset(traza.to_local(poste_origen.global_position))
 		candidato_origen = {"segmento": traza.name, "traza": traza, "offset": offset_origen, "offset_ida": offset_origen, "offset_vuelta": offset_origen}
 
-	var siguiente: Node = _servicio_ferroviario.obtener_parada(1)
-	var candidatos_siguiente: Array[Dictionary] = _candidatos_estacion_servicio(siguiente, red, true)
+	var indice_siguiente: int = _indice_servicio + _direccion_servicio
+	var siguiente: Node = _servicio_ferroviario.obtener_parada(indice_siguiente)
+	var candidatos_siguiente: Array[Dictionary] = _candidatos_estacion_servicio(siguiente, red, sentido_ida_origen)
 	var ruta_inicial: Dictionary = {}
 	var sentido_local_invertido := false
 	var sin_override: Array[String] = []
@@ -961,7 +987,7 @@ func _inicializar_origen_servicio() -> bool:
 	# formación. TrackNetwork traduce internamente ese extremo si la curva fue
 	# invertida durante una edición, pero el tren no debe partir al lado opuesto.
 	var eleccion: Dictionary = _mejor_ruta_a_candidatos_desde(
-		red, candidatos_siguiente, traza.name, _avance, sentido_local_inicio_invertido, sin_override
+		red, candidatos_siguiente, traza.name, _avance, sentido_local_inicio_invertido, sin_override, {}, sentido_ida_origen
 	)
 	if not eleccion.is_empty():
 		ruta_inicial = eleccion.get("ruta", {}) as Dictionary
@@ -991,9 +1017,9 @@ func _inicializar_origen_servicio() -> bool:
 	var largo_formacion: float = float(cantidad_coches - 1) * paso + 24.2
 	_reserva_inicial_lista = bool(red.call("reservar_tramo_inicial", get_instance_id(), traza.name, _avance, invertir_sentido, _odometro_ferroviario, largo_formacion)) if red.has_method("reservar_tramo_inicial") else true
 	_registrar_diagnostico_ruta(origen, candidato_origen, [traza.name], ruta_inicial, "origen")
-	# Constitución también es una parada real: habilita el intercambio inicial
-	# de pasajeros antes de que cada formación salga a Yrigoyen.
-	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0)
+	# La cabecera de origen también es una parada real: suben los pasajeros del
+	# sentido de salida antes de que la formación inicie su primer tramo.
+	_procesar_pasajeros_parada(origen, false, float(_direccion_servicio))
 	parada_alcanzada.emit(_idx_parada)
 	var datos_origen: Dictionary = _resumen_estacion(origen)
 	datos_origen["inicio_servicio"] = true
@@ -1916,7 +1942,7 @@ func _recalcular_paradas_dinamicas() -> void:
 	if _usa_servicio():
 		# La geometría de la red termina de sincronizarse después de _ready().
 		# No debe convertir el origen ya detenido en un nuevo destino de ruta.
-		if _origen_servicio_inicializado and _parada_servicio_activa and _detenido and _indice_servicio == 0:
+		if _origen_servicio_inicializado and _parada_servicio_activa and _detenido and _indice_servicio == _indice_origen_servicio:
 			return
 		_objetivo_servicio_resuelto.clear()
 		_indice_objetivo_resuelto = -1
@@ -2197,6 +2223,8 @@ func _process(delta: float) -> void:
 	var direccion: float = -1.0 if invertir_sentido else 1.0
 
 	if _detenido:
+		if _usa_servicio() and _origen_servicio_inicializado and _indice_servicio == _indice_origen_servicio and not _salida_inicial_habilitada:
+			return
 		_espera -= delta
 		if _espera <= 0.0 and not _procesando_pasajeros:
 			if _usa_servicio() and _parada_servicio_activa:
@@ -2442,6 +2470,8 @@ func _completar_parada_actual(info_parada: Dictionary, direccion: float, objetiv
 				_odometro_ferroviario,
 				obtener_largo_formacion()
 			)
+	if _usa_servicio() and _indice_servicio == _indice_origen_servicio + _direccion_origen_servicio:
+		_alcanzo_primera_estacion_servicio = true
 	_procesar_pasajeros_parada(info_parada.get("nodo"), es_term, direccion)
 	_establecer_estado(EstadoOperacion.DETENIDO_EN_ESTACION)
 	parada_alcanzada.emit(_idx_parada)

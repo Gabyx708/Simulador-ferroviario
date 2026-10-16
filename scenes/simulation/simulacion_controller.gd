@@ -260,6 +260,21 @@ func agregar_tren() -> Dictionary:
 	return {"ok": false, "en_cola": false, "tren": {}, "motivo": "No hay un puesto de instancia disponible."}
 
 
+func agregar_tren_en_bosques() -> Dictionary:
+	var nivel: Node = get_parent()
+	if nivel == null or not nivel.has_method("agregar_tren_en_bosques"):
+		return {"ok": false, "en_cola": false, "tren": {}, "motivo": "El nivel no admite despacho de trenes en Bosques."}
+	var cola_antes: int = int(nivel.call("trenes_bosques_en_cola")) if nivel.has_method("trenes_bosques_en_cola") else 0
+	var tren: Tren = nivel.call("agregar_tren_en_bosques") as Tren
+	if tren != null:
+		_registrar_tren(tren)
+		return {"ok": true, "en_cola": false, "tren": tren.obtener_resumen_operativo(), "motivo": ""}
+	var cola_despues: int = int(nivel.call("trenes_bosques_en_cola")) if nivel.has_method("trenes_bosques_en_cola") else cola_antes
+	if cola_despues > cola_antes:
+		return {"ok": true, "en_cola": true, "tren": {}, "motivo": "Tren agregado a la cola de despacho de Bosques."}
+	return {"ok": false, "en_cola": false, "tren": {}, "motivo": "No hay un puesto de instancia disponible en Bosques."}
+
+
 func seleccionar_tren(id_tren: int) -> bool:
 	var tren: Tren = _trenes.get(id_tren) as Tren
 	if tren == null or not is_instance_valid(tren) or tren.esta_eliminado():

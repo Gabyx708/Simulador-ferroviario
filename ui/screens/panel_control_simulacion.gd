@@ -156,6 +156,7 @@ func _construir_flota(padre: VBoxContainer) -> void:
 	_etiqueta_flota.add_theme_font_size_override("font_size", 12)
 	_etiqueta_flota.add_theme_color_override("font_color", COLOR_TEXTO)
 	_etiqueta_flota.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_etiqueta_flota.tooltip_text = "Detenidos incluye trenes en estación, esperando reserva o detenidos por un evento. Averiados cuenta trenes retirados tras una avería."
 	padre.add_child(_etiqueta_flota)
 	_etiqueta_demora_promedio = Label.new()
 	_etiqueta_demora_promedio.add_theme_font_size_override("font_size", 12)
@@ -169,31 +170,44 @@ func _actualizar_flota() -> void:
 	var trenes: Array[Dictionary] = _controlador.obtener_trenes()
 	var a_tiempo: int = 0
 	var retrasados: int = 0
-	var detenidos_evento: int = 0
-	var incompletos: int = 0
+	var detenidos: int = 0
 	var activos: int = 0
 	var suma_retraso: float = 0.0
 	var cantidad_con_retraso_medido: int = 0
 	for tren: Dictionary in trenes:
 		var estado: int = int(tren.get("estado", -1))
-		if estado == Tren.EstadoOperacion.INCOMPLETO:
-			incompletos += 1
-			continue
-		if estado in [Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA]:
+		if estado in [Tren.EstadoOperacion.INCOMPLETO, Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA]:
 			continue
 		activos += 1
 		var retraso: float = float(tren.get("retraso_s", 0.0))
 		suma_retraso += retraso
 		cantidad_con_retraso_medido += 1
-		if estado == Tren.EstadoOperacion.DETENIDO_POR_EVENTO:
-			detenidos_evento += 1
-		elif retraso > 0.0:
+		if estado in [
+			Tren.EstadoOperacion.EN_TERMINAL_INICIAL,
+			Tren.EstadoOperacion.DETENIDO_EN_ESTACION,
+			Tren.EstadoOperacion.ESPERANDO_RESERVA,
+			Tren.EstadoOperacion.DETENIDO_POR_EVENTO,
+		]:
+			detenidos += 1
+			continue
+		if retraso > 0.0:
 			retrasados += 1
 		else:
 			a_tiempo += 1
-	_etiqueta_flota.text = "Activos: %d  ·  A tiempo: %d  ·  Retrasados: %d  ·  Detenidos: %d  ·  Incompletos: %d" % [activos, a_tiempo, retrasados, detenidos_evento, incompletos]
+	var averiados: int = _contar_trenes_averiados_retirados()
+	_etiqueta_flota.text = "Activos: %d  ·  A tiempo: %d  ·  Retrasados: %d  ·  Detenidos: %d  ·  Averiados: %d" % [activos, a_tiempo, retrasados, detenidos, averiados]
 	var promedio: float = (suma_retraso / cantidad_con_retraso_medido) if cantidad_con_retraso_medido > 0 else 0.0
 	_etiqueta_demora_promedio.text = "Demora promedio de flota activa: %s" % _formatear_duracion(promedio)
+
+
+func _contar_trenes_averiados_retirados() -> int:
+	if _gestor == null:
+		return 0
+	var total: int = 0
+	for evento: Dictionary in _gestor.obtener_historial():
+		if int(evento.get("tipo", -1)) == GestorEventos.TipoEvento.DESPERFECTO_MECANICO and not bool(evento.get("activo", false)):
+			total += 1
+	return total
 
 
 ## --- Velocidad global + pausa ---

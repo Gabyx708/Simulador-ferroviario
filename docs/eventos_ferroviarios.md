@@ -174,11 +174,11 @@ simulación. Al vencer, el tren pasa a `INCOMPLETO`, libera la vía y se elimina
 
 El evento queda en el historial en memoria después de retirar el tren. Su
 registro incluye `plazo_retiro_s` (plazo sorteado), `inicio_s`, `fin_s`,
-`duracion_s` (tiempo simulado real hasta el retiro) y `activo`. La duración se
-muestra en la tabla de eventos de Métricas; el panel de Control indica que la
-avería está activa y muestra la duración al retirarse, sin un contador en vivo.
+`duracion_s` (tiempo simulado real hasta el retiro), `retraso_total_s` y
+`activo`. En una avería, `retraso_total_s` mide desde que se genera hasta que
+se elimina el tren; ambos contadores avanzan en vivo y se cierran con el retiro.
 Si el usuario elimina manualmente un tren averiado antes del plazo, el historial
-guarda la duración real hasta esa baja.
+guarda el tiempo real hasta esa baja.
 
 ### Historial y color (para Persona 2)
 

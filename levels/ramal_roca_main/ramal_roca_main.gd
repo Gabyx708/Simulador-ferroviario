@@ -8,7 +8,6 @@ class_name RamalRocaMainLevel
 @export_group("Componentes del Nivel")
 @export var red_ferroviaria: TrackNetwork
 @export_range(4, 32, 1) var trenes_iniciales: int = 4
-@export_range(60.0, 3600.0, 60.0) var intervalo_salida_inicial: float = 1800.0
 
 const ESCENA_TREN: PackedScene = preload("res://scenes/train/tren_csr.tscn")
 const MARCADORES_CONSTITUCION_NO_DISPONIBLES: Array[String] = [
@@ -28,7 +27,11 @@ var _vias_salida: Array[Dictionary] = []
 ## proyecta sobre su propia vía, por lo que el nivel no está limitado a cuatro
 ## formaciones iniciales.
 var _puestos_instancia: Array[Dictionary] = []
+var _puesto_salida_bosques: Dictionary = {}
 var _vagones_en_cola: int = 0
+var _vagones_bosques_en_cola: int = 0
+var _ultimo_tren_despachado: Tren
+var _ultimo_tren_despachado_bosques: Tren
 
 
 func _ready() -> void:
@@ -50,15 +53,18 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Engine.time_scale == 0.0:
 		return
-	if _vagones_en_cola <= 0 or not _flotilla_inicializada:
+	if not _flotilla_inicializada:
 		return
-	var libre: Dictionary = _primer_puesto_libre()
-	if libre.is_empty():
-		return
-	_vagones_en_cola -= 1
-	var tren: Tren = _crear_tren_en_puesto(libre, get_tree().get_nodes_in_group("trenes").size())
-	if tren != null and _vagones_en_cola > 0:
-		tren.configurar_tiempos_servicio(tren.demora_salida_inicial + float(_vagones_en_cola) * intervalo_salida_inicial, tren.tiempo_parada_servicio)
+	if _vagones_en_cola > 0:
+		var libre: Dictionary = _primer_puesto_libre()
+		if not libre.is_empty():
+			_vagones_en_cola -= 1
+			_crear_tren_en_puesto(libre, get_tree().get_nodes_in_group("trenes").size())
+	if _vagones_bosques_en_cola > 0:
+		var libre_bosques: Dictionary = _primer_puesto_libre_bosques()
+		if not libre_bosques.is_empty():
+			_vagones_bosques_en_cola -= 1
+			_crear_tren_en_puesto(libre_bosques, get_tree().get_nodes_in_group("trenes").size(), _servicio.cantidad_paradas() - 1)
 
 
 func _on_red_cargada(_total_segmentos: int, _total_uniones: int) -> void:
@@ -78,6 +84,9 @@ func _inicializar_flotilla() -> void:
 	if _puestos_instancia.is_empty():
 		push_error("RamalRocaMainLevel: no hay puestos de instancia con ruta válida a Yrigoyen.")
 		return
+	_puesto_salida_bosques = _resolver_puesto_salida_bosques()
+	if _puesto_salida_bosques.is_empty():
+		push_warning("RamalRocaMainLevel: no se encontró una ruta válida desde MarkerTrenVuelta1 de Bosques hacia Constitución.")
 	# Las formaciones iniciales viven en la escena para que se puedan ubicar y
 	# ajustar desde el editor. Sólo las altas del HUD se instancian en runtime.
 	var formaciones_iniciales: Array[Tren] = []
@@ -95,8 +104,13 @@ func _inicializar_flotilla() -> void:
 		var tren_inicial: Tren = formaciones_iniciales[indice]
 		if tren_inicial.servicio == null:
 			tren_inicial.servicio = _servicio
+		tren_inicial.configurar_tiempos_servicio(0.0, tren_inicial.tiempo_parada_servicio)
+		tren_inicial.establecer_salida_inicial_habilitada(indice == 0)
 		tren_inicial.set_meta("via_salida_constitucion", tren_inicial.traza.name if tren_inicial.traza != null else "")
 		_vincular_tren(tren_inicial)
+		if _ultimo_tren_despachado != null:
+			_vincular_separacion_estacion(_ultimo_tren_despachado, tren_inicial)
+		_ultimo_tren_despachado = tren_inicial
 	_flotilla_inicializada = true
 	if formaciones_iniciales.size() < trenes_iniciales:
 		push_warning("Hay %d formaciones iniciales en escena; se esperaban %d." % [formaciones_iniciales.size(), trenes_iniciales])
@@ -227,7 +241,41 @@ func _buscar_via_por_traza(path: Path3D) -> Dictionary:
 	return {}
 
 
-func _crear_tren_en_puesto(puesto: Dictionary, indice: int) -> Tren:
+func _resolver_puesto_salida_bosques() -> Dictionary:
+	var resultado: Dictionary = {}
+	if red_ferroviaria == null or _servicio == null or _servicio.cantidad_paradas() < 2:
+		return resultado
+	var contenedor: Node = find_child("MarcadoresDeInstancia", true, false)
+	var marcador: Marker3D = contenedor.get_node_or_null("Bosques/MarkerTrenVuelta1") as Marker3D if contenedor != null else null
+	if marcador == null:
+		return resultado
+	var segmento: String = str(red_ferroviaria.call("get_closest_segment", marcador.global_position))
+	var path: Path3D = red_ferroviaria.call("get_segment_path", segmento) as Path3D
+	if path == null or path.curve == null or path.curve.point_count < 2 or not red_ferroviaria.segmento_permite_sentido(segmento, false):
+		return resultado
+	var avance: float = path.curve.get_closest_offset(path.to_local(marcador.global_position))
+	var destino: Node = _servicio.obtener_parada(_servicio.cantidad_paradas() - 2)
+	if destino == null or not destino.has_method("obtener_puntos_parada_multivia"):
+		return resultado
+	var destinos: Array[Dictionary] = destino.call("obtener_puntos_parada_multivia", red_ferroviaria, false) as Array[Dictionary]
+	var mejor: Dictionary = {}
+	var sentido_mejor: bool = false
+	var sin_override: Array[String] = []
+	for sentido_local: bool in [false, true]:
+		for parada_destino: Dictionary in destinos:
+			var destino_traza: Path3D = parada_destino.get("traza") as Path3D
+			if destino_traza == null:
+				continue
+			var ruta: Dictionary = red_ferroviaria.planificar_ruta(path.name, avance, sentido_local, destino_traza.name, float(parada_destino.get("offset", 0.0)), sin_override, {}, false)
+			if bool(ruta.get("ok", false)) and (mejor.is_empty() or float(ruta.get("distancia_m", INF)) < float(mejor.get("distancia_m", INF))):
+				mejor = ruta
+				sentido_mejor = sentido_local
+	if mejor.is_empty():
+		return resultado
+	return {"marcador": marcador, "traza": path, "avance": avance, "invertido": sentido_mejor, "ruta": mejor}
+
+
+func _crear_tren_en_puesto(puesto: Dictionary, indice: int, indice_origen: int = 0) -> Tren:
 	var formaciones: Node = find_child("Formaciones", true, false)
 	var path: Path3D = puesto.get("traza") as Path3D
 	if formaciones == null or path == null:
@@ -238,16 +286,69 @@ func _crear_tren_en_puesto(puesto: Dictionary, indice: int) -> Tren:
 	tren.name = "TrenCSR_%02d" % (indice + 1)
 	tren.traza = path
 	tren.servicio = _servicio
+	tren.indice_parada_inicial_servicio = indice_origen
 	tren.sentido_local_inicio_invertido = bool(puesto.get("invertido", false))
 	var avance_marcador: float = float(puesto.get("avance", 0.0))
 	tren.avance_inicial = tren.avance_inicial_ajustado_a_formacion(avance_marcador, tren.sentido_local_inicio_invertido)
-	tren.configurar_tiempos_servicio(float(indice) * intervalo_salida_inicial, 30.0)
-	tren.set_meta("via_salida_constitucion", path.name)
+	tren.configurar_tiempos_servicio(0.0, 30.0)
+	var salida_bosques: bool = indice_origen == _servicio.cantidad_paradas() - 1
+	tren.set_meta("via_salida_bosques" if salida_bosques else "via_salida_constitucion", path.name)
 	tren.set_meta("puesto_instancia", str((puesto.get("marcador") as Node).name))
+	var predecesor: Tren = _ultimo_tren_despachado_bosques if salida_bosques else _ultimo_tren_despachado
+	tren.establecer_salida_inicial_habilitada(predecesor == null)
 	formaciones.add_child(tren)
 	_vincular_tren(tren)
+	if predecesor != null:
+		_vincular_separacion_estacion(predecesor, tren)
+	if salida_bosques:
+		_ultimo_tren_despachado_bosques = tren
+	else:
+		_ultimo_tren_despachado = tren
 	tren_agregado.emit(tren)
 	return tren
+
+
+## Retiene el siguiente tren hasta que el anterior llegue a la primera estación
+## del recorrido. Las demoras por averías o eventos prolongan la espera.
+func _vincular_separacion_estacion(predecesor: Tren, siguiente: Tren) -> void:
+	if siguiente == null or not is_instance_valid(siguiente):
+		return
+	if predecesor == null or not is_instance_valid(predecesor) or predecesor.esta_eliminado():
+		siguiente.establecer_salida_inicial_habilitada(true)
+		return
+	if predecesor.cumplio_distancia_seguridad_estacion():
+		siguiente.establecer_salida_inicial_habilitada(true)
+		return
+	siguiente.establecer_salida_inicial_habilitada(false)
+	var llegada: Callable = Callable(self, "_on_predecesor_llego_a_estacion").bind(predecesor, siguiente)
+	if not predecesor.llego_a_estacion.is_connected(llegada):
+		predecesor.llego_a_estacion.connect(llegada)
+	var eliminacion: Callable = Callable(self, "_on_predecesor_eliminado").bind(predecesor, siguiente)
+	if not predecesor.eliminado.is_connected(eliminacion):
+		predecesor.eliminado.connect(eliminacion)
+
+
+func _on_predecesor_llego_a_estacion(_datos_tren: Dictionary, _datos_estacion: Dictionary, predecesor: Tren, siguiente: Tren) -> void:
+	if predecesor == null or not is_instance_valid(predecesor) or not predecesor.cumplio_distancia_seguridad_estacion():
+		return
+	_liberar_salida_precedida_por(predecesor, siguiente)
+
+
+func _on_predecesor_eliminado(predecesor: Tren, siguiente: Tren) -> void:
+	_liberar_salida_precedida_por(predecesor, siguiente)
+
+
+func _liberar_salida_precedida_por(predecesor: Tren, siguiente: Tren) -> void:
+	if siguiente == null or not is_instance_valid(siguiente):
+		return
+	if predecesor != null and is_instance_valid(predecesor):
+		var llegada: Callable = Callable(self, "_on_predecesor_llego_a_estacion").bind(predecesor, siguiente)
+		if predecesor.llego_a_estacion.is_connected(llegada):
+			predecesor.llego_a_estacion.disconnect(llegada)
+		var eliminacion: Callable = Callable(self, "_on_predecesor_eliminado").bind(predecesor, siguiente)
+		if predecesor.eliminado.is_connected(eliminacion):
+			predecesor.eliminado.disconnect(eliminacion)
+	siguiente.establecer_salida_inicial_habilitada(true)
 
 
 func _vincular_tren(tren: Tren) -> void:
@@ -273,6 +374,19 @@ func agregar_tren() -> Tren:
 	return tren_nuevo
 
 
+func agregar_tren_en_bosques() -> Tren:
+	if not _flotilla_inicializada:
+		_inicializar_flotilla()
+	if _puesto_salida_bosques.is_empty():
+		return null
+	var libre: Dictionary = _primer_puesto_libre_bosques()
+	if libre.is_empty():
+		_vagones_bosques_en_cola += 1
+		push_warning("Tren agregado a la cola de despacho de Bosques (%d pendientes)." % _vagones_bosques_en_cola)
+		return null
+	return _crear_tren_en_puesto(libre, get_tree().get_nodes_in_group("trenes").size(), _servicio.cantidad_paradas() - 1)
+
+
 func _primer_puesto_libre() -> Dictionary:
 	for puesto: Dictionary in _puestos_instancia:
 		var path: Path3D = puesto.get("traza") as Path3D
@@ -288,8 +402,25 @@ func _primer_puesto_libre() -> Dictionary:
 	return {}
 
 
+func _primer_puesto_libre_bosques() -> Dictionary:
+	var puesto: Dictionary = _puesto_salida_bosques
+	var path: Path3D = puesto.get("traza") as Path3D
+	if path == null:
+		return {}
+	for nodo: Node in get_tree().get_nodes_in_group("trenes"):
+		if nodo is Tren and not (nodo as Tren).esta_eliminado() and (nodo as Tren).ocupa_puesto_instancia(path, float(puesto.get("avance", 0.0))):
+			return {}
+	if red_ferroviaria.segmento_reservado(path.name):
+		return {}
+	return puesto
+
+
 func trenes_en_cola() -> int:
 	return _vagones_en_cola
+
+
+func trenes_bosques_en_cola() -> int:
+	return _vagones_bosques_en_cola
 
 
 func _inicializar_traza_y_tren() -> void:

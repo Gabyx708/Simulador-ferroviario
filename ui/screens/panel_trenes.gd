@@ -16,6 +16,7 @@ var _titulo: Label
 var _lista: VBoxContainer
 var _sin_trenes: Label
 var _agregar: Button
+var _agregar_bosques: Button
 var _mensaje: Label
 var _filas: Dictionary = {}  ## ID operativo -> controles de la formación.
 var _proximo_refresco_ms: int = 0
@@ -69,6 +70,11 @@ func _construir_panel() -> void:
 	_agregar.add_theme_font_size_override("font_size", 12)
 	_agregar.pressed.connect(_agregar_tren)
 	add_child(_agregar)
+	_agregar_bosques = Button.new()
+	_agregar_bosques.custom_minimum_size = Vector2(0.0, 32.0)
+	_agregar_bosques.add_theme_font_size_override("font_size", 12)
+	_agregar_bosques.pressed.connect(_agregar_tren_bosques)
+	add_child(_agregar_bosques)
 	_mensaje = _crear_etiqueta(12, COLOR_TEXTO_SUAVE)
 	_mensaje.hide()
 	add_child(_mensaje)
@@ -86,6 +92,8 @@ func _actualizar() -> void:
 		_sin_trenes.text = "No hay un controlador de trenes en este nivel."
 		_agregar.text = "+ Agregar tren en Constitución"
 		_agregar.disabled = true
+		_agregar_bosques.text = "+ Agregar tren en Bosques"
+		_agregar_bosques.disabled = true
 		return
 	var resumen: Dictionary = _controlador.obtener_resumen_global()
 	_titulo.text = "TRENES · %d simultáneos" % int(resumen.get("trenes_activos", 0))
@@ -103,6 +111,8 @@ func _actualizar() -> void:
 	_sin_trenes.visible = _filas.is_empty()
 	var en_cola: int = int(_nivel.call("trenes_en_cola")) if is_instance_valid(_nivel) and _nivel.has_method("trenes_en_cola") else 0
 	_agregar.text = "+ Agregar tren en Constitución" + (" · %d en cola" % en_cola if en_cola > 0 else "")
+	var en_cola_bosques: int = int(_nivel.call("trenes_bosques_en_cola")) if is_instance_valid(_nivel) and _nivel.has_method("trenes_bosques_en_cola") else 0
+	_agregar_bosques.text = "+ Agregar tren en Bosques" + (" · %d en cola" % en_cola_bosques if en_cola_bosques > 0 else "")
 
 
 func _crear_fila(id: int) -> void:
@@ -178,6 +188,15 @@ func _agregar_tren() -> void:
 	if not is_instance_valid(_controlador):
 		return
 	var resultado: Dictionary = _controlador.agregar_tren()
+	_mensaje.text = str(resultado.get("motivo", ""))
+	_mensaje.visible = not _mensaje.text.is_empty()
+	_actualizar()
+
+
+func _agregar_tren_bosques() -> void:
+	if not is_instance_valid(_controlador):
+		return
+	var resultado: Dictionary = _controlador.agregar_tren_en_bosques()
 	_mensaje.text = str(resultado.get("motivo", ""))
 	_mensaje.visible = not _mensaje.text.is_empty()
 	_actualizar()

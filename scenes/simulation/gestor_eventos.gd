@@ -26,10 +26,11 @@ class_name GestorEventos
 ## Cada evento disparado se registra en `_eventos` (id único -> Dictionary)
 ## y acumula su propio impacto (trenes afectados, retraso total) a medida
 ## que ocurre -- pensado para comparar eventos entre sí, que es el objetivo
-## del proyecto. El retraso se atribuye escuchando
+## del proyecto. En eventos de zona, el retraso se atribuye escuchando
 ## `EstadisticasRetraso.retraso_tramo_sumado`: cuando un tren recién entró a
 ## una zona queda con una "atribución pendiente", y el próximo tramo que
 ## complete (sea 0 o no) se suma al evento que lo afectó y cierra la espera.
+## En una avería, se mide el tiempo simulado desde el disparo hasta el retiro.
 
 signal evento_disparado(datos: Dictionary)
 signal evento_finalizado(datos: Dictionary)
@@ -123,6 +124,7 @@ func _process(delta: float) -> void:
 	var ahora: float = _reloj.tiempo_simulado_s()
 	_expirar_zonas(_zonas_estacion, ahora)
 	_expirar_zonas(_zonas_tramo, ahora)
+	_actualizar_duracion_averias(ahora)
 	_resolver_averias_vencidas(ahora)
 	_revisar_trenes_sin_movimiento(ahora)
 	if aleatorio_activo:
@@ -306,10 +308,8 @@ func _formatear_duracion_total(duracion_s: float) -> String:
 	return " y ".join(partes)
 
 
-## Alcance: un único tren. Definitivo, no es zona ni se reanuda. No genera
-## retraso adicional (el viaje termina ahí), así que su impacto es siempre
-## "1 tren afectado, 0 de retraso" -- se registra igual para que aparezca
-## en el historial y se pueda comparar cantidad de averías contra las otras.
+## Alcance: un único tren. Definitivo, no es zona ni se reanuda. El tiempo desde
+## que se dispara hasta que se retira se atribuye como retraso total del evento.
 ## Estimación gruesa de cuánto falta del recorrido cuando no hay forma barata
 ## de calcular la distancia real restante hasta destino: estaciones que le
 ## quedan (según el total de la red, no del servicio puntual) por una
@@ -393,6 +393,17 @@ func _resolver_averias_vencidas(ahora: float) -> void:
 		_finalizar_averia(id_tren, ahora, true)
 
 
+func _actualizar_duracion_averias(ahora: float) -> void:
+	for id_tren: int in _averias_por_tren:
+		var id_evento: int = int(_averias_por_tren[id_tren])
+		if not _eventos.has(id_evento):
+			continue
+		var evento: Dictionary = _eventos[id_evento]
+		var transcurrido: float = maxf(0.0, ahora - float(evento.get("inicio_s", ahora)))
+		evento["duracion_s"] = transcurrido
+		evento["retraso_total_s"] = transcurrido
+
+
 func _finalizar_averia(id_tren: int, ahora: float, retirar_tren: bool) -> void:
 	if not _averias_por_tren.has(id_tren):
 		return
@@ -400,8 +411,10 @@ func _finalizar_averia(id_tren: int, ahora: float, retirar_tren: bool) -> void:
 	_averias_por_tren.erase(id_tren)
 	if _eventos.has(id_evento):
 		var evento: Dictionary = _eventos[id_evento]
+		var duracion_real: float = maxf(0.0, ahora - float(evento.get("inicio_s", ahora)))
 		evento["fin_s"] = ahora
-		evento["duracion_s"] = maxf(0.0, ahora - float(evento.get("inicio_s", ahora)))
+		evento["duracion_s"] = duracion_real
+		evento["retraso_total_s"] = duracion_real
 		evento["activo"] = false
 		evento_finalizado.emit(evento)
 	if retirar_tren and _controlador != null:

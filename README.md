@@ -85,6 +85,7 @@ Los niveles son escenas compuestas que heredan de `BaseLevel` (`levels/base_leve
 - Abrí `project.godot` con **Godot 4.7** (la integración se verificó con Godot 4.7.2) y esperá a que termine la importación inicial de recursos.
 - La escena de inicio es `levels/ramal_roca_main/ramal_roca_main.tscn`. Usá **F5** para ejecutar el proyecto; con **F6** podés ejecutar la escena abierta en el editor.
 - El nivel principal reúne la red ferroviaria, switches, estaciones, cuatro formaciones CSR, la terminal de Constitución, el HUD y `SimulacionController`. El servicio recorre Constitución → Bosques → Constitución en bucle.
+- Las formaciones salen de Constitución con una estación de separación: cada tren espera hasta que el anterior llega a Yrigoyen, también los trenes agregados desde la cola. En el resto del recorrido, las reservas de servicio mantienen ocupado cada tramo hasta que pasa la cola de la formación; una avería definitiva conserva esa reserva mientras el tren siga en la vía.
 - Conservá los archivos fuente `.glb`, `.png` y sus `.import` al compartir recursos nuevos. `.godot/` es caché local y está ignorado por Git.
 
 ### Configurar el recorrido por estaciones
@@ -175,8 +176,10 @@ cada formación, sus pasajeros a bordo y capacidad, destino, estado y puntualida
 Al elegir «▶ Tren N», el menú se cierra y la cámara y el tablero seleccionan esa
 formación. Cada tarjeta tiene su botón «Eliminar», independiente de la selección,
 que elimina sólo ese tren mediante `SimulacionController`. El menú conserva
-«Agregar tren en Constitución» y muestra la cola de despacho. Se cierra con «✕»
-o `Esc`, y sus datos se refrescan también con la simulación pausada.
+«Agregar tren en Constitución» y «Agregar tren en Bosques»; cada cabecera usa
+su vía de salida y muestra su propia cola de despacho. Bosques despacha desde
+`MarkerTrenVuelta1`, en la vía del andén 1, rumbo a Constitución. Se cierra con
+«✕» o `Esc`, y sus datos se refrescan también con la simulación pausada.
 
 La ventana de información de la estación ocupa el lugar del panel del tren: seleccionar otra estación cambia
 sus datos y seleccionar un tren vuelve a mostrar su tablero. Se cierra con «✕»
