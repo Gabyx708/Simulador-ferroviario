@@ -146,8 +146,8 @@ signal evento_temporal_finalizado(datos_tren: Dictionary)
 @export var aceleracion: float = 0.8          ## m/s²
 @export var desaceleracion: float = 1.0        ## m/s²
 @export var tiempo_parada: float = 20.0        ## segundos en estación
-@export_range(0.0, 600.0, 0.5) var demora_salida_inicial: float = 0.0
-@export_range(1.0, 180.0, 0.5) var tiempo_parada_servicio: float = 3.0
+@export_range(0.0, 7200.0, 1.0) var demora_salida_inicial: float = 0.0
+@export_range(1.0, 180.0, 0.5) var tiempo_parada_servicio: float = 30.0
 @export var sentido_local_inicio_invertido: bool = true
 
 @export_group("Pasajeros")
@@ -574,10 +574,17 @@ func _nombre_estado_operacion() -> String:
 ## Convierte una estación o un objetivo de parada en datos seguros para UI.
 func _resumen_estacion(estacion: Variant) -> Dictionary:
 	var nodo: Node
+	var es_terminal: bool = false
 	if estacion is Dictionary:
-		nodo = (estacion as Dictionary).get("nodo") as Node
+		var datos: Dictionary = estacion as Dictionary
+		nodo = datos.get("nodo") as Node
+		es_terminal = bool(datos.get("es_terminal", false)) \
+			or bool(datos.get("es_terminal_ida", false)) \
+			or bool(datos.get("es_terminal_vuelta", false))
 	elif estacion is Node:
 		nodo = estacion as Node
+		if nodo != null and is_instance_valid(nodo):
+			es_terminal = bool(nodo.get("es_terminal")) if "es_terminal" in nodo else false
 	var nombre: String = ""
 	var id: String = ""
 	if nodo != null and is_instance_valid(nodo):
@@ -586,7 +593,7 @@ func _resumen_estacion(estacion: Variant) -> Dictionary:
 	elif estacion is Dictionary:
 		nombre = str((estacion as Dictionary).get("nombre", ""))
 		id = str((estacion as Dictionary).get("id", ""))
-	return {"id": id, "nombre": nombre}
+	return {"id": id, "nombre": nombre, "es_terminal": es_terminal}
 
 
 ## Punto de entrada de la futura fase 3. No se valida contra instance_id para
@@ -964,7 +971,9 @@ func _inicializar_origen_servicio() -> bool:
 	# de pasajeros antes de que cada formación salga a Yrigoyen.
 	_procesar_pasajeros_parada(origen, false, -1.0 if invertir_sentido else 1.0)
 	parada_alcanzada.emit(_idx_parada)
-	llego_a_estacion.emit(obtener_resumen_operativo(), _resumen_estacion(origen))
+	var datos_origen: Dictionary = _resumen_estacion(origen)
+	datos_origen["inicio_servicio"] = true
+	llego_a_estacion.emit(obtener_resumen_operativo(), datos_origen)
 	return true
 
 
@@ -2704,6 +2713,16 @@ func velocidad_actual() -> float:
 	return _vel * 3.6
 
 
+## Posición global del frente de la formación; la raíz lógica del tren no se
+## desplaza porque la geometría se aplica individualmente a cada coche.
+func posicion_cabecera_global() -> Vector3:
+	if not _cuerpos.is_empty():
+		var cabecera: Node3D = _cuerpos[0]
+		if is_instance_valid(cabecera):
+			return cabecera.global_position
+	return global_position
+
+
 ## True si el tren está detenido en una estación (o frenando para hacerlo).
 func esta_detenido() -> bool:
 	return _detenido or _frenando_estacion
@@ -2785,6 +2804,8 @@ func esta_eliminado() -> bool:
 func eliminar() -> void:
 	if _eliminado:
 		return
+	if not Engine.is_editor_hint() and not _servicio_finalizado and not _ruta_invalida and _estado_operacion not in [EstadoOperacion.FINALIZADO_EN_BOSQUES, EstadoOperacion.FINALIZADO_IDA_VUELTA, EstadoOperacion.INCOMPLETO]:
+		_detener_por_ruta_invalida("Tren eliminado antes de completar el recorrido.", "eliminacion_manual")
 	_eliminado = true
 	if _usa_servicio() and _servicio_ferroviario.has_method("liberar_intervalos_servicio"):
 		_servicio_ferroviario.call("liberar_intervalos_servicio", get_instance_id())
@@ -3164,6 +3185,7 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 		id_anden = _resolver_anden_embarque(estacion)
 	var intervalo_seguro: float = maxf(intervalo, 0.001)
 	var abordaje_informado: bool = false
+	var espera_reiniciada: bool = false
 	while true:
 		if not (await _intercambio_habilitado()):
 			break
@@ -3181,6 +3203,9 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 		if suben > 0:
 			pasajeros_actuales += mini(suben, lugar_disponible)
 			_ultimo_suben += suben
+			if not espera_reiniciada and estacion.has_method("reiniciar_contador_espera_actual"):
+				estacion.call("reiniciar_contador_espera_actual")
+				espera_reiniciada = true
 			pasajeros_cambiados.emit(pasajeros_actuales, capacidad_pasajeros, _ultimo_suben, _ultimo_bajan, true)
 			if not abordaje_informado:
 				if estacion.has_method("registrar_abordaje_tren"):
@@ -3199,7 +3224,6 @@ func _embarcar_mientras_en_parada(estacion: Node, intervalo: float, id_anden: St
 			estacion.call("registrar_abordaje_tren", get_instance_id(), false)
 
 
-## Calcula el intervalo entre tandas para que todo el intercambio entre
 ## Convierte una tasa de pasajeros por segundo en el intervalo entre tandas.
 ## El escalonador ya limita el tamaño de cada tanda, así que este intervalo
 ## mantiene el mismo ritmo con cargas pequeñas y grandes.
@@ -3271,6 +3295,7 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 	var restante: int = mini(cantidad, lugar_disponible)
 	var maximo_por_tanda: int = maxi(1, cantidad_pasajeros_por_tanda)
 	var intervalo_efectivo: float = intervalo if intervalo > 0.0 else _intervalo_por_tasa(tasa_subida_pasajeros, maximo_por_tanda)
+	var espera_reiniciada: bool = false
 	while restante > 0:
 		if not (await _intercambio_habilitado()):
 			return
@@ -3287,5 +3312,8 @@ func subir_pasajeros_escalonado(cantidad: int, estacion: Node, intervalo: float 
 			return
 		pasajeros_actuales += suben
 		restante -= suben
+		if not espera_reiniciada and estacion.has_method("reiniciar_contador_espera_actual"):
+			estacion.call("reiniciar_contador_espera_actual")
+			espera_reiniciada = true
 		if restante > 0:
 			await get_tree().create_timer(intervalo_efectivo).timeout

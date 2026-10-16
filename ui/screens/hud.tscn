@@ -138,7 +138,7 @@ theme_override_font_sizes/font_size = 10
 [node name="DemoraSalida" type="SpinBox" parent="Paneles/PanelPruebas/Margen/Contenido"]
 unique_name_in_owner = true
 layout_mode = 2
-max_value = 600.0
+max_value = 7200.0
 step = 0.5
 
 [node name="EtiquetaEsperaEstaciones" type="Label" parent="Paneles/PanelPruebas/Margen/Contenido"]

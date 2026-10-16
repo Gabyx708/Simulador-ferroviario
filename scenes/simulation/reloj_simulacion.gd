@@ -9,8 +9,9 @@ class_name RelojSimulacion
 
 signal minuto_simulado_cambiado(dia: int, hora: int, minuto: int)
 
-## Minutos simulados que pasan por segundo real, a factor de simulación 1.0.
-@export var minutos_simulados_por_segundo: float = 1.0
+## El reloj y los trenes comparten los mismos segundos simulados. La velocidad
+## global se controla con Engine.time_scale, no con otro multiplicador del reloj.
+var minutos_simulados_por_segundo: float = 1.0 / 60.0
 @export_range(0, 23, 1) var hora_inicial: int = 6
 
 var _tiempo_simulado_s: float = 0.0
@@ -29,8 +30,8 @@ func _process(delta: float) -> void:
 	_avanzar_fecha_simulada(delta)
 
 
-func _avanzar_fecha_simulada(delta_real: float) -> void:
-	_resto_segundos += delta_real * minutos_simulados_por_segundo * 60.0
+func _avanzar_fecha_simulada(delta_simulado: float) -> void:
+	_resto_segundos += delta_simulado
 	if _resto_segundos < 60.0:
 		return
 	var minutos_a_sumar: int = int(_resto_segundos / 60.0)

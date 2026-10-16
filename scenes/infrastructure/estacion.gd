@@ -359,6 +359,7 @@ var pasajeros_totales_historicos: int = 0
 var pasajeros_subidos_total: int = 0
 var pasajeros_bajados_total: int = 0
 var _reloj_pasajeros: float = 0.0
+var _reloj_simulacion: RelojSimulacion
 var _salidas_pasajeros_pendientes: Array[Dictionary] = []
 var _trenes_abordando: Dictionary = {}
 var _colas_espera: Dictionary = {}
@@ -382,6 +383,7 @@ var _icono_informacion: Label3D
 
 
 func _ready() -> void:
+	_reloj_simulacion = get_parent().get_node_or_null("RelojSimulacion") as RelojSimulacion
 	if not Engine.is_editor_hint():
 		_ids_andenes_pasajeros.clear()
 		_esperando_por_anden.clear()
@@ -699,6 +701,15 @@ func obtener_metricas_espera() -> Dictionary:
 	}
 
 
+## Reinicia el contador actual de la estación al producirse un embarque real.
+## Conserva las esperas históricas de quienes ya subieron.
+func reiniciar_contador_espera_actual() -> void:
+	for colas: Array in _colas_espera.values():
+		for cola: ColaEsperaPasajeros in colas:
+			cola.reiniciar_espera_actual(_reloj_pasajeros)
+	pasajeros_actualizados.emit(self)
+
+
 func _sumar_pasajeros(cantidades: Array[int]) -> int:
 	var total: int = 0
 	for cantidad: int in cantidades:
@@ -789,7 +800,11 @@ func _repartir_por_destino(cantidad: int, id_anden: String) -> Vector2i:
 
 
 func calcular_bajada_pasajeros(hacia_constitucion: bool) -> int:
-	return demanda_pasajeros.sortear_bajada(hacia_constitucion) if demanda_pasajeros != null else -1
+	return demanda_pasajeros.sortear_bajada(hacia_constitucion, _hora_simulada_actual()) if demanda_pasajeros != null else -1
+
+
+func _hora_simulada_actual() -> int:
+	return int(_reloj_simulacion.fecha_hora_simulada().get("hora", 12)) if is_instance_valid(_reloj_simulacion) else 12
 
 
 ## Selecciona la superficie junto a la vía; el sentido desempata entre laterales.
@@ -906,8 +921,9 @@ func _generar_pasajeros(delta: float) -> void:
 	if demanda_pasajeros != null:
 		var intervalo: float = maxf(0.1, demanda_pasajeros.intervalo_formaciones)
 		if _reloj_pasajeros >= _proximo_sorteo_demanda:
-			_demanda_por_ciclo = Vector2i(demanda_pasajeros.sortear_generacion(true), demanda_pasajeros.sortear_generacion(false))
-			_proximo_sorteo_demanda = _reloj_pasajeros + intervalo
+			var hora: int = _hora_simulada_actual()
+			_demanda_por_ciclo = Vector2i(demanda_pasajeros.sortear_generacion(true, hora), demanda_pasajeros.sortear_generacion(false, hora))
+			_proximo_sorteo_demanda = _reloj_pasajeros + minf(intervalo, 60.0)
 		tasas = Vector2(_demanda_por_ciclo) / intervalo
 		tasas.x /= float(maxi(1, andenes_constitucion))
 		tasas.y /= float(maxi(1, andenes_bosques))

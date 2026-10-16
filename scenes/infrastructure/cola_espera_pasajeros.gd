@@ -49,3 +49,12 @@ func ajustar_cantidad(nueva: int, instante_s: float) -> void:
 
 func espera_acumulada_actual(instante_s: float) -> float:
 	return maxf(0.0, cantidad * instante_s - _suma_llegadas)
+
+
+## Reinicia la espera actual de quienes siguen en la fila sin alterar la espera
+## histórica que ya acumularon los pasajeros que abordaron.
+func reiniciar_espera_actual(instante_s: float) -> void:
+	_suma_llegadas = 0.0
+	for tanda: Dictionary in _tandas:
+		tanda["llegada_s"] = instante_s
+		_suma_llegadas += int(tanda["cantidad"]) * instante_s

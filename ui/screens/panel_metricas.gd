@@ -286,7 +286,7 @@ func _construir_datos_globales(padre: VBoxContainer) -> void:
 	fila.add_theme_constant_override("separation", 12)
 	padre.add_child(fila)
 	_agregar_tarjeta_kpi(fila, "transportados", "PASAJEROS TRANSPORTADOS", "Total de embarques. En viaje: pasajeros a bordo. Completados: viajes de pasajeros que ya descendieron. Interrumpidos: pasajeros en trenes incompletos.")
-	_agregar_tarjeta_kpi(fila, "finalizados", "RECORRIDOS FINALIZADOS", "Recorridos completos: salir de una terminal, llegar a la otra y regresar a la terminal de origen.")
+	_agregar_tarjeta_kpi(fila, "finalizados", "RECORRIDOS FINALIZADOS", "Total acumulado de tramos punta a punta: Constitución–Bosques cuenta 1 y Bosques–Constitución cuenta 1. Se suma al llegar a una terminal.")
 	_agregar_tarjeta_kpi(fila, "simultaneos", "TRENES EN SIMULTÁNEO", "Servicios activos, incluidos los detenidos en estación o por evento. Excluye finalizados, incompletos y eliminados. Pico histórico de trenes, no de pasajeros.")
 	var fila2: HBoxContainer = HBoxContainer.new()
 	fila2.add_theme_constant_override("separation", 12)
@@ -681,7 +681,7 @@ static func _formatear_duracion(segundos: float) -> String:
 func _hora_simulada_en(tiempo_s: float) -> String:
 	if _reloj == null:
 		return "—"
-	var minutos_totales: int = int(_reloj.hora_inicial) * 60 + int(tiempo_s * _reloj.minutos_simulados_por_segundo / 60.0)
+	var minutos_totales: int = int(_reloj.hora_inicial) * 60 + int(tiempo_s * _reloj.minutos_simulados_por_segundo)
 	var dia: int = 1 + int(floor(float(minutos_totales) / 1440.0))
 	var hora: int = int(floor(float(minutos_totales) / 60.0)) % 24
 	var minuto: int = ((minutos_totales % 60) + 60) % 60

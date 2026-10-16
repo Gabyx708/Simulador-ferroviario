@@ -8,9 +8,15 @@ class_name RamalRocaMainLevel
 @export_group("Componentes del Nivel")
 @export var red_ferroviaria: TrackNetwork
 @export_range(4, 32, 1) var trenes_iniciales: int = 4
-@export_range(0.0, 60.0, 0.5) var intervalo_salida_inicial: float = 6.0
+@export_range(60.0, 3600.0, 60.0) var intervalo_salida_inicial: float = 1800.0
 
 const ESCENA_TREN: PackedScene = preload("res://scenes/train/tren_csr.tscn")
+const MARCADORES_CONSTITUCION_NO_DISPONIBLES: Array[String] = [
+	"MarkerTrenIda1",
+	"MarkerTrenVuelta1",
+	"MarkerTrenIda2",
+	"MarkerTrenVuelta2",
+]
 signal tren_agregado(tren: Tren)
 
 var _tren_inicializado: bool = false
@@ -183,6 +189,8 @@ func _resolver_puestos_instancia() -> Array[Dictionary]:
 			marcadores.append(hijo as Marker3D)
 	marcadores.sort_custom(func(a: Marker3D, b: Marker3D) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
 	for marcador: Marker3D in marcadores:
+		if marcador.name in MARCADORES_CONSTITUCION_NO_DISPONIBLES:
+			continue
 		var segmento: String = str(red_ferroviaria.call("get_closest_segment", marcador.global_position))
 		var path: Path3D = red_ferroviaria.call("get_segment_path", segmento) as Path3D
 		if path == null or path.curve == null or path.curve.point_count < 2:
@@ -233,7 +241,7 @@ func _crear_tren_en_puesto(puesto: Dictionary, indice: int) -> Tren:
 	tren.sentido_local_inicio_invertido = bool(puesto.get("invertido", false))
 	var avance_marcador: float = float(puesto.get("avance", 0.0))
 	tren.avance_inicial = tren.avance_inicial_ajustado_a_formacion(avance_marcador, tren.sentido_local_inicio_invertido)
-	tren.configurar_tiempos_servicio(float(indice) * intervalo_salida_inicial, 3.0 + float(indice % 4) * 1.0)
+	tren.configurar_tiempos_servicio(float(indice) * intervalo_salida_inicial, 30.0)
 	tren.set_meta("via_salida_constitucion", path.name)
 	tren.set_meta("puesto_instancia", str((puesto.get("marcador") as Node).name))
 	formaciones.add_child(tren)

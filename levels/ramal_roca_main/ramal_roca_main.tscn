@@ -98,8 +98,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.4146505, 0.4146505)
-shader_parameter/cirrus_position2 = Vector2(0.4146505, 0.4146505)
+shader_parameter/cirrus_position1 = Vector2(0.51554954, 0.51554954)
+shader_parameter/cirrus_position2 = Vector2(0.51554954, 0.51554954)
 shader_parameter/cirrus_texture = ExtResource("3_ks8ua")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -109,7 +109,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(2.0732758, 2.0732758)
+shader_parameter/cumulus_position = Vector2(2.5774868, 2.5774868)
 shader_parameter/cumulus_texture = ExtResource("4_mksc4")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -3682,7 +3682,7 @@ transform = Transform3D(1.1249382, 0, 0.0117807565, 0, 1.125, 0, -0.0117807565, 
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=1648845219]
+[node name="Galpones_Andenes" parent="constitucion_terminal" index="4" unique_id=479191820]
 visible = false
 
 [node name="TrackNetwork" type="Node3D" parent="." unique_id=541304712]
@@ -9175,9 +9175,7 @@ transform = Transform3D(-0.99911886, 0, 0.041969452, 0, 1, 0, -0.041969452, 0, -
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_585")
 alinear_a_via = false
 avance_inicial = 162.3
-tiempo_parada_servicio = 0.0
 sentido_local_inicio_invertido = false
-cantidad_pasajeros_por_tanda = 0
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
 porcentaje_bajada_inverso_min = 0.0
@@ -9191,10 +9189,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 178.84636, 0, 248.79265)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_583")
 alinear_a_via = false
 avance_inicial = 157.3
-demora_salida_inicial = 6.0
-tiempo_parada_servicio = 4.0
+demora_salida_inicial = 1800.0
 sentido_local_inicio_invertido = false
-cantidad_pasajeros_por_tanda = 0
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
 porcentaje_bajada_inverso_min = 0.0
@@ -9208,10 +9204,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 195.77872, 0, 254.0668)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_622")
 alinear_a_via = false
 avance_inicial = 162.5
-demora_salida_inicial = 12.0
-tiempo_parada_servicio = 5.0
+demora_salida_inicial = 3600.0
 sentido_local_inicio_invertido = false
-cantidad_pasajeros_por_tanda = 0
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
 porcentaje_bajada_inverso_min = 0.0
@@ -9225,10 +9219,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144.1524, 0, 252.25522)
 traza = NodePath("../../TrackNetwork/Vias/Sector_01_Constitucion_Avellaneda/01_Plaza_Constitucion/seg_587")
 alinear_a_via = false
 avance_inicial = 160.60000000000002
-demora_salida_inicial = 18.0
-tiempo_parada_servicio = 6.0
+demora_salida_inicial = 5400.0
 sentido_local_inicio_invertido = false
-cantidad_pasajeros_por_tanda = 0
 porcentaje_bajada_directo_min = 0.0
 porcentaje_bajada_directo_max = 0.0
 porcentaje_bajada_inverso_min = 0.0
@@ -9241,8 +9233,8 @@ distancia_maxima_via = 1.0
 script = ExtResource("19_servicio")
 paradas = Array[NodePath]([NodePath("../EstacionPlazaConstitucion"), NodePath("../EstacionYrigoyen"), NodePath("../EstacionDarioSantillanKosteki"), NodePath("../EstacionGerli"), NodePath("../EstacionLanus"), NodePath("../EstacionRemediosDeEscalada"), NodePath("../EstacionBanfield"), NodePath("../EstacionLomasDeZamora"), NodePath("../EstacionTemperley"), NodePath("../EstacionJoseMarmol"), NodePath("../EstacionRafaelCalzada"), NodePath("../EstacionClaypole"), NodePath("../EstacionDanteArdigo"), NodePath("../EstacionFlorencioVarela"), NodePath("../EstacionZeballos"), NodePath("../EstacionBosques")])
 separar_vias_por_sentido = true
-tiempos_tramos_ida_s = PackedFloat32Array()
-tiempos_tramos_vuelta_s = PackedFloat32Array()
+tiempos_tramos_ida_s = PackedFloat32Array(180, 240, 240, 240, 180, 180, 180, 180, 240, 180, 180, 240, 300, 240, 240)
+tiempos_tramos_vuelta_s = PackedFloat32Array(180, 240, 240, 240, 180, 180, 180, 180, 240, 180, 180, 240, 300, 240, 240)
 
 [node name="Camaras" type="Node3D" parent="." unique_id=1068451313]
 

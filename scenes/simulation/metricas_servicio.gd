@@ -2,7 +2,7 @@ extends RefCounted
 class_name MetricasServicio
 ## Conserva horarios y resultados aunque una formación se quite de la escena.
 
-var tolerancia_s: float = 1.0
+var tolerancia_s: float = 120.0
 var _reloj: RelojSimulacion
 var _registros: Dictionary = {}
 

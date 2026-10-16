@@ -64,6 +64,12 @@ func _configurar_destinos_andenes() -> void:
 		var estacion: Estacion = obtener_parada(indice) as Estacion
 		if estacion == null:
 			continue
+		if indice == 0 or indice == paradas.size() - 1:
+			# En las cabeceras el tren puede invertir la marcha en el mismo andén.
+			# Ambas plataformas deben admitir pasajeros para el sentido de salida.
+			estacion.destino_anden_a = Estacion.DestinoAnden.AMBOS
+			estacion.destino_anden_b = Estacion.DestinoAnden.AMBOS
+			continue
 		if not estacion.incluir_anden_b_pasajeros:
 			estacion.destino_anden_a = Estacion.DestinoAnden.BOSQUES
 			continue

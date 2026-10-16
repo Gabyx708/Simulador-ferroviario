@@ -17,10 +17,11 @@ var _trenes: Dictionary = {}
 var _estaciones: Dictionary = {}
 var _siguiente_id_tren: int = 1
 var _concurrencia_maxima: int = 0
+var _recorridos_finalizados_total: int = 0
 var _factor_velocidad_simulacion: float = 1.0
 var _factor_antes_de_pausa: float = 1.0
 var _escala_engine_previa: float = 1.0
-@export_range(0.0, 60.0, 0.5) var tolerancia_horario_s: float = 1.0
+@export_range(0.0, 600.0, 1.0) var tolerancia_horario_s: float = 120.0
 var _metricas: MetricasServicio
 
 
@@ -196,7 +197,6 @@ func obtener_resumen_global() -> Dictionary:
 		espera_actual_total += float(estacion.get("espera_promedio_actual_s", 0.0))
 	var pasajeros_en_viaje: int = 0
 	var activos: int = 0
-	var finalizados: int = 0
 	var incompletos: int = 0
 	var incompletos_evento: int = 0
 	var pasajeros_interrumpidos: int = 0
@@ -217,9 +217,7 @@ func obtener_resumen_global() -> Dictionary:
 	if _metricas != null:
 		for tren: Dictionary in _metricas.obtener_resultados():
 			var estado: int = int(tren.get("estado", -1))
-			if estado == Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA:
-				finalizados += 1
-			elif estado == Tren.EstadoOperacion.INCOMPLETO:
+			if estado == Tren.EstadoOperacion.INCOMPLETO:
 				incompletos += 1
 				pasajeros_interrumpidos += int(tren.get("pasajeros", 0))
 				if str(tren.get("causa_resultado", "")) == "evento_terminal":
@@ -231,7 +229,7 @@ func obtener_resumen_global() -> Dictionary:
 		"pasajeros_recorrido_completado": pasajeros_completados,
 		"pasajeros_interrumpidos": pasajeros_interrumpidos,
 		"trenes_activos": activos,
-		"trenes_finalizados": finalizados,
+		"trenes_finalizados": _recorridos_finalizados_total,
 		"trenes_incompletos": incompletos,
 		"trenes_incompletos_evento": incompletos_evento,
 		"trenes_atrasados": atrasados,
@@ -330,6 +328,8 @@ func _on_tren_estado(datos_tren: Dictionary, _id: int) -> void:
 
 
 func _on_tren_llego_estacion(datos_tren: Dictionary, datos_estacion: Dictionary, id: int) -> void:
+	if bool(datos_estacion.get("es_terminal", false)) and not bool(datos_estacion.get("inicio_servicio", false)):
+		_recorridos_finalizados_total += 1
 	_publicar_actualizacion(datos_tren)
 	tren_llego_estacion.emit(id, datos_estacion)
 

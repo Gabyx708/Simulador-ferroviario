@@ -42,9 +42,11 @@ signal retraso_tramo_sumado(id_tren: int, aporte_s: float)
 @export var velocidad_nominal_kmh: float = 50.0
 ## Medido en tools/diag_calibracion_retraso.gd contra una corrida sin eventos
 ## (3 tramos reales, llegada a llegada: Avellaneda->Gerli->Lanús->Escalada).
-## Incluye tiempo de andén normal además de las rampas de aceleración/
-## frenado. Promedio observado: 1.123 (rango 1.08-1.21).
+## Ajusta el tiempo en marcha por las rampas de aceleración y frenado.
+## Promedio observado: 1.123 (rango 1.08-1.21).
 @export var factor_calibracion_tiempo: float = 1.123
+## Se mide llegada a llegada: incluye la parada anterior al tramo recorrido.
+@export_range(0.0, 180.0, 1.0) var tiempo_espera_tipico_s: float = 30.0
 @export var tolerancia_minima_s: float = 20.0
 @export var tolerancia_porcentual: float = 0.15
 
@@ -130,7 +132,7 @@ func _on_llego_a_estacion(_datos_tren: Dictionary, _datos_estacion: Dictionary, 
 		return
 
 	var tiempo_real: float = t_ahora - t_anterior
-	var tiempo_esperado: float = (distancia_m / (velocidad_nominal_kmh / 3.6)) * factor_calibracion_tiempo
+	var tiempo_esperado: float = (distancia_m / (velocidad_nominal_kmh / 3.6)) * factor_calibracion_tiempo + tiempo_espera_tipico_s
 	var diferencia: float = tiempo_real - tiempo_esperado
 	var tolerancia_efectiva: float = maxf(tolerancia_minima_s, tiempo_esperado * tolerancia_porcentual)
 

@@ -41,6 +41,9 @@ signal tren_afectado_por_evento(id_tren: int, tipo: TipoEvento)
 
 enum TipoEvento { FALLA_ELECTRICA, PIQUETE, DESPERFECTO_MECANICO }
 
+const TIEMPO_MAXIMO_SIN_MOVIMIENTO_S: float = 15.0 * 60.0
+const DISTANCIA_MINIMA_MOVIMIENTO_M: float = 0.1
+
 ## Un color por evento, consistente para quien construya el panel/ícono.
 const COLOR_FALLA_ELECTRICA: Color = Color(0.95, 0.80, 0.15)  ## amarillo
 const COLOR_PIQUETE: Color = Color(0.95, 0.55, 0.10)          ## naranja
@@ -75,6 +78,7 @@ var _zonas_tramo: Dictionary = {}  ## nombre_estacion_origen -> id_evento
 var _tipo_activo_por_tren: Dictionary = {}  ## id_tren -> TipoEvento
 var _atribucion_pendiente: Dictionary = {}  ## id_tren -> id_evento
 var _trenes_conectados: Dictionary = {}
+var _seguimiento_movimiento: Dictionary = {}  ## id_tren -> {posicion, desde_s}
 
 
 func _ready() -> void:
@@ -103,6 +107,7 @@ func _process(delta: float) -> void:
 	var ahora: float = _reloj.tiempo_simulado_s()
 	_expirar_zonas(_zonas_estacion, ahora)
 	_expirar_zonas(_zonas_tramo, ahora)
+	_revisar_trenes_sin_movimiento(ahora)
 	if aleatorio_activo:
 		# `delta` ya viene escalado por Engine.time_scale (el mismo mecanismo
 		# que usa RelojSimulacion), así que es directamente tiempo simulado:
@@ -267,6 +272,37 @@ func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: 
 ## medir tiempos reales. Ver docs/reporte_final.md.
 const DURACION_PROMEDIO_TRAMO_S: float = 240.0
 
+
+func _revisar_trenes_sin_movimiento(ahora: float) -> void:
+	for id: int in _trenes_conectados.keys():
+		var tren: Tren = _trenes_conectados[id] as Tren
+		if tren == null or not is_instance_valid(tren) or tren.esta_eliminado():
+			_seguimiento_movimiento.erase(id)
+			continue
+		if tren.obtener_estado_operacion() != Tren.EstadoOperacion.EN_MARCHA:
+			_seguimiento_movimiento.erase(id)
+			continue
+
+		var posicion: Vector3 = tren.posicion_cabecera_global()
+		if not _seguimiento_movimiento.has(id):
+			_seguimiento_movimiento[id] = {"posicion": posicion, "desde_s": ahora}
+			continue
+
+		var seguimiento: Dictionary = _seguimiento_movimiento[id]
+		var ultima_posicion: Vector3 = seguimiento.get("posicion", posicion) as Vector3
+		if posicion.distance_to(ultima_posicion) >= DISTANCIA_MINIMA_MOVIMIENTO_M:
+			seguimiento["posicion"] = posicion
+			seguimiento["desde_s"] = ahora
+			continue
+
+		if ahora - float(seguimiento.get("desde_s", ahora)) < TIEMPO_MAXIMO_SIN_MOVIMIENTO_S:
+			continue
+
+		_seguimiento_movimiento.erase(id)
+		var motivo: String = "Avería: tren detenido en marcha durante 15 minutos sin desplazarse."
+		if disparar_desperfecto_mecanico(id, motivo):
+			tren.eliminar()
+
 func disparar_desperfecto_mecanico(id_tren: int, motivo: String = "Desperfecto mecánico") -> bool:
 	if _controlador == null:
 		return false
@@ -427,3 +463,4 @@ func _on_tren_eliminado(id: int) -> void:
 	_tipo_activo_por_tren.erase(id)
 	_atribucion_pendiente.erase(id)
 	_trenes_conectados.erase(id)
+	_seguimiento_movimiento.erase(id)
