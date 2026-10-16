@@ -8,6 +8,7 @@ signal cierre_solicitado
 const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
 const COLOR_TEXTO_SUAVE: Color = Color(0.60, 0.63, 0.70, 1.0)
 const COLOR_ACENTO: Color = Color(1.0, 0.756863, 0.278431, 1.0)
+const COLOR_SUSPENDIDO: Color = Color(1.0, 0.45, 0.35, 1.0)
 
 var _lista: VBoxContainer
 var _sin_estaciones: Label
@@ -121,6 +122,7 @@ func _agregar_estacion(estacion: Estacion) -> void:
 	_filas[estacion] = {"boton": boton, "pasajeros": pasajeros, "estado": estado}
 	estacion.pasajeros_actualizados.connect(_actualizar_fila)
 	estacion.abordaje_cambiado.connect(_on_abordaje_cambiado.bind(estacion))
+	estacion.ingreso_pasajeros_cambiado.connect(_on_ingreso_pasajeros_cambiado.bind(estacion))
 	estacion.tree_exiting.connect(_quitar_estacion.bind(estacion))
 	_sin_estaciones.hide()
 	_actualizar_fila(estacion)
@@ -135,11 +137,19 @@ func _actualizar_fila(estacion: Estacion) -> void:
 	var cantidad: int = estacion.pasajeros_esperando + estacion.pasajeros_saliendo
 	pasajeros.text = "%d pasajeros" % cantidad
 	var abordando: bool = estacion.hay_tren_abordando()
-	estado.text = "Abordando" if abordando else "En espera"
-	estado.add_theme_color_override("font_color", COLOR_ACENTO if abordando else COLOR_TEXTO_SUAVE)
+	if not estacion.ingreso_pasajeros_habilitado:
+		estado.text = "Suspendido"
+		estado.add_theme_color_override("font_color", COLOR_SUSPENDIDO)
+	else:
+		estado.text = "Abordando" if abordando else "En espera"
+		estado.add_theme_color_override("font_color", COLOR_ACENTO if abordando else COLOR_TEXTO_SUAVE)
 
 
 func _on_abordaje_cambiado(_activo: bool, estacion: Estacion) -> void:
+	_actualizar_fila(estacion)
+
+
+func _on_ingreso_pasajeros_cambiado(_habilitado: bool, estacion: Estacion) -> void:
 	_actualizar_fila(estacion)
 
 
@@ -161,6 +171,9 @@ func _desconectar_estacion(estacion: Estacion) -> void:
 	var abordaje: Callable = _on_abordaje_cambiado.bind(estacion)
 	if estacion.abordaje_cambiado.is_connected(abordaje):
 		estacion.abordaje_cambiado.disconnect(abordaje)
+	var ingreso: Callable = _on_ingreso_pasajeros_cambiado.bind(estacion)
+	if estacion.ingreso_pasajeros_cambiado.is_connected(ingreso):
+		estacion.ingreso_pasajeros_cambiado.disconnect(ingreso)
 	var salida: Callable = _quitar_estacion.bind(estacion)
 	if estacion.tree_exiting.is_connected(salida):
 		estacion.tree_exiting.disconnect(salida)

@@ -184,6 +184,8 @@ func _expirar_zonas(zonas: Dictionary, ahora: float) -> void:
 		var id_evento: int = int(zonas[clave])
 		zonas.erase(clave)
 		if _eventos.has(id_evento):
+			if int(_eventos[id_evento].get("tipo", -1)) == TipoEvento.PIQUETE:
+				_controlador.establecer_ingreso_pasajeros_estacion(clave, true)
 			_eventos[id_evento]["activo"] = false
 			evento_finalizado.emit(_eventos[id_evento])
 
@@ -275,6 +277,7 @@ func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: 
 		evento["tipo_evento"] = nombre_tipo(tipo)
 		evento["perjudicado"] = clave
 		evento["mensaje"] = _crear_mensaje_incidente_estacion(duracion_s)
+		_controlador.establecer_ingreso_pasajeros_estacion(clave, false)
 	_eventos[id_evento] = evento
 	zonas[clave] = id_evento
 	evento_disparado.emit(evento)

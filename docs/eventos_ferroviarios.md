@@ -97,6 +97,12 @@ existen en `SimulacionController` (`detener_tren_temporalmente`,
 | Resolución | Automática al vencer, o `reanudar_tren` manual | Igual | Ninguna -- no se puede reanudar |
 | Color | `COLOR_FALLA_ELECTRICA` (amarillo) | `COLOR_PIQUETE` (naranja, nombre interno conservado) | `COLOR_DESPERFECTO_MECANICO` (rojo), vía `color_evento_activo(id_tren)` |
 
+Mientras un incidente de estación está activo, esa estación deja de generar
+nuevos pasajeros. Al finalizar, se reanuda el ingreso; quienes ya estaban
+esperando permanecen en sus andenes. El menú de estaciones muestra el estado
+"Suspendido" mientras el ingreso está bloqueado y vuelve a "En espera" o
+"Abordando" al finalizar el incidente.
+
 ### Datos preparados para el popup de incidente
 
 Al disparar un incidente en estación, `evento_disparado` y
@@ -121,8 +127,12 @@ El suceso se elige al azar de esta lista definida en `GestorEventos`:
 - Un vendedor ambulante amenaza con cagar a palos a todo el mundo
 
 La duración incluida en el mensaje es la duración total seleccionada en el
-HUD, no el tiempo restante. El popup todavía no forma parte de esta
-implementación; los datos ya quedan disponibles para conectarlo.
+HUD, no el tiempo restante. `PopupEventos` escucha `evento_disparado` para
+mostrar el incidente de estación con el nombre de la estación y ese mensaje.
+También muestra la falla eléctrica al activarse, indicando la estación de
+origen del tramo; el aviso no se repite cuando un tren queda detenido por esa
+falla. Las averías individuales siguen llegando por
+`evento_individual_disparado`.
 `disparar_piquete()` y los identificadores `PIQUETE` / `COLOR_PIQUETE` se
 conservan por compatibilidad interna; el HUD y la etiqueta pública usan el
 nombre nuevo.

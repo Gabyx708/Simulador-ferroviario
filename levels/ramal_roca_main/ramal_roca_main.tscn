@@ -9460,6 +9460,7 @@ terminal_parada_vuelta = true
 es_terminal = true
 tiempo_espera = 3.0
 capacidad_maxima_espera = 1400
+incluir_anden_b_pasajeros = false
 demanda_pasajeros = ExtResource("demanda_bosques")
 
 [node name="HUD" parent="." unique_id=1717866822 instance=ExtResource("18_hud")]
