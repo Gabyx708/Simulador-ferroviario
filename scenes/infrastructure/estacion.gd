@@ -16,6 +16,7 @@ signal reseteada(estacion: Estacion)
 signal pasajeros_actualizados(estacion: Estacion)
 signal seleccionada(estacion: Estacion)
 signal abordaje_cambiado(activo: bool)
+signal ingreso_pasajeros_cambiado(habilitado: bool)
 
 enum DestinoAnden { CONSTITUCION, BOSQUES, AMBOS }
 
@@ -354,6 +355,7 @@ var pasajeros_esperando: int:
 		return _sumar_pasajeros(_esperando_por_anden)
 	set(v):
 		_repartir_pasajeros_esperando(maxi(0, v))
+var ingreso_pasajeros_habilitado: bool = true
 var pasajeros_saliendo: int = 0
 var pasajeros_totales_historicos: int = 0
 var pasajeros_subidos_total: int = 0
@@ -904,7 +906,7 @@ func _process(_delta: float) -> void:
 
 
 func _generar_pasajeros(delta: float) -> void:
-	if not activa or _andenes_pasajeros.is_empty():
+	if not ingreso_pasajeros_habilitado or not activa or _andenes_pasajeros.is_empty():
 		return
 	if demanda_pasajeros == null and tasa_generacion_pasajeros <= 0.0:
 		return
@@ -961,6 +963,16 @@ func _generar_pasajeros(delta: float) -> void:
 	if generados > 0:
 		pasajeros_totales_historicos += generados
 		pasajeros_actualizados.emit(self)
+
+
+## Cierra o habilita el ingreso de pasajeros a la estación.
+func establecer_ingreso_pasajeros_habilitado(habilitado: bool) -> void:
+	if ingreso_pasajeros_habilitado == habilitado:
+		return
+	ingreso_pasajeros_habilitado = habilitado
+	if not habilitado:
+		_pendientes_por_anden.fill(Vector2.ZERO)
+	ingreso_pasajeros_cambiado.emit(habilitado)
 
 
 ## Registra pasajeros que bajan. Se muestran temporalmente en la estación,

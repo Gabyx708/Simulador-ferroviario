@@ -237,6 +237,7 @@ desfasaje_parada_vuelta = -100.0
 nombre_estacion = "Bosques"
 demanda_pasajeros = ExtResource("demanda_bosques")
 capacidad_maxima_espera = 1400
+incluir_anden_b_pasajeros = false
 es_terminal = true
 
 [node name="EstacionConstitucion" parent="Infraestructura/Estaciones" unique_id=1196130512 node_paths=PackedStringArray("traza") instance=ExtResource("6_est")]

@@ -118,10 +118,10 @@ func _run() -> void:
 		quit(1); return
 
 	panel._actualizar_feedback()
-	var fila_piquete: String = _buscar_fila_con(panel, "Piquete · Hipólito Yrigoyen")
-	assert(fila_piquete != "", "El piquete debe seguir en el feedback")
-	assert(not fila_piquete.contains("0 tren"), "Una vez que un tren se vio afectado, el feedback debe mostrar al menos 1 tren: '%s'" % fila_piquete)
-	print("OK: el feedback del piquete refleja el impacto real (trenes afectados) una vez que ocurre")
+	var fila_incidente: String = _buscar_fila_con(panel, "Incidente en estación · Hipólito Yrigoyen")
+	assert(fila_incidente != "", "El incidente debe seguir en el feedback")
+	assert(not fila_incidente.contains("0 tren"), "Una vez que un tren se vio afectado, el feedback debe mostrar al menos 1 tren: '%s'" % fila_incidente)
+	print("OK: el feedback del incidente refleja el impacto real una vez que ocurre")
 
 	nivel.queue_free()
 	await process_frame

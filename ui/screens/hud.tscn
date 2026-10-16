@@ -1,4 +1,6 @@
+
 [gd_scene load_steps=14 format=3 uid="uid://w3ge5g3k2vgds"]
+
 
 [ext_resource type="PackedScene" path="res://ui/components/velocimetro/velocimetro.tscn" id="1_veloc"]
 [ext_resource type="Script" path="res://ui/screens/hud.gd" id="2_hud"]
@@ -8,10 +10,14 @@
 [ext_resource type="PackedScene" path="res://ui/components/informacion_estacion/informacion_estacion.tscn" id="6_estacion"]
 [ext_resource type="PackedScene" path="res://ui/screens/panel_estaciones.tscn" id="7_panel_estaciones"]
 [ext_resource type="PackedScene" path="res://ui/screens/panel_trenes.tscn" id="8_panel_trenes"]
+
+[ext_resource type="Script" path="res://ui/screens/popup_eventos.gd" id="9_popup_eventos"]
+
 [ext_resource type="Texture2D" path="res://assets/icons/ui/general.svg" id="9_icono_general"]
 [ext_resource type="Texture2D" path="res://assets/icons/ui/metricas.svg" id="10_icono_metricas"]
 [ext_resource type="Texture2D" path="res://assets/icons/ui/estacion.svg" id="11_icono_estacion"]
 [ext_resource type="Texture2D" path="res://assets/icons/ui/tren.svg" id="12_icono_tren"]
+
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_train_list"]
 bg_color = Color(0.101961, 0.109804, 0.14902, 0.88)
@@ -29,6 +35,9 @@ script = ExtResource("2_hud")
 
 [node name="InformacionEstacion" parent="." instance=ExtResource("6_estacion")]
 theme_override_styles/panel = SubResource("StyleBoxFlat_train_list")
+
+[node name="PopupEventos" type="Control" parent="."]
+script = ExtResource("9_popup_eventos")
 
 [node name="Paneles" type="VBoxContainer" parent="."]
 offset_left = 20.0

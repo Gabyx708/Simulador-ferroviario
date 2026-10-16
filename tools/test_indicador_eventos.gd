@@ -37,9 +37,9 @@ func _run() -> void:
 		quit(1); return
 	var etiqueta_piquete: Label3D = _buscar_etiqueta(estaciones_nivel)
 	assert(etiqueta_piquete != null, "El piquete debe agregar una etiqueta 3D con el tiempo restante")
-	assert(etiqueta_piquete.text.contains("Piquete") and etiqueta_piquete.text.contains("restantes"),
-		"La etiqueta del piquete debe mostrar tipo y tiempo restante: '%s'" % etiqueta_piquete.text)
-	print("OK parcial: piquete agrega efecto de partículas y etiqueta 3D a la estación")
+	assert(etiqueta_piquete.text.contains("Incidente en estación") and etiqueta_piquete.text.contains("restantes"),
+		"La etiqueta del incidente debe mostrar tipo y tiempo restante: '%s'" % etiqueta_piquete.text)
+	print("OK parcial: incidente en estación agrega efecto de partículas y etiqueta 3D")
 
 	# Esperar a que el piquete se venza y el efecto desaparezca.
 	if not await _esperar_hasta(func() -> bool: return _contar_particulas(estaciones_nivel) == 0, "el efecto de piquete desaparece al vencer"):

@@ -48,9 +48,10 @@ usando `RelojSimulacion` y las señales `llego_a_estacion`/`salio_de_estacion`.
 Es la única línea que Persona 5 toca en `tren.gd`; Diego dejó el proyecto y
 delegó el mantenimiento de ese campo.
 
-Una estación publica `id`, `nombre`, `activa`, `pasajeros_esperando`,
-`pasajeros_saliendo`, `pasajeros_subidos_total`, `pasajeros_bajados_total` y
-sus métricas de espera: `espera_total_completada_s`, `pasajeros_con_espera`,
+Una estación publica `id`, `nombre`, `activa`,
+`ingreso_pasajeros_habilitado`, `pasajeros_esperando`, `pasajeros_saliendo`,
+`pasajeros_subidos_total`, `pasajeros_bajados_total` y sus métricas de espera:
+`espera_total_completada_s`, `pasajeros_con_espera`,
 `espera_promedio_s`, `espera_actual_total_s` y `espera_promedio_actual_s`.
 
 El resumen global publica `pasajeros_esperando`, `pasajeros_en_viaje`,
@@ -84,7 +85,7 @@ o un andén en vía muerta que tiene otro tren, o que frena por un tren adelante
 | `tren_llego_estacion(id, datos_estacion)` | Llegada efectiva a una estación. |
 | `tren_reanudo(id)` | Salida o fin de una detención temporal. |
 | `tren_finalizo(id, resultado)` | Fin del servicio (`solo_ida` en Bosques o `finalizar_al_volver` en Constitución) o recorrido incompleto. |
-| `estacion_actualizada(datos_estacion)` | Cambian pasajeros de una estación. |
+| `estacion_actualizada(datos_estacion)` | Cambian pasajeros o el estado de ingreso de una estación. |
 | `resumen_global_actualizado(datos)` | Cambia un dato agregado publicado. |
 | `velocidad_simulacion_cambiada(factor)` | Cambia el factor global. |
 
@@ -100,6 +101,10 @@ o un andén en vía muerta que tiene otro tren, o que frena por un tren adelante
 | `detener_tren_por_averia(id, motivo) -> bool` | Detiene indefinidamente un tren averiado y conserva sus reservas hasta que el gestor finalice la avería. |
 | `reanudar_tren(id) -> bool` | Cancela un evento temporal válido y restaura el estado previo. |
 | `finalizar_tren_incompleto(id, motivo) -> bool` | Detiene el tren, libera reservas y deja el snapshot disponible. |
+
+`establecer_ingreso_pasajeros_estacion(nombre, habilitado) -> bool` habilita o
+bloquea la generación de nuevos pasajeros en todas las plataformas registradas
+con ese nombre y devuelve `false` si no hay coincidencias.
 
 Los comandos devuelven `false` ante IDs inexistentes, motivos vacíos, valores
 inválidos o estados incompatibles. Ninguno invierte la marcha ni cambia de vía:
@@ -130,7 +135,10 @@ Hay dos medidas de atraso y no son intercambiables:
   (`MetricasServicio`), con tolerancia `tolerancia_horario_s` del controlador
   (1 s por defecto). Alimentan `trenes_atrasados`, `tasa_demora_pct` y
   `demora_promedio_s` del resumen global, y la etiqueta "En tiempo" o
-  "Atrasado" del panel de trenes.
+  "Atrasado" del panel de trenes. Esta puntualidad se calcula desde la última
+  cabecera: se reinicia al llegar a Bosques para la vuelta y al llegar a
+  Constitución para la siguiente ida. Las llegadas históricas del ciclo se
+  conservan aparte.
 
 El horario previsto supone que cada tramo se recorre a `velocidad_horario_kmh`
 sin esperas de reserva; con varias formaciones compartiendo vías es normal que

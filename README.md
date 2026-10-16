@@ -138,6 +138,8 @@ del andén donde se detiene.
 Al habilitar la separación de vías por sentido, el servicio adapta los destinos
 de `AndenA` y `AndenB` a su ubicación física. Constitución conserva su único
 andén de pasajeros, dedicado al embarque hacia Bosques.
+En Bosques, `AndenB` queda excluido del sistema de pasajeros: no genera ni
+visualiza pasajeros y tampoco permite embarcarlos.
 
 El tren embarca únicamente desde el andén más cercano a la vía por la que
 se detiene; el sentido de servicio desempata entre los andenes laterales.
@@ -330,9 +332,12 @@ cuando cambia el listado, manteniendo el menú abierto durante los refrescos.
 Los tiempos de llegada se
 expresan en minutos:segundos desde el inicio del recorrido. Un tren queda
 «Atrasado» si supera la llegada prevista; conserva ese estado hasta que
-una llegada posterior lo deje nuevamente «En tiempo». También se detecta una
-próxima llegada vencida mientras sigue viajando. La tolerancia independiente
-`tolerancia_horario_s` del controlador es de un segundo por defecto.
+una llegada posterior lo deje nuevamente «En tiempo». La comparación vuelve
+a cero al completar cada viaje entre cabeceras: al llegar a Bosques para
+iniciar la vuelta, y al llegar a Constitución para iniciar una nueva ida.
+También se detecta una próxima llegada vencida mientras sigue viajando. La
+tolerancia independiente `tolerancia_horario_s` del controlador es de un
+segundo por defecto.
 Este estado puede recuperar puntualidad; el retraso acumulado usado para
 atribuir el impacto de los eventos se conserva por separado.
 

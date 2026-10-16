@@ -160,7 +160,7 @@
 				"destino_anden_central_1": 2.0,
 				"destino_anden_central_2": 2.0,
 				"es_terminal": true,
-				"incluir_anden_b_pasajeros": true,
+				"incluir_anden_b_pasajeros": false,
 				"invertir_sentido": false,
 				"longitud_anden": 200.0,
 				"maximo_pasajeros_visibles": 150.0,

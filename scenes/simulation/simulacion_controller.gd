@@ -116,6 +116,7 @@ func _registrar_estacion(estacion: Estacion) -> void:
 		return
 	_estaciones[id] = estacion
 	_conectar_si_hace_falta(estacion.pasajeros_actualizados, _on_estacion_pasajeros_actualizados.bind(id))
+	_conectar_si_hace_falta(estacion.ingreso_pasajeros_cambiado, _on_estacion_ingreso_pasajeros_cambiado.bind(id))
 	estacion_actualizada.emit(_resumen_estacion(estacion))
 	_emitir_resumen_global()
 
@@ -129,6 +130,7 @@ func _resumen_estacion(estacion: Estacion) -> Dictionary:
 		"id": _id_estacion(estacion),
 		"nombre": estacion.nombre_estacion,
 		"activa": estacion.activa,
+		"ingreso_pasajeros_habilitado": estacion.ingreso_pasajeros_habilitado,
 		"pasajeros_esperando": estacion.pasajeros_esperando,
 		"pasajeros_saliendo": estacion.pasajeros_saliendo,
 		"pasajeros_subidos_total": estacion.pasajeros_subidos_total,
@@ -304,6 +306,19 @@ func esta_pausada() -> bool:
 	return _factor_velocidad_simulacion == 0.0
 
 
+## Habilita o bloquea el ingreso de pasajeros en todas las plataformas del nombre indicado.
+func establecer_ingreso_pasajeros_estacion(nombre_estacion: String, habilitado: bool) -> bool:
+	if nombre_estacion.strip_edges().is_empty():
+		return false
+	var encontrada: bool = false
+	for estacion: Estacion in _estaciones.values():
+		if not is_instance_valid(estacion) or estacion.nombre_estacion != nombre_estacion:
+			continue
+		estacion.establecer_ingreso_pasajeros_habilitado(habilitado)
+		encontrada = true
+	return encontrada
+
+
 func detener_tren_temporalmente(id_tren: int, motivo: String, duracion_s: float) -> bool:
 	var tren: Tren = _trenes.get(id_tren) as Tren
 	return tren.detener_por_evento(motivo, duracion_s) if is_instance_valid(tren) else false
@@ -376,6 +391,14 @@ func _on_estacion_pasajeros_actualizados(estacion: Estacion, id: String) -> void
 	if estacion == null or not is_instance_valid(estacion):
 		return
 	_estaciones[id] = estacion
+	estacion_actualizada.emit(_resumen_estacion(estacion))
+	_emitir_resumen_global()
+
+
+func _on_estacion_ingreso_pasajeros_cambiado(_habilitado: bool, id: String) -> void:
+	var estacion: Estacion = _estaciones.get(id) as Estacion
+	if estacion == null or not is_instance_valid(estacion):
+		return
 	estacion_actualizada.emit(_resumen_estacion(estacion))
 	_emitir_resumen_global()
 

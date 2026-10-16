@@ -201,7 +201,7 @@ func _construir_kpis(padre: VBoxContainer) -> void:
 	var fila1 := HBoxContainer.new()
 	fila1.add_theme_constant_override("separation", 12)
 	padre.add_child(fila1)
-	_agregar_tarjeta_kpi(fila1, "puntualidad", "PUNTUALIDAD POR HORARIO", "Trenes en tiempo / servicios activos con horario. Se actualiza en cada llegada y puede recuperarse.")
+	_agregar_tarjeta_kpi(fila1, "puntualidad", "PUNTUALIDAD POR HORARIO", "Trenes en tiempo / servicios activos con horario. Se mide entre cabeceras y se reinicia al llegar a Bosques o Constitución; también puede recuperarse durante el viaje.")
 	_agregar_tarjeta_kpi(fila1, "retraso_demorados", "RETRASO ACUMULADO PROMEDIO", "Promedio de retraso_s entre trenes con retraso acumulado medido. Conserva el impacto histórico de los eventos, aunque recuperen puntualidad.")
 	_agregar_tarjeta_kpi(fila1, "demora_maxima", "DEMORA ACUMULADA MÁXIMA", "El mayor retraso_s acumulado entre servicios activos y el tren que lo tiene.")
 
@@ -210,7 +210,7 @@ func _construir_kpis(padre: VBoxContainer) -> void:
 	padre.add_child(fila2)
 	_agregar_tarjeta_kpi(fila2, "incompletos", "INCOMPLETOS", "Trenes que quedaron con el servicio interrumpido (avería o ruta sin continuación) y no van a completar su recorrido.")
 	_agregar_tarjeta_kpi(fila2, "pasajeros", "PASAJEROS AFECTADOS", "Pasajeros a bordo de trenes retrasados o detenidos (por evento o esperando vía), sobre el total de pasajeros en viaje ahora.")
-	_agregar_tarjeta_kpi(fila2, "eventos", "EVENTOS OCURRIDOS", "Cantidad total de eventos disparados hasta ahora, desglosados por tipo (falla eléctrica · piquete · avería).")
+	_agregar_tarjeta_kpi(fila2, "eventos", "EVENTOS OCURRIDOS", "Cantidad total de eventos disparados hasta ahora, desglosados por tipo (falla eléctrica · incidente en estación · avería).")
 
 
 func _agregar_tarjeta_kpi(fila: HBoxContainer, clave: String, titulo_texto: String, tooltip: String) -> void:
@@ -293,7 +293,7 @@ func _construir_datos_globales(padre: VBoxContainer) -> void:
 	padre.add_child(fila2)
 	_agregar_tarjeta_kpi(fila2, "incompletos_evento", "INCOMPLETOS POR EVENTO TERMINAL", "Las averías mecánicas se distinguen de las interrupciones por falta de ruta.")
 	_agregar_tarjeta_kpi(fila2, "espera_global", "ESPERA GLOBAL DE PASAJEROS", "Promedio de la espera actual de todas las estaciones. Cada estación tiene el mismo peso; las que no tienen pasajeros en espera aportan cero.")
-	_agregar_tarjeta_kpi(fila2, "tasa_demora", "TASA DE DEMORA POR HORARIO", "Trenes atrasados / servicios activos con horario. La demora promedio incluye los que están en tiempo con demora cero; se recalcula en cada llegada y puede disminuir.")
+	_agregar_tarjeta_kpi(fila2, "tasa_demora", "TASA DE DEMORA POR HORARIO", "Trenes atrasados / servicios activos con horario. Se reinicia en cada cabecera. La demora promedio incluye los que están en tiempo con demora cero; se recalcula en cada llegada y puede disminuir.")
 
 
 func _actualizar_datos_globales() -> void:
