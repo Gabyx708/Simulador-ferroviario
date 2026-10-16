@@ -20,6 +20,15 @@ const COLOR_TEXTO: Color = Color(0.82, 0.84, 0.90, 1.0)
 const COLOR_ACENTO: Color = Color(1.0, 0.756863, 0.278431, 1.0)
 const COLOR_BACKDROP: Color = Color(0.0, 0.0, 0.0, 0.55)
 const DIAMETRO_BOTON: float = 56.0
+const TAMANO_ICONO: int = 26
+
+## Un icono por panel (Font Awesome, trazo único) en vez del símbolo de texto
+## que se usaba antes -- mismo criterio de color que el texto: COLOR_TEXTO en
+## reposo, oscuro cuando el botón está activo (ver _aplicar_estilo_boton).
+const ICONO_TRENES: Texture2D = preload("res://assets/icons/ui/tren.svg")
+const ICONO_ESTACIONES: Texture2D = preload("res://assets/icons/ui/estacion.svg")
+const ICONO_METRICAS: Texture2D = preload("res://assets/icons/ui/metricas.svg")
+const ICONO_CONTROL: Texture2D = preload("res://assets/icons/ui/general.svg")
 const ALTO_NAVEGACION: float = 74.0
 const ANCHO_PANEL: float = 420.0
 const ALTO_MAX_PANEL: float = 460.0
@@ -86,10 +95,10 @@ func _ready() -> void:
 	_fila_botones.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(_fila_botones)
 
-	_agregar_boton("control", "⚙", "Control de simulación")
-	_agregar_boton("metricas", "☰", "Métricas")
-	_agregar_boton("estaciones", "⌂", "Estaciones")
-	_agregar_boton("trenes", "⇄", "Trenes")
+	_agregar_boton("control", ICONO_CONTROL, "Control de simulación")
+	_agregar_boton("metricas", ICONO_METRICAS, "Métricas")
+	_agregar_boton("estaciones", ICONO_ESTACIONES, "Estaciones")
+	_agregar_boton("trenes", ICONO_TRENES, "Trenes")
 	var ancho_botones: float = _fila_botones.get_combined_minimum_size().x
 	_fila_botones.offset_left = -ancho_botones / 2.0
 	_fila_botones.offset_right = ancho_botones / 2.0
@@ -104,15 +113,19 @@ func _actualizar_tamano_panel() -> void:
 	_contenedor_panel.offset_top = _contenedor_panel.offset_bottom - alto
 
 
-func _agregar_boton(clave: String, simbolo: String, tooltip: String) -> void:
+func _agregar_boton(clave: String, icono: Texture2D, tooltip: String) -> void:
 	var boton := Button.new()
 	boton.name = "Boton" + clave.capitalize()
 	boton.custom_minimum_size = Vector2(DIAMETRO_BOTON, DIAMETRO_BOTON)
 	boton.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	boton.text = simbolo
+	boton.icon = icono
+	boton.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boton.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	boton.expand_icon = true
+	boton.add_theme_constant_override("icon_max_width", TAMANO_ICONO)
 	boton.tooltip_text = tooltip
-	boton.add_theme_font_size_override("font_size", 22)
-	boton.add_theme_color_override("font_color", COLOR_TEXTO)
+	boton.add_theme_color_override("icon_normal_color", COLOR_TEXTO)
+	boton.add_theme_color_override("icon_hover_color", COLOR_TEXTO)
 	boton.pressed.connect(_alternar.bind(clave))
 	_fila_botones.add_child(boton)
 	_aplicar_estilo_boton(boton, false)
@@ -127,8 +140,11 @@ func _aplicar_estilo_boton(boton: Button, activo: bool) -> void:
 	boton.add_theme_stylebox_override("pressed", hover)
 	boton.add_theme_stylebox_override("hover_pressed", hover)
 	boton.add_theme_stylebox_override("focus", _estilo_foco_circular())
-	boton.add_theme_color_override("font_color", Color(0.1, 0.09, 0.05, 1.0) if activo else COLOR_TEXTO)
-	boton.add_theme_color_override("font_color_hover", Color(0.1, 0.09, 0.05, 1.0) if activo else COLOR_TEXTO)
+	var color_icono: Color = Color(0.1, 0.09, 0.05, 1.0) if activo else COLOR_TEXTO
+	boton.add_theme_color_override("icon_normal_color", color_icono)
+	boton.add_theme_color_override("icon_hover_color", color_icono)
+	boton.add_theme_color_override("icon_pressed_color", color_icono)
+	boton.add_theme_color_override("icon_focus_color", color_icono)
 
 
 func _estilo_circular(color: Color) -> StyleBoxFlat:
