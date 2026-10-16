@@ -30,6 +30,7 @@ func _ready() -> void:
 	cerrar.text = "✕"
 	cerrar.tooltip_text = "Cerrar estaciones"
 	cerrar.flat = true
+	cerrar.add_theme_font_size_override("font_size", 12)
 	cerrar.add_theme_color_override("font_color", COLOR_TEXTO)
 	cerrar.pressed.connect(func() -> void: cierre_solicitado.emit())
 	encabezado.add_child(cerrar)

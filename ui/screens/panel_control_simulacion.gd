@@ -1,4 +1,4 @@
-extends Control
+extends VBoxContainer
 class_name PanelControlSimulacion
 ## Panel 1 de NavegacionPaneles: reloj, estado de flota, velocidad/pausa,
 ## generar eventos y feedback de impacto. Sólo lee/llama la API pública de
@@ -66,6 +66,7 @@ func _resolver_nivel() -> Node:
 func _ready() -> void:
 	custom_minimum_size = Vector2(0, 0)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_theme_constant_override("separation", 10)
 
 	var nivel: Node = _resolver_nivel()
 	if nivel != null:
@@ -73,20 +74,15 @@ func _ready() -> void:
 		_reloj = nivel.get_node_or_null("RelojSimulacion") as RelojSimulacion
 		_gestor = nivel.get_node_or_null("GestorEventos") as GestorEventos
 
-	var raiz := VBoxContainer.new()
-	raiz.add_theme_constant_override("separation", 10)
-	raiz.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(raiz)
-
-	_construir_encabezado(raiz)
-	raiz.add_child(HSeparator.new())
-	_construir_flota(raiz)
-	raiz.add_child(HSeparator.new())
-	_construir_velocidad(raiz)
-	raiz.add_child(HSeparator.new())
-	_construir_formulario_evento(raiz)
-	raiz.add_child(HSeparator.new())
-	_construir_feedback(raiz)
+	_construir_encabezado(self)
+	add_child(HSeparator.new())
+	_construir_flota(self)
+	add_child(HSeparator.new())
+	_construir_velocidad(self)
+	add_child(HSeparator.new())
+	_construir_formulario_evento(self)
+	add_child(HSeparator.new())
+	_construir_feedback(self)
 
 	if _controlador != null:
 		_controlador.velocidad_simulacion_cambiada.connect(func(_f: float) -> void: _actualizar_velocidad())
@@ -237,8 +233,8 @@ func _construir_velocidad(padre: VBoxContainer) -> void:
 
 	_slider_velocidad = HSlider.new()
 	_slider_velocidad.min_value = 0.0
-	_slider_velocidad.max_value = 10.0
-	_slider_velocidad.step = 0.5
+	_slider_velocidad.max_value = 20.0
+	_slider_velocidad.step = 1.0
 	_slider_velocidad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_slider_velocidad.value_changed.connect(_on_velocidad_cambiada)
 	fila.add_child(_slider_velocidad)

@@ -143,8 +143,8 @@ Hay dos medidas de atraso y no son intercambiables:
 El horario previsto supone que cada tramo se recorre a `velocidad_horario_kmh`
 sin esperas de reserva; con varias formaciones compartiendo vías es normal que
 los trenes figuren "Atrasado" aunque `retraso_s` sea bajo. El factor global ya
-está disponible; el slider del HUD permite `0.0×–10.0×` y muestra **Pausada**
-en cero.
+está disponible; el slider del HUD permite `0.0×–20.0×` en incrementos de
+`1.0×` y muestra **Pausada** en cero.
 
 Los sliders individuales de velocidad, aceleración y frenado son controles
 internos del HUD. La velocidad nominal de cada CSR es `50 km/h` y puede

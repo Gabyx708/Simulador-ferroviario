@@ -21,6 +21,7 @@ signal ingreso_pasajeros_cambiado(habilitado: bool)
 enum DestinoAnden { CONSTITUCION, BOSQUES, AMBOS }
 
 const PACK_MODELOS_PASAJEROS: PackedScene = preload("res://assets/models/passengers/free_pack_-_lowpoly_people.glb")
+const TEXTURA_ICONO_INFORMACION: Texture2D = preload("res://assets/icons/ui/information-variant-box.svg")
 const ESCALA_ELEMENTOS_INFORMACION: float = 5.0
 const NOMBRES_VARIANTES_PASAJERO: Array[String] = [
 	"SM_People_Lowpoly_01",
@@ -299,6 +300,10 @@ var _datos_originales: Dictionary = {}
 			_reubicar_pasajeros_visuales()
 			pasajeros_actualizados.emit(self)
 
+## Rutas relativas de andenes que no participan en la demanda de pasajeros.
+## Ejemplos: "AndenB" o "AndenesCentrales/Central1/Anden".
+@export var andenes_excluidos_pasajeros: Array[String] = []
+
 ## Ajuste vertical de las figuras del AndenA para integrarlas con plataformas existentes.
 @export_range(-5.0, 5.0, 0.01, "suffix:m") var desfasaje_vertical_pasajeros_anden_a: float = 0.0:
 	set(v):
@@ -381,7 +386,7 @@ var _aviso_trenes_pendiente: bool = false
 var _poste_ida: Node3D
 var _poste_vuelta: Node3D
 var _area_icono_informacion: Area3D
-var _icono_informacion: Label3D
+var _icono_informacion: Sprite3D
 
 
 func _ready() -> void:
@@ -454,16 +459,15 @@ func _configurar_icono_informacion() -> void:
 		_area_icono_informacion.input_event.connect(_on_area_input_event)
 	if not pasajeros_actualizados.is_connected(_on_pasajeros_actualizados):
 		pasajeros_actualizados.connect(_on_pasajeros_actualizados)
-	_icono_informacion = get_node_or_null("IconoInformacion") as Label3D
+	_icono_informacion = get_node_or_null("IconoInformacion") as Sprite3D
 	if _icono_informacion == null:
-		_icono_informacion = Label3D.new()
+		_icono_informacion = Sprite3D.new()
 		_icono_informacion.name = "IconoInformacion"
 		add_child(_icono_informacion)
-	_icono_informacion.text = "ℹ"
+	_icono_informacion.texture = TEXTURA_ICONO_INFORMACION
 	_icono_informacion.position = Vector3(0.0, 30.0, 0.0)
-	_icono_informacion.font_size = 192
-	_icono_informacion.modulate = Color(0.2, 0.8, 1.0, 1.0)
-	_icono_informacion.outline_size = 16
+	_icono_informacion.pixel_size = 0.02
+	_icono_informacion.modulate = Color(1.0, 0.756863, 0.278431, 1.0)
 	_icono_informacion.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_area_icono_informacion.position = _icono_informacion.position
 	_area_icono_informacion.scale = Vector3.ONE * ESCALA_ELEMENTOS_INFORMACION
@@ -633,12 +637,16 @@ func _obtener_andenes_pasajeros() -> Array[MeshInstance3D]:
 		nombres.append("AndenB")
 	for nombre: String in nombres:
 		var anden: MeshInstance3D = get_node_or_null(nombre) as MeshInstance3D
-		if anden != null and anden.mesh != null and not anden.is_queued_for_deletion():
+		if anden == null or anden.mesh == null or anden.is_queued_for_deletion():
+			continue
+		if str(get_path_to(anden)) not in andenes_excluidos_pasajeros:
 			andenes.append(anden)
 	for indice: int in range(cantidad_andenes_centrales):
 		var ruta: String = "AndenesCentrales/Central%d/Anden" % (indice + 1)
 		var anden: MeshInstance3D = get_node_or_null(ruta) as MeshInstance3D
-		if anden != null and anden.mesh != null and not anden.is_queued_for_deletion():
+		if anden == null or anden.mesh == null or anden.is_queued_for_deletion():
+			continue
+		if str(get_path_to(anden)) not in andenes_excluidos_pasajeros:
 			andenes.append(anden)
 	return andenes
 
@@ -1567,6 +1575,7 @@ func serializar_datos() -> Dictionary:
 		"activa": activa,
 		"capacidad_maxima_espera": capacidad_maxima_espera,
 		"incluir_anden_b_pasajeros": incluir_anden_b_pasajeros,
+		"andenes_excluidos_pasajeros": andenes_excluidos_pasajeros.duplicate(),
 		"desfasaje_vertical_pasajeros_anden_a": desfasaje_vertical_pasajeros_anden_a,
 		"ajuste_lateral_pasajeros_anden_a": ajuste_lateral_pasajeros_anden_a,
 		"tasa_generacion_pasajeros": tasa_generacion_pasajeros,
@@ -1612,6 +1621,10 @@ func deserializar_datos(data: Dictionary) -> void:
 	activa = bool(data.get("activa", activa))
 	capacidad_maxima_espera = int(data.get("capacidad_maxima_espera", capacidad_maxima_espera))
 	incluir_anden_b_pasajeros = bool(data.get("incluir_anden_b_pasajeros", incluir_anden_b_pasajeros))
+	if data.has("andenes_excluidos_pasajeros"):
+		andenes_excluidos_pasajeros.clear()
+		for id_anden: Variant in (data.get("andenes_excluidos_pasajeros", []) as Array):
+			andenes_excluidos_pasajeros.append(str(id_anden))
 	desfasaje_vertical_pasajeros_anden_a = float(data.get("desfasaje_vertical_pasajeros_anden_a", desfasaje_vertical_pasajeros_anden_a))
 	ajuste_lateral_pasajeros_anden_a = float(data.get("ajuste_lateral_pasajeros_anden_a", ajuste_lateral_pasajeros_anden_a))
 	tasa_generacion_pasajeros = float(data.get("tasa_generacion_pasajeros", tasa_generacion_pasajeros))

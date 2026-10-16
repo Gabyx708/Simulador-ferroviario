@@ -95,6 +95,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 1900.0,
 				"demanda_pasajeros": "res://resources/passengers/banfield.tres",
@@ -147,6 +150,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1400.0,
 				"demanda_pasajeros": "res://resources/passengers/bosques.tres",
@@ -199,6 +203,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1600.0,
 				"demanda_pasajeros": "res://resources/passengers/claypole.tres",
@@ -251,6 +256,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/dante_ardigo.tres",
@@ -303,6 +309,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 2300.0,
 				"demanda_pasajeros": "res://resources/passengers/dario_santillan_kosteki.tres",
@@ -355,6 +364,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1500.0,
 				"demanda_pasajeros": "res://resources/passengers/florencio_varela.tres",
@@ -407,6 +417,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 47.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/gerli.tres",
@@ -459,6 +472,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1100.0,
 				"demanda_pasajeros": "res://resources/passengers/jose_marmol.tres",
@@ -511,6 +525,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 47.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 2500.0,
 				"demanda_pasajeros": "res://resources/passengers/lanus.tres",
@@ -563,6 +580,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 2200.0,
 				"demanda_pasajeros": "res://resources/passengers/lomas_de_zamora.tres",
@@ -615,6 +635,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 9.5,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 3000.0,
 				"demanda_pasajeros": "res://resources/passengers/plaza_constitucion.tres",
@@ -667,6 +688,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/rafael_calzada.tres",
@@ -719,6 +741,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 1600.0,
 				"demanda_pasajeros": "res://resources/passengers/remedios_de_escalada.tres",
@@ -771,6 +796,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 2400.0,
 				"demanda_pasajeros": "res://resources/passengers/temperley.tres",
@@ -823,6 +849,9 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 67.0,
+				"andenes_excluidos_pasajeros": [
+					"AndenB"
+				],
 				"cantidad_andenes_centrales": 1.0,
 				"capacidad_maxima_espera": 1000.0,
 				"demanda_pasajeros": "res://resources/passengers/hipolito_yrigoyen.tres",
@@ -875,6 +904,7 @@
 				"ajuste_lateral_pasajeros_anden_a": 0.0,
 				"alinear_a_via": true,
 				"ancho_cobertura_vias": 35.0,
+				"andenes_excluidos_pasajeros": [],
 				"cantidad_andenes_centrales": 0.0,
 				"capacidad_maxima_espera": 1200.0,
 				"demanda_pasajeros": "res://resources/passengers/zeballos.tres",

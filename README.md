@@ -141,6 +141,11 @@ de `AndenA` y `AndenB` a su ubicación física. Constitución conserva su único
 andén de pasajeros, dedicado al embarque hacia Bosques.
 En Bosques, `AndenB` queda excluido del sistema de pasajeros: no genera ni
 visualiza pasajeros y tampoco permite embarcarlos.
+En Yrigoyen, Darío Santillán y Maximiliano Kosteki, Gerli, Lanús, Remedios de
+Escalada, Banfield y Lomas de Zamora, `AndenB` también se excluye de las filas
+de información y de la demanda. Esto no modifica las vías ni las paradas de los
+trenes. La información enumera primero `AndenA` y después `AndenB`, así que en
+Banfield se excluye el Andén 2; los andenes centrales restantes se renumeran.
 
 El tren embarca únicamente desde el andén más cercano a la vía por la que
 se detiene; el sentido de servicio desempata entre los andenes laterales.
@@ -222,9 +227,9 @@ plataforma integrada a la terminal sin alterar la parada del tren.
 Bosques y Constitución también usan estas capacidades en el nivel alternativo
 `levels/ramal_roca/ramal_roca.tscn`.
 
-Gerli tiene dos andenes y admite 600 pasajeros en cada uno. Remedios de Escalada
-tiene también un andén central habilitado; sus 1.600 lugares se reparten entre
-las tres filas como 534, 533 y 533 pasajeros.
+Gerli tiene dos andenes activos y admite 600 pasajeros en cada uno. Remedios de
+Escalada tiene un andén central activo; sus 1.600 lugares se reparten entre las
+dos filas como 800 pasajeros por andén.
 
 ### Demanda por estación y destino
 

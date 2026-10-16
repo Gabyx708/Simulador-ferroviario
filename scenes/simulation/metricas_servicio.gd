@@ -32,6 +32,7 @@ func registrar_tren(tren: Tren) -> void:
 	if int((_registros[id]["datos"] as Dictionary).get("estado", -1)) in [Tren.EstadoOperacion.INCOMPLETO, Tren.EstadoOperacion.FINALIZADO_EN_BOSQUES, Tren.EstadoOperacion.FINALIZADO_IDA_VUELTA]:
 		_registros[id]["fin_s"] = _ahora()
 	tren.llego_a_estacion.connect(_on_llegada.bind(id))
+	tren.salio_de_estacion.connect(_on_salida.bind(id))
 	tren.recorrido_finalizado.connect(_on_finalizado.bind(id))
 	tren.recorrido_incompleto.connect(_on_incompleto.bind(id))
 	tren.eliminado.connect(_on_eliminado.bind(id))
@@ -48,19 +49,8 @@ func _on_llegada(datos: Dictionary, estacion: Dictionary, id: int) -> void:
 	var registro: Dictionary = _registros[id]
 	var horario: Array[Dictionary] = registro["horario"]
 	var siguiente: int = int(registro["siguiente"])
-	# El servicio repite ida y vuelta: completado un ciclo, la primera parada
-	# del siguiente reinicia el horario con base en la llegada real a la
-	# cabecera. Sin esto la puntualidad quedaba congelada tras la primera vuelta.
-	if siguiente >= horario.size() and horario.size() > 1 and str(horario[1]["id"]) == str(estacion.get("id", "")):
-		var llegadas_ciclo: Dictionary = registro["llegadas"]
-		var ultima: int = horario.size() - 1
-		if llegadas_ciclo.has(ultima):
-			registro["inicio_s"] = float(registro["inicio_s"]) + float(llegadas_ciclo[ultima])
-			registro["llegadas"] = {0: 0.0}
-			registro["siguiente"] = 1
-			registro["desvio_s"] = 0.0
-			registro["ciclo"] = int(registro.get("ciclo", 1)) + 1
-			siguiente = 1
+	# Sólo se registra una llegada que coincide con la próxima visita prevista;
+	# así la tabla conserva el orden del servicio.
 	if siguiente >= horario.size() or str(horario[siguiente]["id"]) != str(estacion.get("id", "")):
 		return
 	var ahora_s: float = _ahora()
@@ -75,7 +65,7 @@ func _on_llegada(datos: Dictionary, estacion: Dictionary, id: int) -> void:
 
 	# La puntualidad se mide por cada viaje entre cabeceras. Al llegar a Bosques
 	# empieza una medición nueva para la vuelta; al llegar a Constitución, para
-	# la próxima ida. El historial de llegadas del ciclo se conserva aparte.
+	# la próxima ida. La tabla del ciclo se reinicia al partir de la cabecera.
 	if siguiente + 1 < horario.size():
 		var sentido_actual: String = str(horario[siguiente].get("sentido", ""))
 		var sentido_siguiente: String = str(horario[siguiente + 1].get("sentido", ""))
@@ -84,6 +74,38 @@ func _on_llegada(datos: Dictionary, estacion: Dictionary, id: int) -> void:
 	elif siguiente == horario.size() - 1:
 		# Última visita del ciclo: Constitución es el origen de la próxima ida.
 		_reiniciar_retraso_tramo(registro, ahora_s, 0)
+
+
+func _on_salida(datos: Dictionary, estacion: Dictionary, id: int) -> void:
+	actualizar_datos(datos)
+	if not _registros.has(id):
+		return
+	var registro: Dictionary = _registros[id]
+	var horario: Array[Dictionary] = registro["horario"]
+	var siguiente: int = int(registro["siguiente"])
+	if horario.size() < 2 or siguiente < horario.size():
+		return
+	# Sólo una ruta de ida y vuelta que regresa al origen abre otro ciclo.
+	# Una ruta de sólo ida o un tren finalizado conserva sus llegadas finales.
+	var origen_id: String = str(horario.front().get("id", ""))
+	var ultima: int = horario.size() - 1
+	if str(horario.back().get("sentido", "")) != "vuelta" \
+		or str(horario.back().get("id", "")) != origen_id \
+		or str(estacion.get("id", "")) != origen_id:
+		return
+	var llegadas: Dictionary = registro["llegadas"]
+	if not llegadas.has(ultima):
+		return
+	# La cabecera marca el minuto cero. Se usa su hora real de llegada para que
+	# la espera antes de salir cuente al medir la llegada a la primera estación.
+	var inicio_ciclo_s: float = float(registro["inicio_s"]) + float(llegadas[ultima])
+	registro["inicio_s"] = inicio_ciclo_s
+	registro["llegadas"] = {0: 0.0}
+	registro["siguiente"] = 1
+	registro["desvio_s"] = 0.0
+	registro["inicio_tramo_s"] = inicio_ciclo_s
+	registro["indice_inicio_tramo"] = 0
+	registro["ciclo"] = int(registro.get("ciclo", 1)) + 1
 
 
 func _reiniciar_retraso_tramo(registro: Dictionary, ahora_s: float, indice_inicio: int) -> void:
