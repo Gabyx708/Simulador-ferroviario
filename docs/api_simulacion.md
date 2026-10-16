@@ -129,7 +129,10 @@ Hay dos medidas de atraso y no son intercambiables:
   (`MetricasServicio`), con tolerancia `tolerancia_horario_s` del controlador
   (1 s por defecto). Alimentan `trenes_atrasados`, `tasa_demora_pct` y
   `demora_promedio_s` del resumen global, y la etiqueta "En tiempo" o
-  "Atrasado" del panel de trenes.
+  "Atrasado" del panel de trenes. Esta puntualidad se calcula desde la última
+  cabecera: se reinicia al llegar a Bosques para la vuelta y al llegar a
+  Constitución para la siguiente ida. Las llegadas históricas del ciclo se
+  conservan aparte.
 
 El horario previsto supone que cada tramo se recorre a `velocidad_horario_kmh`
 sin esperas de reserva; con varias formaciones compartiendo vías es normal que

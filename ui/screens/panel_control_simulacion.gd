@@ -255,7 +255,7 @@ func _construir_formulario_evento(padre: VBoxContainer) -> void:
 
 	_opcion_tipo = OptionButton.new()
 	_opcion_tipo.add_item("Falla eléctrica (tramo)", 0)
-	_opcion_tipo.add_item("Piquete (estación)", 1)
+	_opcion_tipo.add_item("Incidente en estación", 1)
 	_opcion_tipo.add_item("Avería (tren)", 2)
 	_opcion_tipo.item_selected.connect(func(_i: int) -> void: _actualizar_objetivos())
 	padre.add_child(_opcion_tipo)
@@ -338,7 +338,7 @@ func _on_disparar_pressed() -> void:
 		if tipo == 0:
 			resultado = _gestor.disparar_falla_electrica(nombre, _spin_duracion.value)
 		else:
-			resultado = _gestor.disparar_piquete(nombre, _spin_duracion.value)
+			resultado = _gestor.disparar_incidente_en_estacion(nombre, _spin_duracion.value)
 		var ok2: bool = bool(resultado.get("ok", false))
 		_mostrar_mensaje("Evento disparado." if ok2 else str(resultado.get("motivo", "Rechazado.")), ok2)
 	_actualizar_feedback()

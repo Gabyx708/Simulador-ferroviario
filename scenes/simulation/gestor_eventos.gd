@@ -1,11 +1,11 @@
 extends Node
 class_name GestorEventos
 ## Dispara y resuelve los 3 eventos de dominio del servicio ferroviario:
-## falla eléctrica, piquete y desperfecto mecánico. Todo pasa por los
+## falla eléctrica, incidente en estación y desperfecto mecánico. Todo pasa por los
 ## comandos ya existentes de `SimulacionController` -- este módulo no toca
 ## `Tren`, `TrackNetwork` ni reservas directamente.
 ##
-## Falla eléctrica y piquete son "zonas activas": mientras el evento dura,
+## Falla eléctrica e incidente en estación son "zonas activas": mientras el evento dura,
 ## CUALQUIER tren que entre a la estación/tramo afectado se detiene por el
 ## TIEMPO RESTANTE del evento (no una duración fija desde que entra, y no
 ## sólo los trenes que ya estaban ahí al disparar). El efecto en los trenes
@@ -16,7 +16,7 @@ class_name GestorEventos
 ## definitivo (`finalizar_tren_incompleto`); no es una zona.
 ##
 ## Alcance de cada zona -- detectado sólo con señales públicas de Tren:
-## - Piquete (estación puntual): se aplica en `llego_a_estacion` cuando el
+## - Incidente en estación: se aplica en `llego_a_estacion` cuando el
 ##   nombre de la estación coincide con la zona activa.
 ## - Falla eléctrica (tramo): se aplica en `salio_de_estacion` cuando el
 ##   nombre de la estación de origen coincide con la zona activa -- el tramo
@@ -39,7 +39,19 @@ signal evento_finalizado(datos: Dictionary)
 ## ya que al disparar una zona todavía no se sabe qué tren va a entrar.
 signal tren_afectado_por_evento(id_tren: int, tipo: TipoEvento)
 
+## PIQUETE se conserva como identificador interno por compatibilidad; el nombre
+## público del evento es "Incidente en estación".
 enum TipoEvento { FALLA_ELECTRICA, PIQUETE, DESPERFECTO_MECANICO }
+
+const MENSAJES_INCIDENTE_ESTACION: Array[String] = [
+	"Descompensación de pasajero",
+	"Emergencia Médica",
+	"Arrollamiento o Accidente en Paso Peatonal de Estación",
+	"Desprendimiento de Pantógrafo en Andén",
+	"Medida de Fuerza Gremial por Agresión al Personal",
+	"Invasión o Bloqueo de Vías por Protesta Social",
+	"Un vendedor ambulante amenaza con cagar a palos a todo el mundo",
+]
 
 const TIEMPO_MAXIMO_SIN_MOVIMIENTO_S: float = 15.0 * 60.0
 const DISTANCIA_MINIMA_MOVIMIENTO_M: float = 0.1
@@ -50,7 +62,7 @@ const COLOR_PIQUETE: Color = Color(0.95, 0.55, 0.10)          ## naranja
 const COLOR_DESPERFECTO_MECANICO: Color = Color(0.85, 0.15, 0.15)  ## rojo
 
 @export var duracion_falla_electrica_s: float = 90.0
-@export var duracion_piquete_s: float = 120.0
+@export var duracion_incidente_estacion_s: float = 120.0
 ## Teclas de debug F1/F2/F3, sólo en build de debug y nunca si hay un campo
 ## de texto con foco (ver _unhandled_input). Provisorio hasta que el panel
 ## de control dispare eventos por su cuenta.
@@ -65,7 +77,7 @@ const COLOR_DESPERFECTO_MECANICO: Color = Color(0.85, 0.15, 0.15)  ## rojo
 ## El código queda listo por si se quiere complementar más adelante.
 @export var aleatorio_activo: bool = false
 @export_range(0.0, 20.0, 0.1) var falla_electrica_por_hora: float = 2.0
-@export_range(0.0, 20.0, 0.1) var piquete_por_hora: float = 2.0
+@export_range(0.0, 20.0, 0.1) var incidente_estacion_por_hora: float = 2.0
 @export_range(0.0, 20.0, 0.1) var desperfecto_por_hora: float = 0.5
 
 var _controlador: SimulacionController
@@ -113,7 +125,7 @@ func _process(delta: float) -> void:
 		# que usa RelojSimulacion), así que es directamente tiempo simulado:
 		# no hace falta pasar por _reloj para esta cuenta.
 		_evaluar_disparo_aleatorio(falla_electrica_por_hora, delta, _disparar_falla_electrica_aleatoria)
-		_evaluar_disparo_aleatorio(piquete_por_hora, delta, _disparar_piquete_aleatorio)
+		_evaluar_disparo_aleatorio(incidente_estacion_por_hora, delta, _disparar_incidente_estacion_aleatorio)
 		_evaluar_disparo_aleatorio(desperfecto_por_hora, delta, _disparar_desperfecto_aleatorio)
 
 
@@ -131,10 +143,10 @@ func _disparar_falla_electrica_aleatoria() -> void:
 		disparar_falla_electrica(nombre)
 
 
-func _disparar_piquete_aleatorio() -> void:
+func _disparar_incidente_estacion_aleatorio() -> void:
 	var nombre: String = _estacion_al_azar()
 	if not nombre.is_empty():
-		disparar_piquete(nombre)
+		disparar_incidente_en_estacion(nombre)
 
 
 func _disparar_desperfecto_aleatorio() -> void:
@@ -196,8 +208,8 @@ func _unhandled_input(evento: InputEvent) -> void:
 		KEY_F2:
 			var nombre2: String = _primera_estacion_disponible()
 			if not nombre2.is_empty():
-				print("[GestorEventos][debug] piquete en '%s'" % nombre2)
-				disparar_piquete(nombre2)
+				print("[GestorEventos][debug] incidente en estación '%s'" % nombre2)
+				disparar_incidente_en_estacion(nombre2)
 		KEY_F3:
 			var id: int = _primer_tren_activo()
 			if id > 0:
@@ -231,9 +243,14 @@ func disparar_falla_electrica(estacion_origen_tramo: String, duracion_s: float =
 
 
 ## Alcance: una estación puntual. No apila.
-func disparar_piquete(estacion: String, duracion_s: float = -1.0) -> Dictionary:
+func disparar_incidente_en_estacion(estacion: String, duracion_s: float = -1.0) -> Dictionary:
 	return _disparar_zona(_zonas_estacion, estacion, TipoEvento.PIQUETE,
-		"Piquete", duracion_s if duracion_s > 0.0 else duracion_piquete_s)
+		"Incidente en estación", duracion_s if duracion_s > 0.0 else duracion_incidente_estacion_s)
+
+
+## Alias de compatibilidad para llamadas existentes que aún usan el nombre anterior.
+func disparar_piquete(estacion: String, duracion_s: float = -1.0) -> Dictionary:
+	return disparar_incidente_en_estacion(estacion, duracion_s)
 
 
 func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: String, duracion_s: float) -> Dictionary:
@@ -253,10 +270,32 @@ func _disparar_zona(zonas: Dictionary, clave: String, tipo: TipoEvento, motivo: 
 		"id_tren": -1, "trenes_afectados": {}, "retraso_total_s": 0.0,
 		"pasajeros_minuto_perdidos": 0.0, "activo": true,
 	}
+	if tipo == TipoEvento.PIQUETE:
+		evento["tipo_evento"] = nombre_tipo(tipo)
+		evento["perjudicado"] = clave
+		evento["mensaje"] = _crear_mensaje_incidente_estacion(duracion_s)
 	_eventos[id_evento] = evento
 	zonas[clave] = id_evento
 	evento_disparado.emit(evento)
-	return {"ok": true, "motivo": ""}
+	return {"ok": true, "motivo": "", "evento": evento.duplicate()}
+
+
+func _crear_mensaje_incidente_estacion(duracion_s: float) -> String:
+	var suceso: String = MENSAJES_INCIDENTE_ESTACION.pick_random()
+	var duracion: String = _formatear_duracion_total(duracion_s)
+	return "%s. Duración total configurada: %s." % [suceso, duracion]
+
+
+func _formatear_duracion_total(duracion_s: float) -> String:
+	var total_s: int = maxi(0, roundi(duracion_s))
+	var minutos: int = floori(float(total_s) / 60.0)
+	var segundos: int = total_s - minutos * 60
+	var partes: PackedStringArray = PackedStringArray()
+	if minutos > 0:
+		partes.append("%d minuto%s" % [minutos, "" if minutos == 1 else "s"])
+	if segundos > 0 or minutos == 0:
+		partes.append("%d segundo%s" % [segundos, "" if segundos == 1 else "s"])
+	return " y ".join(partes)
 
 
 ## Alcance: un único tren. Definitivo, no es zona ni se reanuda. No genera
@@ -357,7 +396,7 @@ static func nombre_tipo(tipo: TipoEvento) -> String:
 		TipoEvento.FALLA_ELECTRICA:
 			return "Falla eléctrica"
 		TipoEvento.PIQUETE:
-			return "Piquete"
+			return "Incidente en estación"
 		TipoEvento.DESPERFECTO_MECANICO:
 			return "Avería"
 	return "Evento"

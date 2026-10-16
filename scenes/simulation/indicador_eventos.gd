@@ -17,8 +17,8 @@ class_name IndicadorEventos
 ##   docs/reporte_final.md -- así que se marca el punto de partida, visible
 ##   "a lo largo de la vía" porque el tren que pasa por ahí también se
 ##   enciende).
-## - Piquete: humo + baliza naranja intermitente en la estación afectada,
-##   no en un tren puntual -- el piquete bloquea el andén, no depende de
+## - Incidente en estación: humo + baliza naranja intermitente en la estación afectada,
+##   no en un tren puntual -- el incidente bloquea el andén, no depende de
 ##   quién esté ahí. Dura mientras la zona esté activa.
 ## - Desperfecto mecánico: humo gris + baliza roja intermitente sobre el
 ##   tren roto. Permanente, como el evento mismo (se va solo si el tren se
@@ -217,7 +217,7 @@ func _quitar_efecto_estacion(nombre: String) -> void:
 ## Falla eléctrica es una zona de TRAMO, no de estación -- no hay forma
 ## barata de resolver el segmento de vía real desde acá (ver cabecera del
 ## archivo), así que se marca la estación de origen del tramo con una
-## baliza propia (distinta de la del piquete: sin humo, sólo luz) para que
+## baliza propia (distinta de la del incidente en estación: sin humo, sólo luz) para que
 ## se note "desde dónde" arranca la zona afectada.
 func _agregar_efecto_origen_tramo(nombre: String, id_evento: int) -> void:
 	if nombre.is_empty() or _efectos_origen_tramo.has(nombre):

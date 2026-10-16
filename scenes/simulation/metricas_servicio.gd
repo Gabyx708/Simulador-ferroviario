@@ -19,10 +19,12 @@ func registrar_tren(tren: Tren) -> void:
 	var id: int = tren.obtener_id_operativo()
 	if _registros.has(id):
 		return
+	var inicio_s: float = _ahora()
 	var horario: Array[Dictionary] = tren.obtener_horario_previsto()
 	_registros[id] = {
-		"inicio_s": _ahora(), "fin_s": -1.0, "datos": tren.obtener_resumen_operativo(),
+		"inicio_s": inicio_s, "fin_s": -1.0, "datos": tren.obtener_resumen_operativo(),
 		"horario": horario, "siguiente": 1, "desvio_s": 0.0, "llegadas": {},
+		"inicio_tramo_s": inicio_s, "indice_inicio_tramo": 0,
 		"estancia_final_s": tren.tiempo_parada_servicio,
 	}
 	if not horario.is_empty():
@@ -61,10 +63,33 @@ func _on_llegada(datos: Dictionary, estacion: Dictionary, id: int) -> void:
 			siguiente = 1
 	if siguiente >= horario.size() or str(horario[siguiente]["id"]) != str(estacion.get("id", "")):
 		return
-	var transcurrido: float = _ahora() - float(registro["inicio_s"])
-	(registro["llegadas"] as Dictionary)[siguiente] = transcurrido
-	registro["desvio_s"] = transcurrido - float(horario[siguiente]["llegada_prevista_s"])
+	var ahora_s: float = _ahora()
+	var transcurrido_ciclo_s: float = ahora_s - float(registro["inicio_s"])
+	(registro["llegadas"] as Dictionary)[siguiente] = transcurrido_ciclo_s
+	var indice_inicio_tramo: int = int(registro["indice_inicio_tramo"])
+	var previsto_inicio_tramo_s: float = float(horario[indice_inicio_tramo]["llegada_prevista_s"])
+	var previsto_llegada_s: float = float(horario[siguiente]["llegada_prevista_s"])
+	var transcurrido_tramo_s: float = ahora_s - float(registro["inicio_tramo_s"])
+	registro["desvio_s"] = transcurrido_tramo_s - (previsto_llegada_s - previsto_inicio_tramo_s)
 	registro["siguiente"] = siguiente + 1
+
+	# La puntualidad se mide por cada viaje entre cabeceras. Al llegar a Bosques
+	# empieza una medición nueva para la vuelta; al llegar a Constitución, para
+	# la próxima ida. El historial de llegadas del ciclo se conserva aparte.
+	if siguiente + 1 < horario.size():
+		var sentido_actual: String = str(horario[siguiente].get("sentido", ""))
+		var sentido_siguiente: String = str(horario[siguiente + 1].get("sentido", ""))
+		if sentido_actual != sentido_siguiente:
+			_reiniciar_retraso_tramo(registro, ahora_s, siguiente)
+	elif siguiente == horario.size() - 1:
+		# Última visita del ciclo: Constitución es el origen de la próxima ida.
+		_reiniciar_retraso_tramo(registro, ahora_s, 0)
+
+
+func _reiniciar_retraso_tramo(registro: Dictionary, ahora_s: float, indice_inicio: int) -> void:
+	registro["inicio_tramo_s"] = ahora_s
+	registro["indice_inicio_tramo"] = indice_inicio
+	registro["desvio_s"] = 0.0
 
 
 func _on_finalizado(datos: Dictionary, id: int) -> void:
@@ -94,7 +119,10 @@ func obtener_puntualidad(id: int) -> Dictionary:
 	var siguiente: int = int(registro["siguiente"])
 	var retraso: float = maxf(0.0, float(registro["desvio_s"]))
 	if fin < 0.0 and siguiente < horario.size():
-		retraso = maxf(retraso, transcurrido - float(horario[siguiente]["llegada_prevista_s"]))
+		var indice_inicio_tramo: int = int(registro["indice_inicio_tramo"])
+		var tiempo_desde_inicio_tramo_s: float = _ahora() - float(registro["inicio_tramo_s"])
+		var tiempo_previsto_tramo_s: float = float(horario[siguiente]["llegada_prevista_s"]) - float(horario[indice_inicio_tramo]["llegada_prevista_s"])
+		retraso = maxf(retraso, tiempo_desde_inicio_tramo_s - tiempo_previsto_tramo_s)
 	var atrasado: bool = retraso > tolerancia_s
 	return {
 		"horario_disponible": true, "atrasado": atrasado,

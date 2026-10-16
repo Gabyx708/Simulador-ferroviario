@@ -35,7 +35,7 @@ patrón de conexión que usa `SimulacionController._conectar_tren()`.
 
 **Mide llegada a llegada, no salida a llegada.** Si sólo se midiera el
 viaje, una demora que agarra al tren ya parado en el andén (como un
-piquete) quedaría invisible, porque ocurre antes de que el tren salga.
+incidente en estación) quedaría invisible, porque ocurre antes de que el tren salga.
 Llegada a llegada la captura siempre.
 
 El largo de cada tramo sale del **pico** de `distancia_a_proxima_estacion()`
@@ -87,15 +87,45 @@ existen en `SimulacionController` (`detener_tren_temporalmente`,
 `reanudar_tren`, `finalizar_tren_incompleto`). No toca `Tren`,
 `TrackNetwork` ni reservas directamente.
 
-| | Falla eléctrica | Piquete | Desperfecto mecánico |
+| | Falla eléctrica | Incidente en estación | Desperfecto mecánico |
 | --- | --- | --- | --- |
 | Alcance | Un tramo (identificado por su estación de salida) | Una estación puntual | Un único tren |
 | Tipo | Zona activa, reanudable | Zona activa, reanudable | Inmediato, definitivo |
-| Disparo | `disparar_falla_electrica(estacion_origen, duracion_s=-1)` | `disparar_piquete(estacion, duracion_s=-1)` | `disparar_desperfecto_mecanico(id_tren, motivo="...")` |
-| Duración por defecto | `duracion_falla_electrica_s = 90.0` | `duracion_piquete_s = 120.0` | No aplica |
+| Disparo | `disparar_falla_electrica(estacion_origen, duracion_s=-1)` | `disparar_incidente_en_estacion(estacion, duracion_s=-1)` | `disparar_desperfecto_mecanico(id_tren, motivo="...")` |
+| Duración por defecto | `duracion_falla_electrica_s = 90.0` | `duracion_incidente_estacion_s = 120.0` | No aplica |
 | Se aplica en | `salio_de_estacion` (nombre de origen == zona) | `llego_a_estacion` (nombre == zona) | Al llamar, sobre ese tren |
 | Resolución | Automática al vencer, o `reanudar_tren` manual | Igual | Ninguna -- no se puede reanudar |
-| Color | `COLOR_FALLA_ELECTRICA` (amarillo) | `COLOR_PIQUETE` (naranja) | `COLOR_DESPERFECTO_MECANICO` (rojo), vía `color_evento_activo(id_tren)` |
+| Color | `COLOR_FALLA_ELECTRICA` (amarillo) | `COLOR_PIQUETE` (naranja, nombre interno conservado) | `COLOR_DESPERFECTO_MECANICO` (rojo), vía `color_evento_activo(id_tren)` |
+
+### Datos preparados para el popup de incidente
+
+Al disparar un incidente en estación, `evento_disparado` y
+`obtener_historial()` incluyen estos campos en el diccionario del evento:
+
+```gdscript
+{
+	"tipo_evento": "Incidente en estación",
+	"perjudicado": "nombre de la estación afectada",
+	"mensaje": "suceso aleatorio. Duración total configurada: 2 minutos."
+}
+```
+
+El suceso se elige al azar de esta lista definida en `GestorEventos`:
+
+- Descompensación de pasajero
+- Emergencia Médica
+- Arrollamiento o Accidente en Paso Peatonal de Estación
+- Desprendimiento de Pantógrafo en Andén
+- Medida de Fuerza Gremial por Agresión al Personal
+- Invasión o Bloqueo de Vías por Protesta Social
+- Un vendedor ambulante amenaza con cagar a palos a todo el mundo
+
+La duración incluida en el mensaje es la duración total seleccionada en el
+HUD, no el tiempo restante. El popup todavía no forma parte de esta
+implementación; los datos ya quedan disponibles para conectarlo.
+`disparar_piquete()` y los identificadores `PIQUETE` / `COLOR_PIQUETE` se
+conservan por compatibilidad interna; el HUD y la etiqueta pública usan el
+nombre nuevo.
 
 ### Zonas activas: lo importante
 
@@ -139,7 +169,7 @@ código (sin assets externos), escuchando las señales de `GestorEventos`.
 | Evento | Efecto | Dónde | Dura |
 | --- | --- | --- | --- |
 | Falla eléctrica | Chispas amarillas | Arriba del tren que entra al tramo (simula el pantógrafo arqueando) | Hasta que ESE tren reanuda |
-| Piquete | Humo negro/naranja | En la estación afectada, no en un tren puntual | Mientras la zona esté activa |
+| Incidente en estación | Humo negro/naranja | En la estación afectada, no en un tren puntual | Mientras la zona esté activa |
 | Desperfecto mecánico | Humo gris | Saliendo del tren roto | Permanente, como el evento |
 
 `GestorEventos` expone una señal nueva para esto,
@@ -154,7 +184,7 @@ el panel de Persona 2, no un ícono final.
 ### Disparo manual (teclas de debug)
 
 Con `teclas_debug_activas = true` (default): **1** dispara falla eléctrica
-en la primera estación de la lista, **2** piquete en la primera estación,
+en la primera estación de la lista, **2** incidente en estación en la primera estación,
 **3** desperfecto mecánico en el primer tren activo. Requiere foco en la
 ventana del juego. Es un reemplazo provisorio hasta que exista el panel de
 Persona 2 -- siempre apunta a "el primero disponible", no a uno elegido.
@@ -162,7 +192,7 @@ Persona 2 -- siempre apunta a "el primero disponible", no a uno elegido.
 ### Disparo aleatorio (presente pero desactivado)
 
 El código para disparo automático por probabilidad (`aleatorio_activo`,
-`falla_electrica_por_hora`, `piquete_por_hora`, `desperfecto_por_hora`,
+`falla_electrica_por_hora`, `incidente_estacion_por_hora`, `desperfecto_por_hora`,
 todos `@export`) existe y fue decisión explícita del equipo dejarlo
 **desactivado por defecto** (`aleatorio_activo = false`): por ahora el
 disparo es manual únicamente -- vía teclas de debug hoy, vía el panel de
