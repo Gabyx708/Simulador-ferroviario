@@ -25,8 +25,10 @@ func _run() -> void:
 
 	var boton_control: Button = nav.find_child("BotonControl", true, false) as Button
 	var boton_metricas: Button = nav.find_child("BotonMetricas", true, false) as Button
-	var boton_reservado: Button = nav.find_child("BotonReservado", true, false) as Button
-	assert(boton_control != null and boton_metricas != null and boton_reservado != null, "Los 3 botones deben existir")
+	var boton_estaciones: Button = nav.find_child("BotonEstaciones", true, false) as Button
+	var boton_trenes: Button = nav.find_child("BotonTrenes", true, false) as Button
+	assert(boton_control != null and boton_metricas != null and boton_estaciones != null and boton_trenes != null,
+		"Los 4 botones deben existir")
 
 	boton_control.pressed.emit()
 	await process_frame
@@ -64,11 +66,15 @@ func _run() -> void:
 	await process_frame
 	assert(nav.panel_abierto() == "", "Apretar el mismo botón de nuevo debe cerrar el panel")
 
-	boton_reservado.pressed.emit()
+	boton_estaciones.pressed.emit()
 	await process_frame
-	assert(nav.panel_abierto() == "reservado", "El botón reservado debe abrir su placeholder")
+	assert(nav.panel_abierto() == "estaciones", "El botón de estaciones debe abrir ese panel")
 
-	print("OK: navegación abre/cierra correctamente entre los 3 paneles")
+	boton_trenes.pressed.emit()
+	await process_frame
+	assert(nav.panel_abierto() == "trenes", "El botón de trenes debe abrir ese panel (no quedarse en estaciones)")
+
+	print("OK: navegación abre/cierra correctamente entre los 4 paneles")
 
 	nivel.queue_free()
 	await process_frame
